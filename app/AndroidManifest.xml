@@ -8,7 +8,7 @@
 	<application
 		android:allowBackup="false"
 		android:hasCode="false"
-		android:label="Quest XR"
+		android:label="HapPB"
 		android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
 		<activity
 			android:name="android.app.NativeActivity"
@@ -20,7 +20,7 @@
 			android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
 			<meta-data
 				android:name="android.app.lib_name"
-				android:value="quest-xr" />
+				android:value="happb" />
 			<meta-data
 				android:name="com.oculus.vr.focusaware"
 				android:value="true" />

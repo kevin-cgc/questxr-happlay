@@ -5,7 +5,7 @@ add_library(native_app_glue STATIC ${ANDROID_NDK}/sources/android/native_app_glu
 target_include_directories(native_app_glue PUBLIC ${ANDROID_NDK}/sources/android/native_app_glue)
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
 
-add_library(quest-xr SHARED
+add_library(happb SHARED
         graphics_plugin_vulkan.cpp
         main.cpp
         openxr_program.cpp
@@ -14,12 +14,12 @@ add_library(quest-xr SHARED
         vulkan_swapchain_context.cpp
         )
 
-target_compile_definitions(quest-xr PRIVATE XR_USE_PLATFORM_ANDROID
+target_compile_definitions(happb PRIVATE XR_USE_PLATFORM_ANDROID
         XR_USE_GRAPHICS_API_VULKAN
         VK_USE_PLATFORM_ANDROID_KHR)
 
 target_link_libraries(
-        quest-xr
+        happb
         android
         glm
         native_app_glue

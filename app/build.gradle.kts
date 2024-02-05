@@ -4,13 +4,13 @@ plugins {
 android {
     compileSdk = 32
     ndkVersion = "26.1.10909125"
-    namespace = "app.artyomd.questxr"
+    namespace = "app.kevin_asu.happb"
     defaultConfig {
         minSdk = 32
         targetSdk = 32
         versionCode = 1
         versionName = "1.0"
-        applicationId = "app.artyomd.questxr"
+        applicationId = "app.kevin_asu.happb"
         externalNativeBuild {
             cmake {
                 arguments.add("-DANDROID_STL=c++_shared")
@@ -54,5 +54,12 @@ android {
         jniLibs {
             keepDebugSymbols.add("**.so")
         }
+    }
+}
+
+
+tasks.named("clean") {
+    doLast {
+        delete(".cxx")
     }
 }

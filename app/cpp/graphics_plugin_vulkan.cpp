@@ -96,7 +96,7 @@ class VulkanGraphicsPlugin : public GraphicsPlugin {
     }
     VkApplicationInfo app_info = {
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-        .pApplicationName= "quest-xr",
+        .pApplicationName= "happb",
         .applicationVersion = 0u,
         .pEngineName = "No Engine",
         .engineVersion = 0u,
