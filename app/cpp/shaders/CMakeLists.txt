@@ -1,4 +1,4 @@
-set(glslc_exe "${CMAKE_ANDROID_NDK}/shader-tools/${CMAKE_ANDROID_NDK_TOOLCHAIN_HOST_TAG}/glslc")
+find_program(glslc_exe NAMES glslc glslc.exe PATHS "${CMAKE_ANDROID_NDK}/shader-tools/${CMAKE_ANDROID_NDK_TOOLCHAIN_HOST_TAG}")
 message(STATUS "${glslc_exe}")
 
 #add spirv library
