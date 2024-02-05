@@ -55,6 +55,9 @@ android {
             keepDebugSymbols.add("**.so")
         }
     }
+    lintOptions {
+        warning("ExpiredTargetSdkVersion")
+    }
 }
 
 
