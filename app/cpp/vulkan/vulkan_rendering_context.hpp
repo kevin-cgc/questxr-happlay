@@ -8,81 +8,82 @@
 
 namespace vulkan {
 class VulkanRenderingContext
-    : public std::enable_shared_from_this<VulkanRenderingContext> {
- private:
-  VkFormat color_attachment_format_ = VK_FORMAT_UNDEFINED;
-  VkFormat depth_attachment_format_ = VK_FORMAT_UNDEFINED;
+	: public std::enable_shared_from_this<VulkanRenderingContext> {
+   private:
+	VkFormat color_attachment_format_ = VK_FORMAT_UNDEFINED;
+	VkFormat depth_attachment_format_ = VK_FORMAT_UNDEFINED;
 
-  VkPhysicalDevice physical_device_;
-  VkDevice device_;
-  VkQueue graphics_queue_;
-  VkCommandPool graphics_pool_;
-  VkSampleCountFlagBits recommended_msaa_samples_;
-  VkRenderPass render_pass_ = VK_NULL_HANDLE;
+	VkPhysicalDevice physical_device_;
+	VkDevice device_;
+	VkQueue graphics_queue_;
+	VkCommandPool graphics_pool_;
+	VkSampleCountFlagBits recommended_msaa_samples_;
+	VkRenderPass render_pass_ = VK_NULL_HANDLE;
 
-  VkSampleCountFlagBits GetMaxUsableSampleCount();
- public:
-  VulkanRenderingContext(VkPhysicalDevice physical_device,
-                         VkDevice device,
-                         VkQueue graphics_queue,
-                         VkCommandPool graphics_pool,
-                         VkFormat color_attachment_format);
+	VkSampleCountFlagBits GetMaxUsableSampleCount();
 
-  [[nodiscard]] VkDevice GetDevice() const;
+   public:
+	VulkanRenderingContext(VkPhysicalDevice physical_device,
+						   VkDevice device,
+						   VkQueue graphics_queue,
+						   VkCommandPool graphics_pool,
+						   VkFormat color_attachment_format);
 
-  VkFormat GetDepthAttachmentFormat() const;
+	[[nodiscard]] VkDevice GetDevice() const;
 
-  void WaitForGpuIdle() const;
+	VkFormat GetDepthAttachmentFormat() const;
 
-  virtual ~VulkanRenderingContext();
+	void WaitForGpuIdle() const;
 
-  void CreateBuffer(VkDeviceSize size,
-                    VkBufferUsageFlags usage,
-                    VkMemoryPropertyFlags properties,
-                    VkBuffer *buffer,
-                    VkDeviceMemory *buffer_memory);
+	virtual ~VulkanRenderingContext();
 
-  void CreateImage(uint32_t width,
-                   uint32_t height,
-                   VkSampleCountFlagBits num_samples,
-                   VkFormat format,
-                   VkImageUsageFlags usage,
-                   VkMemoryPropertyFlags properties,
-                   VkImage *image,
-                   VkDeviceMemory *image_memory) const;
+	void CreateBuffer(VkDeviceSize size,
+					  VkBufferUsageFlags usage,
+					  VkMemoryPropertyFlags properties,
+					  VkBuffer *buffer,
+					  VkDeviceMemory *buffer_memory);
 
-  void CopyBuffer(VkBuffer src_buffer,
-                  VkBuffer dst_buffer,
-                  VkDeviceSize size,
-                  VkDeviceSize src_offset = 0,
-                  VkDeviceSize dst_offset = 0);
+	void CreateImage(uint32_t width,
+					 uint32_t height,
+					 VkSampleCountFlagBits num_samples,
+					 VkFormat format,
+					 VkImageUsageFlags usage,
+					 VkMemoryPropertyFlags properties,
+					 VkImage *image,
+					 VkDeviceMemory *image_memory) const;
 
-  void TransitionImageLayout(VkImage image,
-                             VkImageLayout old_layout,
-                             VkImageLayout new_layout);
+	void CopyBuffer(VkBuffer src_buffer,
+					VkBuffer dst_buffer,
+					VkDeviceSize size,
+					VkDeviceSize src_offset = 0,
+					VkDeviceSize dst_offset = 0);
 
-  void CreateImageView(VkImage image,
-                       VkFormat format,
-                       VkImageAspectFlagBits aspect_mask,
-                       VkImageView *image_view);
+	void TransitionImageLayout(VkImage image,
+							   VkImageLayout old_layout,
+							   VkImageLayout new_layout);
 
-  VkCommandBuffer BeginSingleTimeCommands(VkCommandPool command_pool);
+	void CreateImageView(VkImage image,
+						 VkFormat format,
+						 VkImageAspectFlagBits aspect_mask,
+						 VkImageView *image_view);
 
-  void EndSingleTimeCommands(VkQueue queue, VkCommandPool pool, VkCommandBuffer command_buffer);
+	VkCommandBuffer BeginSingleTimeCommands(VkCommandPool command_pool);
 
-  [[nodiscard]] uint32_t FindMemoryType(uint32_t type_filter,
-                                        VkMemoryPropertyFlags properties) const;
+	void EndSingleTimeCommands(VkQueue queue, VkCommandPool pool, VkCommandBuffer command_buffer);
 
-  [[nodiscard]] VkRenderPass GetRenderPass() const;
+	[[nodiscard]] uint32_t FindMemoryType(uint32_t type_filter,
+										  VkMemoryPropertyFlags properties) const;
 
-  VkCommandPool GetGraphicsPool() const;
+	[[nodiscard]] VkRenderPass GetRenderPass() const;
 
-  VkQueue GetGraphicsQueue() const;
+	VkCommandPool GetGraphicsPool() const;
 
-  [[nodiscard]] VkFormat FindSupportedFormat(const std::vector<VkFormat> &candidates,
-                                             VkImageTiling tiling,
-                                             VkFormatFeatureFlags features) const;
+	VkQueue GetGraphicsQueue() const;
 
-  [[nodiscard]] VkSampleCountFlagBits GetRecommendedMsaaSamples() const;
+	[[nodiscard]] VkFormat FindSupportedFormat(const std::vector<VkFormat> &candidates,
+											   VkImageTiling tiling,
+											   VkFormatFeatureFlags features) const;
+
+	[[nodiscard]] VkSampleCountFlagBits GetRecommendedMsaaSamples() const;
 };
-}
+}  // namespace vulkan

@@ -52,12 +52,12 @@ XrPosef RotateCCWAboutYAxis(float radians, XrVector3f translation) {
 namespace {
 bool EqualsIgnoreCase(const std::string &a, const std::string &b) {
 	return std::equal(a.begin(), a.end(),
-										b.begin(), b.end(),
-										[](char a, char b) {
-											return tolower(a) == tolower(b);
-										});
+					  b.begin(), b.end(),
+					  [](char a, char b) {
+						  return tolower(a) == tolower(b);
+					  });
 }
-};
+};	// namespace
 
 inline XrReferenceSpaceCreateInfo GetXrReferenceSpaceCreateInfo(const std::string &reference_space_type_str) {
 	XrReferenceSpaceCreateInfo reference_space_create_info{};
@@ -76,29 +76,29 @@ inline XrReferenceSpaceCreateInfo GetXrReferenceSpaceCreateInfo(const std::strin
 		reference_space_create_info.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_STAGE;
 	} else if (EqualsIgnoreCase(reference_space_type_str, "StageLeft")) {
 		reference_space_create_info.poseInReferenceSpace =
-				Math::Pose::RotateCCWAboutYAxis(0.f, {-2.f, 0.f, -2.f});
+			Math::Pose::RotateCCWAboutYAxis(0.f, {-2.f, 0.f, -2.f});
 		reference_space_create_info.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_STAGE;
 	} else if (EqualsIgnoreCase(reference_space_type_str, "StageRight")) {
 		reference_space_create_info.poseInReferenceSpace =
-				Math::Pose::RotateCCWAboutYAxis(0.f, {2.f, 0.f, -2.f});
+			Math::Pose::RotateCCWAboutYAxis(0.f, {2.f, 0.f, -2.f});
 		reference_space_create_info.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_STAGE;
 	} else if (EqualsIgnoreCase(reference_space_type_str, "StageLeftRotated")) {
 		reference_space_create_info.poseInReferenceSpace =
-				Math::Pose::RotateCCWAboutYAxis(3.14f / 3.f, {-2.f, 0.5f, -2.f});
+			Math::Pose::RotateCCWAboutYAxis(3.14f / 3.f, {-2.f, 0.5f, -2.f});
 		reference_space_create_info.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_STAGE;
 	} else if (EqualsIgnoreCase(reference_space_type_str, "StageRightRotated")) {
 		reference_space_create_info.poseInReferenceSpace =
-				Math::Pose::RotateCCWAboutYAxis(-3.14f / 3.f, {2.f, 0.5f, -2.f});
+			Math::Pose::RotateCCWAboutYAxis(-3.14f / 3.f, {2.f, 0.5f, -2.f});
 		reference_space_create_info.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_STAGE;
 	} else {
 		throw std::invalid_argument(fmt::format("Unknown reference space type '{}'",
-																						reference_space_type_str.c_str()));
+												reference_space_type_str.c_str()));
 	}
 	return reference_space_create_info;
 }
 
 OpenXrProgram::OpenXrProgram(std::shared_ptr<Platform> platform)
-		: platform_(platform), graphics_plugin_(CreateGraphicsPlugin()) {}
+	: platform_(platform), graphics_plugin_(CreateGraphicsPlugin()) {}
 
 void OpenXrProgram::CreateInstance() {
 	LogLayersAndExtensions();
@@ -110,16 +110,16 @@ void OpenXrProgram::CreateInstance() {
 
 	const std::vector<std::string> kPlatformExtensions = platform_->GetInstanceExtensions();
 	std::transform(kPlatformExtensions.begin(),
-								 kPlatformExtensions.end(),
-								 std::back_inserter(extensions),
-								 [](const std::string &ext) { return ext.c_str(); });
+				   kPlatformExtensions.end(),
+				   std::back_inserter(extensions),
+				   [](const std::string &ext) { return ext.c_str(); });
 
 	const std::vector<std::string>
-			kGraphicsExtensions = graphics_plugin_->GetOpenXrInstanceExtensions();
+		kGraphicsExtensions = graphics_plugin_->GetOpenXrInstanceExtensions();
 	std::transform(kGraphicsExtensions.begin(),
-								 kGraphicsExtensions.end(),
-								 std::back_inserter(extensions),
-								 [](const std::string &ext) { return ext.c_str(); });
+				   kGraphicsExtensions.end(),
+				   std::back_inserter(extensions),
+				   [](const std::string &ext) { return ext.c_str(); });
 
 	XrInstanceCreateInfo create_info{};
 	create_info.type = XR_TYPE_INSTANCE_CREATE_INFO;
@@ -180,7 +180,7 @@ void OpenXrProgram::InitializeSession() {
 
 	{
 		XrReferenceSpaceCreateInfo
-				reference_space_create_info = GetXrReferenceSpaceCreateInfo("Local");
+			reference_space_create_info = GetXrReferenceSpaceCreateInfo("Local");
 		CHECK_XRCMD(xrCreateReferenceSpace(session_, &reference_space_create_info, &app_space_));
 	}
 }
@@ -191,18 +191,18 @@ void OpenXrProgram::InitializeActions() {
 		action_set_info.type = XR_TYPE_ACTION_SET_CREATE_INFO;
 		strncpy(action_set_info.actionSetName, "gameplay", sizeof(action_set_info.actionSetName));
 		strncpy(action_set_info.localizedActionSetName,
-						"Gameplay",
-						sizeof(action_set_info.localizedActionSetName));
+				"Gameplay",
+				sizeof(action_set_info.localizedActionSetName));
 		action_set_info.priority = 0;
 		CHECK_XRCMD(xrCreateActionSet(instance_, &action_set_info, &input_.action_set));
 	}
 
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/left",
-														 &input_.hand_subaction_path[side::LEFT]));
+							   "/user/hand/left",
+							   &input_.hand_subaction_path[side::LEFT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/right",
-														 &input_.hand_subaction_path[side::RIGHT]));
+							   "/user/hand/right",
+							   &input_.hand_subaction_path[side::RIGHT]));
 
 	{
 		XrActionCreateInfo action_info{};
@@ -210,8 +210,8 @@ void OpenXrProgram::InitializeActions() {
 		action_info.actionType = XR_ACTION_TYPE_FLOAT_INPUT;
 		strncpy(action_info.actionName, "grab_object", sizeof(action_info.actionName));
 		strncpy(action_info.localizedActionName,
-						"Grab Object",
-						sizeof(action_info.localizedActionName));
+				"Grab Object",
+				sizeof(action_info.localizedActionName));
 		action_info.countSubactionPaths = uint32_t(input_.hand_subaction_path.size());
 		action_info.subactionPaths = input_.hand_subaction_path.data();
 		CHECK_XRCMD(xrCreateAction(input_.action_set, &action_info, &input_.grab_action));
@@ -226,8 +226,8 @@ void OpenXrProgram::InitializeActions() {
 		action_info.actionType = XR_ACTION_TYPE_VIBRATION_OUTPUT;
 		strncpy(action_info.actionName, "vibrate_hand", sizeof(action_info.actionName));
 		strncpy(action_info.localizedActionName,
-						"Vibrate Hand",
-						sizeof(action_info.localizedActionName));
+				"Vibrate Hand",
+				sizeof(action_info.localizedActionName));
 		action_info.countSubactionPaths = uint32_t(input_.hand_subaction_path.size());
 		action_info.subactionPaths = input_.hand_subaction_path.data();
 		CHECK_XRCMD(xrCreateAction(input_.action_set, &action_info, &input_.vibrate_action));
@@ -235,8 +235,8 @@ void OpenXrProgram::InitializeActions() {
 		action_info.actionType = XR_ACTION_TYPE_BOOLEAN_INPUT;
 		strncpy(action_info.actionName, "quit_session", sizeof(action_info.actionName));
 		strncpy(action_info.localizedActionName,
-						"Quit Session",
-						sizeof(action_info.localizedActionName));
+				"Quit Session",
+				sizeof(action_info.localizedActionName));
 		action_info.countSubactionPaths = 0;
 		action_info.subactionPaths = nullptr;
 		CHECK_XRCMD(xrCreateAction(input_.action_set, &action_info, &input_.quit_action));
@@ -252,78 +252,78 @@ void OpenXrProgram::InitializeActions() {
 	std::array<XrPath, side::COUNT> b_click_path{};
 	std::array<XrPath, side::COUNT> trigger_value_path{};
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/left/input/select/click",
-														 &select_path[side::LEFT]));
+							   "/user/hand/left/input/select/click",
+							   &select_path[side::LEFT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/right/input/select/click",
-														 &select_path[side::RIGHT]));
+							   "/user/hand/right/input/select/click",
+							   &select_path[side::RIGHT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/left/input/squeeze/value",
-														 &squeeze_value_path[side::LEFT]));
+							   "/user/hand/left/input/squeeze/value",
+							   &squeeze_value_path[side::LEFT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/right/input/squeeze/value",
-														 &squeeze_value_path[side::RIGHT]));
+							   "/user/hand/right/input/squeeze/value",
+							   &squeeze_value_path[side::RIGHT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/left/input/squeeze/force",
-														 &squeeze_force_path[side::LEFT]));
+							   "/user/hand/left/input/squeeze/force",
+							   &squeeze_force_path[side::LEFT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/right/input/squeeze/force",
-														 &squeeze_force_path[side::RIGHT]));
+							   "/user/hand/right/input/squeeze/force",
+							   &squeeze_force_path[side::RIGHT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/left/input/squeeze/click",
-														 &squeeze_click_path[side::LEFT]));
+							   "/user/hand/left/input/squeeze/click",
+							   &squeeze_click_path[side::LEFT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/right/input/squeeze/click",
-														 &squeeze_click_path[side::RIGHT]));
+							   "/user/hand/right/input/squeeze/click",
+							   &squeeze_click_path[side::RIGHT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/left/input/grip/pose",
-														 &pose_path[side::LEFT]));
+							   "/user/hand/left/input/grip/pose",
+							   &pose_path[side::LEFT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/right/input/grip/pose",
-														 &pose_path[side::RIGHT]));
+							   "/user/hand/right/input/grip/pose",
+							   &pose_path[side::RIGHT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/left/output/haptic",
-														 &haptic_path[side::LEFT]));
+							   "/user/hand/left/output/haptic",
+							   &haptic_path[side::LEFT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/right/output/haptic",
-														 &haptic_path[side::RIGHT]));
+							   "/user/hand/right/output/haptic",
+							   &haptic_path[side::RIGHT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/left/input/menu/click",
-														 &menu_click_path[side::LEFT]));
+							   "/user/hand/left/input/menu/click",
+							   &menu_click_path[side::LEFT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/right/input/menu/click",
-														 &menu_click_path[side::RIGHT]));
+							   "/user/hand/right/input/menu/click",
+							   &menu_click_path[side::RIGHT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/left/input/b/click",
-														 &b_click_path[side::LEFT]));
+							   "/user/hand/left/input/b/click",
+							   &b_click_path[side::LEFT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/right/input/b/click",
-														 &b_click_path[side::RIGHT]));
+							   "/user/hand/right/input/b/click",
+							   &b_click_path[side::RIGHT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/left/input/trigger/value",
-														 &trigger_value_path[side::LEFT]));
+							   "/user/hand/left/input/trigger/value",
+							   &trigger_value_path[side::LEFT]));
 	CHECK_XRCMD(xrStringToPath(instance_,
-														 "/user/hand/right/input/trigger/value",
-														 &trigger_value_path[side::RIGHT]));
+							   "/user/hand/right/input/trigger/value",
+							   &trigger_value_path[side::RIGHT]));
 	{
 		XrPath oculus_touch_interaction_profile_path;
 		CHECK_XRCMD(
-				xrStringToPath(instance_,
-											 "/interaction_profiles/oculus/touch_controller",
-											 &oculus_touch_interaction_profile_path));
+			xrStringToPath(instance_,
+						   "/interaction_profiles/oculus/touch_controller",
+						   &oculus_touch_interaction_profile_path));
 		std::vector<XrActionSuggestedBinding>
-				bindings{{{input_.grab_action, squeeze_value_path[side::LEFT]},
-									{input_.grab_action, squeeze_value_path[side::RIGHT]},
-									{input_.pose_action, pose_path[side::LEFT]},
-									{input_.pose_action, pose_path[side::RIGHT]},
-									{input_.quit_action, menu_click_path[side::LEFT]},
-									{input_.vibrate_action, haptic_path[side::LEFT]},
-									{input_.vibrate_action, haptic_path[side::RIGHT]}}};
+			bindings{{{input_.grab_action, squeeze_value_path[side::LEFT]},
+					  {input_.grab_action, squeeze_value_path[side::RIGHT]},
+					  {input_.pose_action, pose_path[side::LEFT]},
+					  {input_.pose_action, pose_path[side::RIGHT]},
+					  {input_.quit_action, menu_click_path[side::LEFT]},
+					  {input_.vibrate_action, haptic_path[side::LEFT]},
+					  {input_.vibrate_action, haptic_path[side::RIGHT]}}};
 		XrInteractionProfileSuggestedBinding suggested_bindings{};
 		suggested_bindings.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING;
 		suggested_bindings.interactionProfile = oculus_touch_interaction_profile_path;
 		suggested_bindings.suggestedBindings = bindings.data();
-		suggested_bindings.countSuggestedBindings = (uint32_t) bindings.size();
+		suggested_bindings.countSuggestedBindings = (uint32_t)bindings.size();
 		CHECK_XRCMD(xrSuggestInteractionProfileBindings(instance_, &suggested_bindings));
 	}
 	XrActionSpaceCreateInfo action_space_info{};
@@ -348,20 +348,20 @@ void OpenXrProgram::CreateVisualizedSpaces() {
 	}
 
 	std::string visualized_spaces[] =
-			{"ViewFront", "Local", "Stage", "StageLeft", "StageRight", "StageLeftRotated",
-			 "StageRightRotated"};
+		{"ViewFront", "Local", "Stage", "StageLeft", "StageRight", "StageLeftRotated",
+		 "StageRightRotated"};
 
-	for (const auto &visualized_space: visualized_spaces) {
+	for (const auto &visualized_space : visualized_spaces) {
 		XrReferenceSpaceCreateInfo
-				reference_space_create_info = GetXrReferenceSpaceCreateInfo(visualized_space);
+			reference_space_create_info = GetXrReferenceSpaceCreateInfo(visualized_space);
 		XrSpace space{};
 		XrResult res = xrCreateReferenceSpace(session_, &reference_space_create_info, &space);
 		if (XR_SUCCEEDED(res)) {
 			visualized_spaces_.push_back(space);
 		} else {
 			spdlog::warn("Failed to create reference space {} with error {}",
-									 visualized_space,
-									 res);
+						 visualized_space,
+						 res);
 		}
 	}
 }
@@ -383,9 +383,9 @@ void OpenXrProgram::CreateSwapchains() {
 	CHECK_XRCMD(xrEnumerateSwapchainFormats(session_, 0, &swapchain_format_count, nullptr));
 	std::vector<int64_t> swapchain_formats(swapchain_format_count);
 	CHECK_XRCMD(xrEnumerateSwapchainFormats(session_,
-																					static_cast<uint32_t>(swapchain_formats.size()),
-																					&swapchain_format_count,
-																					swapchain_formats.data()));
+											static_cast<uint32_t>(swapchain_formats.size()),
+											&swapchain_format_count,
+											swapchain_formats.data()));
 	uint32_t swapchain_color_format = graphics_plugin_->SelectSwapchainFormat(swapchain_formats);
 
 	if (view_config_type_ != XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO) {
@@ -394,25 +394,25 @@ void OpenXrProgram::CreateSwapchains() {
 
 	uint32_t view_count = 0;
 	CHECK_XRCMD(xrEnumerateViewConfigurationViews(instance_,
-																								system_id_,
-																								view_config_type_,
-																								0,
-																								&view_count,
-																								nullptr));
+												  system_id_,
+												  view_config_type_,
+												  0,
+												  &view_count,
+												  nullptr));
 	config_views_.resize(view_count, {XR_TYPE_VIEW_CONFIGURATION_VIEW});
 	CHECK_XRCMD(xrEnumerateViewConfigurationViews(instance_,
-																								system_id_,
-																								view_config_type_,
-																								view_count,
-																								&view_count,
-																								config_views_.data()));
+												  system_id_,
+												  view_config_type_,
+												  view_count,
+												  &view_count,
+												  config_views_.data()));
 
 	views_.resize(view_count, {XR_TYPE_VIEW});
-	for (const auto &view_config_view: config_views_) {
+	for (const auto &view_config_view : config_views_) {
 		spdlog::info("Creating swapchain with dimensions Width={} Height={} SampleCount={}",
-								 view_config_view.recommendedImageRectWidth,
-								 view_config_view.recommendedImageRectHeight,
-								 view_config_view.recommendedSwapchainSampleCount);
+					 view_config_view.recommendedImageRectWidth,
+					 view_config_view.recommendedImageRectHeight,
+					 view_config_view.recommendedSwapchainSampleCount);
 
 		XrSwapchainCreateInfo swapchain_create_info{};
 		swapchain_create_info.type = XR_TYPE_SWAPCHAIN_CREATE_INFO;
@@ -424,7 +424,7 @@ void OpenXrProgram::CreateSwapchains() {
 		swapchain_create_info.faceCount = 1;
 		swapchain_create_info.sampleCount = view_config_view.recommendedSwapchainSampleCount;
 		swapchain_create_info.usageFlags =
-				XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
+			XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
 		Swapchain swapchain{};
 		swapchain.width = swapchain_create_info.width;
 		swapchain.height = swapchain_create_info.height;
@@ -436,11 +436,11 @@ void OpenXrProgram::CreateSwapchains() {
 		CHECK_XRCMD(xrEnumerateSwapchainImages(swapchain.handle, 0, &image_count, nullptr));
 
 		XrSwapchainImageBaseHeader *swapchain_images =
-				graphics_plugin_->AllocateSwapchainImageStructs(image_count, swapchain_create_info);
+			graphics_plugin_->AllocateSwapchainImageStructs(image_count, swapchain_create_info);
 		CHECK_XRCMD(xrEnumerateSwapchainImages(swapchain.handle,
-																					 image_count,
-																					 &image_count,
-																					 swapchain_images));
+											   image_count,
+											   &image_count,
+											   swapchain_images));
 		graphics_plugin_->SwapchainImageStructsReady(swapchain_images);
 		swapchain_images_.insert(std::make_pair(swapchain.handle, swapchain_images));
 	}
@@ -451,13 +451,13 @@ void OpenXrProgram::PollEvents() {
 		switch (event->type) {
 			case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
 				const auto &instance_loss_pending =
-						*reinterpret_cast<const XrEventDataInstanceLossPending *>(&event);
+					*reinterpret_cast<const XrEventDataInstanceLossPending *>(&event);
 				spdlog::warn("XrEventDataInstanceLossPending by {}", instance_loss_pending.lossTime);
 				return;
 			}
 			case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
 				auto session_state_changed_event =
-						*reinterpret_cast<const XrEventDataSessionStateChanged *>(event);
+					*reinterpret_cast<const XrEventDataSessionStateChanged *>(event);
 				HandleSessionStateChangedEvent(session_state_changed_event);
 				break;
 			}
@@ -466,8 +466,7 @@ void OpenXrProgram::PollEvents() {
 				LogActionSourceName(session_, input_.quit_action, "Quit");
 				LogActionSourceName(session_, input_.pose_action, "Pose");
 				LogActionSourceName(session_, input_.vibrate_action, "Vibrate");
-			}
-				break;
+			} break;
 			case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING:
 			default: {
 				spdlog::debug("Ignoring event type {}", event->type);
@@ -495,14 +494,12 @@ const XrEventDataBaseHeader *OpenXrProgram::TryReadNextEvent() {
 }
 
 void OpenXrProgram::HandleSessionStateChangedEvent(const XrEventDataSessionStateChanged &state_changed_event) {
-
 	spdlog::info("XrEventDataSessionStateChanged: state {}->{} time={}",
-							 session_state_,
-							 state_changed_event.state,
-							 state_changed_event.time);
+				 session_state_,
+				 state_changed_event.state,
+				 state_changed_event.time);
 
-	if ((state_changed_event.session != XR_NULL_HANDLE)
-			&& (state_changed_event.session != session_)) {
+	if ((state_changed_event.session != XR_NULL_HANDLE) && (state_changed_event.session != session_)) {
 		spdlog::error("XrEventDataSessionStateChanged for unknown session");
 		return;
 	}
@@ -521,7 +518,8 @@ void OpenXrProgram::HandleSessionStateChangedEvent(const XrEventDataSessionState
 			CHECK_XRCMD(xrEndSession(session_));
 			break;
 		}
-		default:break;
+		default:
+			break;
 	}
 }
 
@@ -539,7 +537,7 @@ void OpenXrProgram::PollActions() {
 	sync_info.activeActionSets = &kActiveActionSet;
 	CHECK_XRCMD(xrSyncActions(session_, &sync_info));
 
-	for (auto hand: {side::LEFT, side::RIGHT}) {
+	for (auto hand : {side::LEFT, side::RIGHT}) {
 		XrActionStateGetInfo get_info{};
 		get_info.type = XR_TYPE_ACTION_STATE_GET_INFO;
 		get_info.action = input_.grab_action;
@@ -562,7 +560,7 @@ void OpenXrProgram::PollActions() {
 				haptic_action_info.action = input_.vibrate_action;
 				haptic_action_info.subactionPath = input_.hand_subaction_path[hand];
 				CHECK_XRCMD(xrApplyHapticFeedback(session_, &haptic_action_info,
-																					(XrHapticBaseHeader *) &vibration));
+												  (XrHapticBaseHeader *)&vibration));
 			}
 		}
 
@@ -581,8 +579,7 @@ void OpenXrProgram::PollActions() {
 	XrActionStateBoolean quit_value{};
 	quit_value.type = XR_TYPE_ACTION_STATE_BOOLEAN;
 	CHECK_XRCMD(xrGetActionStateBoolean(session_, &get_info, &quit_value));
-	if ((quit_value.isActive == XR_TRUE) && (quit_value.changedSinceLastSync == XR_TRUE)
-			&& (quit_value.currentState == XR_TRUE)) {
+	if ((quit_value.isActive == XR_TRUE) && (quit_value.changedSinceLastSync == XR_TRUE) && (quit_value.currentState == XR_TRUE)) {
 		CHECK_XRCMD(xrRequestExitSession(session_));
 	}
 }
@@ -593,21 +590,21 @@ void OpenXrProgram::RenderFrame() {
 	}
 
 	XrFrameWaitInfo frame_wait_info{
-			.type = XR_TYPE_FRAME_WAIT_INFO,
+		.type = XR_TYPE_FRAME_WAIT_INFO,
 	};
 	XrFrameState frame_state{
-			.type = XR_TYPE_FRAME_STATE,
+		.type = XR_TYPE_FRAME_STATE,
 	};
 	CHECK_XRCMD(xrWaitFrame(session_, &frame_wait_info, &frame_state));
 
 	XrFrameBeginInfo frame_begin_info{
-			.type = XR_TYPE_FRAME_BEGIN_INFO,
+		.type = XR_TYPE_FRAME_BEGIN_INFO,
 	};
 	CHECK_XRCMD(xrBeginFrame(session_, &frame_begin_info));
 
 	std::vector<XrCompositionLayerBaseHeader *> layers{};
 	XrCompositionLayerProjection layer{
-			.type = XR_TYPE_COMPOSITION_LAYER_PROJECTION,
+		.type = XR_TYPE_COMPOSITION_LAYER_PROJECTION,
 	};
 	std::vector<XrCompositionLayerProjectionView> projection_layer_views{};
 	if (frame_state.shouldRender == XR_TRUE) {
@@ -626,8 +623,8 @@ void OpenXrProgram::RenderFrame() {
 }
 
 bool OpenXrProgram::RenderLayer(XrTime predicted_display_time,
-																std::vector<XrCompositionLayerProjectionView> &projection_layer_views,
-																XrCompositionLayerProjection &layer) {
+								std::vector<XrCompositionLayerProjectionView> &projection_layer_views,
+								XrCompositionLayerProjection &layer) {
 	XrViewState view_state{};
 	view_state.type = XR_TYPE_VIEW_STATE;
 
@@ -639,13 +636,13 @@ bool OpenXrProgram::RenderLayer(XrTime predicted_display_time,
 
 	uint32_t view_count_output = 0;
 	CHECK_XRCMD(xrLocateViews(session_,
-														&view_locate_info,
-														&view_state,
-														views_.size(),
-														&view_count_output,
-														views_.data()));
+							  &view_locate_info,
+							  &view_state,
+							  views_.size(),
+							  &view_count_output,
+							  views_.data()));
 	if ((view_state.viewStateFlags & XR_VIEW_STATE_POSITION_VALID_BIT) == 0 ||
-			(view_state.viewStateFlags & XR_VIEW_STATE_ORIENTATION_VALID_BIT) == 0) {
+		(view_state.viewStateFlags & XR_VIEW_STATE_ORIENTATION_VALID_BIT) == 0) {
 		return false;  // There is no valid tracking poses for the views.
 	}
 
@@ -654,17 +651,17 @@ bool OpenXrProgram::RenderLayer(XrTime predicted_display_time,
 	// For each locatable space that we want to visualize, render a 25cm cube.
 	std::vector<math::Transform> cubes{};
 
-	for (XrSpace visualized_space: visualized_spaces_) {
+	for (XrSpace visualized_space : visualized_spaces_) {
 		XrSpaceLocation space_location{};
 		space_location.type = XR_TYPE_SPACE_LOCATION;
 		auto res = xrLocateSpace(visualized_space, app_space_, predicted_display_time, &space_location);
 		if (XR_UNQUALIFIED_SUCCESS(res)) {
 			if ((space_location.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0 &&
-					(space_location.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) != 0) {
+				(space_location.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) != 0) {
 				cubes.push_back(math::Transform{
-						math::XrQuaternionFToGlm(space_location.pose.orientation),
-						math::XrVector3FToGlm(space_location.pose.position),
-						{0.25f, 0.25f, 0.25f}});
+					math::XrQuaternionFToGlm(space_location.pose.orientation),
+					math::XrVector3FToGlm(space_location.pose.position),
+					{0.25f, 0.25f, 0.25f}});
 			}
 		} else {
 			spdlog::debug("Unable to locate a visualized reference space in app space: {}", res);
@@ -672,27 +669,27 @@ bool OpenXrProgram::RenderLayer(XrTime predicted_display_time,
 	}
 
 	// Render a 10cm cube scaled by grab_action for each hand. Note renderHand will only be true when the application has focus.
-	for (auto hand: {side::LEFT, side::RIGHT}) {
+	for (auto hand : {side::LEFT, side::RIGHT}) {
 		XrSpaceLocation space_location{};
 		space_location.type = XR_TYPE_SPACE_LOCATION;
 		auto res =
-				xrLocateSpace(input_.hand_space[hand], app_space_, predicted_display_time, &space_location);
+			xrLocateSpace(input_.hand_space[hand], app_space_, predicted_display_time, &space_location);
 		if (XR_UNQUALIFIED_SUCCESS(res)) {
 			if ((space_location.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0 &&
-					(space_location.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) != 0) {
+				(space_location.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) != 0) {
 				float scale = 0.1f * input_.hand_scale[hand];
 				cubes.push_back(math::Transform{
-						math::XrQuaternionFToGlm(space_location.pose.orientation),
-						math::XrVector3FToGlm(space_location.pose.position),
-						{scale, scale, scale}});
+					math::XrQuaternionFToGlm(space_location.pose.orientation),
+					math::XrVector3FToGlm(space_location.pose.position),
+					{scale, scale, scale}});
 			}
 		} else {
 			// Tracking loss is expected when the hand is not active so only log a message if the hand is active.
 			if (input_.hand_active[hand] == XR_TRUE) {
 				const char *hand_name[] = {"left", "right"};
 				spdlog::debug("Unable to locate {} hand action space in app space: {}",
-											hand_name[hand],
-											res);
+							  hand_name[hand],
+							  res);
 			}
 		}
 	}
@@ -706,8 +703,8 @@ bool OpenXrProgram::RenderLayer(XrTime predicted_display_time,
 
 		uint32_t swapchain_image_index = 0;
 		CHECK_XRCMD(xrAcquireSwapchainImage(view_swapchain.handle,
-																				&acquire_info,
-																				&swapchain_image_index));
+											&acquire_info,
+											&swapchain_image_index));
 
 		XrSwapchainImageWaitInfo wait_info{};
 		wait_info.type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO;
@@ -720,13 +717,13 @@ bool OpenXrProgram::RenderLayer(XrTime predicted_display_time,
 		projection_layer_views[i].subImage.swapchain = view_swapchain.handle;
 		projection_layer_views[i].subImage.imageRect.offset = {0, 0};
 		projection_layer_views[i].subImage.imageRect.extent =
-				{view_swapchain.width, view_swapchain.height};
+			{view_swapchain.width, view_swapchain.height};
 
 		auto swapchain_image = swapchain_images_[view_swapchain.handle];
 		graphics_plugin_->RenderView(projection_layer_views[i],
-																 swapchain_image,
-																 swapchain_image_index,
-																 cubes);
+									 swapchain_image,
+									 swapchain_image_index,
+									 cubes);
 
 		XrSwapchainImageReleaseInfo release_info{};
 		release_info.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO;
@@ -741,16 +738,16 @@ bool OpenXrProgram::RenderLayer(XrTime predicted_display_time,
 
 OpenXrProgram::~OpenXrProgram() {
 	if (input_.action_set != XR_NULL_HANDLE) {
-		for (auto hand: {side::LEFT, side::RIGHT}) {
+		for (auto hand : {side::LEFT, side::RIGHT}) {
 			xrDestroySpace(input_.hand_space[hand]);
 		}
 		xrDestroyActionSet(input_.action_set);
 	}
-	for (Swapchain swapchain: swapchains_) {
+	for (Swapchain swapchain : swapchains_) {
 		xrDestroySwapchain(swapchain.handle);
 	}
 	graphics_plugin_->DeinitDevice();
-	for (XrSpace visualized_space: visualized_spaces_) {
+	for (XrSpace visualized_space : visualized_spaces_) {
 		xrDestroySpace(visualized_space);
 	}
 	if (app_space_ != XR_NULL_HANDLE) {

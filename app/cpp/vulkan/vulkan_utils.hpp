@@ -12,7 +12,7 @@
 #include <string>
 
 #define CHECK_VKCMD(x) \
-  vulkan::CheckResult(x, __FILE__, __LINE__)
+	vulkan::CheckResult(x, __FILE__, __LINE__)
 
 namespace vulkan {
 
@@ -39,4 +39,4 @@ VkFrontFace GetVkFrontFace(FrontFace front_face);
 VkCompareOp GetVkCompareOp(CompareOp compare_op);
 
 VkShaderStageFlagBits GetVkShaderStageFlag(ShaderType shader_type);
-}
+}  // namespace vulkan

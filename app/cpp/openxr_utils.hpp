@@ -5,7 +5,7 @@
 #include <string>
 
 #define CHECK_XRCMD(cmd) \
-  CheckResult(cmd, __FILE__, __LINE__)
+	CheckResult(cmd, __FILE__, __LINE__)
 
 void CheckResult(XrResult result, const std::string &file, uint32_t line);
 std::string GetXrVersionString(XrVersion ver);

@@ -7,21 +7,22 @@
 
 namespace vulkan {
 struct VertexAttribute {
-  unsigned int binding_index;
-  DataType type;
-  size_t count;
+	unsigned int binding_index;
+	DataType type;
+	size_t count;
 };
 
 class VertexBufferLayout {
- private:
-  std::vector<VertexAttribute> elements_{};
- public:
-  VertexBufferLayout() = default;
+   private:
+	std::vector<VertexAttribute> elements_{};
 
-  void Push(VertexAttribute attribute);
+   public:
+	VertexBufferLayout() = default;
 
-  [[nodiscard]] size_t GetElementSize() const;
+	void Push(VertexAttribute attribute);
 
-  [[nodiscard]] const std::vector<VertexAttribute> &GetElements() const;
+	[[nodiscard]] size_t GetElementSize() const;
+
+	[[nodiscard]] const std::vector<VertexAttribute> &GetElements() const;
 };
-}
+}  // namespace vulkan

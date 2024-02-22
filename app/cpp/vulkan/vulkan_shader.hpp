@@ -14,24 +14,25 @@
 
 namespace vulkan {
 class VulkanShader {
- private:
-  std::vector<uint32_t> code_{};
-  std::string entry_point_name_;
-  VkShaderStageFlagBits type_;
+   private:
+	std::vector<uint32_t> code_{};
+	std::string entry_point_name_;
+	VkShaderStageFlagBits type_;
 
-  VkDevice device_;
-  VkShaderModule shader_module_ = nullptr;
-  SpvReflectShaderModule reflect_shader_module_{};
-  std::vector<VkPushConstantRange> push_constants_{};
- public:
-  VulkanShader(const std::shared_ptr<VulkanRenderingContext> &context,
-               const std::vector<uint32_t> &code,
-               std::string entry_point_name);
+	VkDevice device_;
+	VkShaderModule shader_module_ = nullptr;
+	SpvReflectShaderModule reflect_shader_module_{};
+	std::vector<VkPushConstantRange> push_constants_{};
 
-  [[nodiscard]] VkPipelineShaderStageCreateInfo GetShaderStageInfo() const;
+   public:
+	VulkanShader(const std::shared_ptr<VulkanRenderingContext> &context,
+				 const std::vector<uint32_t> &code,
+				 std::string entry_point_name);
 
-  const std::vector<VkPushConstantRange> &GetPushConstants() const;
+	[[nodiscard]] VkPipelineShaderStageCreateInfo GetShaderStageInfo() const;
 
-  virtual ~VulkanShader();
+	const std::vector<VkPushConstantRange> &GetPushConstants() const;
+
+	virtual ~VulkanShader();
 };
-}
+}  // namespace vulkan
