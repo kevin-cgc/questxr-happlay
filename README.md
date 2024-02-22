@@ -11,6 +11,11 @@ Only the following dependencies are required:
 
 - [Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
 
+Set sdk.dir in `local.properties` to the path of the Android SDK. For example:
+```
+sdk.dir=C\:\\Users\\USERNAME\\AppData\\Local\\Android\\Sdk
+```
+
 To build the project just run the following in the project directory:
 
 ```bash
