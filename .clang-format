@@ -2,5 +2,14 @@ BasedOnStyle: Google
 IndentWidth: 4
 TabWidth: 4
 UseTab: Always
-ColumnLimit: 0
 SortIncludes: false # scared
+
+ColumnLimit: 0
+BinPackArguments: true
+BinPackParameters: true
+AllowShortBlocksOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: true
+# AllowShortCompoundRequirementOnASingleLine: true
+# AllowShortEnumsOnASingleLine: true
+# AllowShortFunctionsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: true
