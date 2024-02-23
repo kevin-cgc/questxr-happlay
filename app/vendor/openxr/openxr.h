@@ -41,7 +41,7 @@ extern "C" {
     #define XR_NULL_HANDLE 0
 #endif
 #endif
-        
+
 
 
 #define XR_NULL_SYSTEM_ID 0
@@ -96,13 +96,13 @@ extern "C" {
     #define XR_DEFINE_HANDLE(object) typedef uint64_t object;
 #endif
 #endif
-        
+
 
 
 #if !defined(XR_DEFINE_ATOM)
     #define XR_DEFINE_ATOM(object) typedef uint64_t object;
 #endif
-        
+
 
 typedef uint64_t XrVersion;
 typedef uint64_t XrFlags64;
@@ -1888,7 +1888,7 @@ typedef XrBool32 (XRAPI_PTR *PFN_xrDebugUtilsMessengerCallbackEXT)(
             XrDebugUtilsMessageTypeFlagsEXT                  messageTypes,
             const XrDebugUtilsMessengerCallbackDataEXT*      callbackData,
             void*                                            userData);
-        
+
 
 // XrDebugUtilsMessengerCreateInfoEXT extends XrInstanceCreateInfo
 typedef struct XrDebugUtilsMessengerCreateInfoEXT {
