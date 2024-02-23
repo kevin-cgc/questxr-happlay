@@ -1,11 +1,12 @@
 #include "vulkan_swapchain_context.hpp"
 
-VulkanSwapchainContext::VulkanSwapchainContext(std::shared_ptr<vulkan::VulkanRenderingContext>
-												   vulkan_rendering_context,
+VulkanSwapchainContext::VulkanSwapchainContext(std::shared_ptr<vulkan::VulkanRenderingContext> vulkan_rendering_context,
 											   uint32_t capacity,
-											   const XrSwapchainCreateInfo &swapchain_create_info) : rendering_context_(vulkan_rendering_context),
-																									 swapchain_image_format_(static_cast<VkFormat>(swapchain_create_info.format)),
-																									 swapchain_extent_({swapchain_create_info.width, swapchain_create_info.height}) {
+											   const XrSwapchainCreateInfo &swapchain_create_info) :
+											   		rendering_context_(vulkan_rendering_context),
+											   		swapchain_image_format_(static_cast<VkFormat>(swapchain_create_info.format)),
+											   		swapchain_extent_({swapchain_create_info.width, swapchain_create_info.height})
+{
 	swapchain_images_.resize(capacity);
 	swapchain_image_views_.resize(capacity);
 	swapchain_frame_buffers_.resize(capacity);
@@ -37,11 +38,7 @@ void VulkanSwapchainContext::InitSwapchainImageViews() {
 		throw std::runtime_error("cannot double init");
 	}
 	for (size_t i = 0; i < swapchain_images_.size(); i++) {
-		rendering_context_->CreateImageView(
-			swapchain_images_[i].image,
-			swapchain_image_format_,
-			VK_IMAGE_ASPECT_COLOR_BIT,
-			&swapchain_image_views_[i]);
+		rendering_context_->CreateImageView(swapchain_images_[i].image, swapchain_image_format_, VK_IMAGE_ASPECT_COLOR_BIT, &swapchain_image_views_[i]);
 	}
 	CreateColorResources();
 	CreateDepthResources();
@@ -57,11 +54,7 @@ void VulkanSwapchainContext::Draw(uint32_t image_index,
 								  uint32_t index_count,
 								  std::vector<glm::mat4> transforms) {
 	if (images_in_flight_[current_fame_] != VK_NULL_HANDLE) {
-		vkWaitForFences(rendering_context_->GetDevice(),
-						1,
-						&images_in_flight_[current_fame_],
-						VK_TRUE,
-						UINT64_MAX);
+		vkWaitForFences(rendering_context_->GetDevice(), 1, &images_in_flight_[current_fame_], VK_TRUE, UINT64_MAX);
 	}
 	images_in_flight_[current_fame_] = in_flight_fences_[current_fame_];
 
@@ -78,30 +71,19 @@ void VulkanSwapchainContext::Draw(uint32_t image_index,
 	render_pass_info.renderArea.extent = swapchain_extent_;
 
 	std::array<VkClearValue, 2> clear_values = {};
-	clear_values[0].color = {{0.184313729f, 0.309803933f, 0.309803933f, 1.0f}};
+	// clear_values[0].color = {{0.184313729f, 0.309803933f, 0.309803933f, 1.0f}};
+	clear_values[0].color = hexToVkClearColorValue("#0c1b28FF");
 	clear_values[1].depthStencil = {1.0f, 0};
 	render_pass_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
 	render_pass_info.pClearValues = clear_values.data();
-	vkCmdBeginRenderPass(graphics_command_buffers_[current_fame_],
-						 &render_pass_info,
-						 VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdBeginRenderPass(graphics_command_buffers_[current_fame_], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 	////render
 	pipeline->BindPipeline(graphics_command_buffers_[current_fame_]);
 	vkCmdSetViewport(graphics_command_buffers_[current_fame_], 0, 1, &viewport_);
 	vkCmdSetScissor(graphics_command_buffers_[current_fame_], 0, 1, &scissor_);
 	for (const auto &transform : transforms) {
-		vkCmdPushConstants(graphics_command_buffers_[current_fame_],
-						   pipeline->GetPipelineLayout(),
-						   VK_SHADER_STAGE_VERTEX_BIT,
-						   0,
-						   sizeof(transform),
-						   &transform);
-		vkCmdDrawIndexed(graphics_command_buffers_[current_fame_],
-						 static_cast<uint32_t>(index_count),
-						 1,
-						 0,
-						 0,
-						 0);
+		vkCmdPushConstants(graphics_command_buffers_[current_fame_], pipeline->GetPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(transform), &transform);
+		vkCmdDrawIndexed(graphics_command_buffers_[current_fame_], static_cast<uint32_t>(index_count), 1, 0, 0, 0);
 	}
 	////render
 	vkCmdEndRenderPass(graphics_command_buffers_[current_fame_]);
@@ -117,10 +99,7 @@ void VulkanSwapchainContext::Draw(uint32_t image_index,
 	submit_info.signalSemaphoreCount = 0;
 
 	vkResetFences(rendering_context_->GetDevice(), 1, &in_flight_fences_[current_fame_]);
-	if (vkQueueSubmit(rendering_context_->GetGraphicsQueue(),
-					  1,
-					  &submit_info,
-					  in_flight_fences_[current_fame_]) != VK_SUCCESS) {
+	if (vkQueueSubmit(rendering_context_->GetGraphicsQueue(), 1, &submit_info, in_flight_fences_[current_fame_]) != VK_SUCCESS) {
 		throw std::runtime_error("failed to submit draw command buffer!");
 	}
 	current_fame_ = (current_fame_ + 1) % max_frames_in_flight_;
@@ -134,10 +113,7 @@ VulkanSwapchainContext::~VulkanSwapchainContext() {
 	for (const auto &fence : in_flight_fences_) {
 		vkDestroyFence(rendering_context_->GetDevice(), fence, nullptr);
 	}
-	vkFreeCommandBuffers(rendering_context_->GetDevice(),
-						 rendering_context_->GetGraphicsPool(),
-						 graphics_command_buffers_.size(),
-						 &graphics_command_buffers_[0]);
+	vkFreeCommandBuffers(rendering_context_->GetDevice(), rendering_context_->GetGraphicsPool(), graphics_command_buffers_.size(), &graphics_command_buffers_[0]);
 	for (const auto &framebuffer : swapchain_frame_buffers_) {
 		vkDestroyFramebuffer(rendering_context_->GetDevice(), framebuffer, nullptr);
 	}

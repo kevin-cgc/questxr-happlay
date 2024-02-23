@@ -71,11 +71,7 @@ void android_main(struct android_app *app) {
 			for (;;) {
 				int events;
 				struct android_poll_source *source;
-				const int kTimeoutMilliseconds =
-					(!app_state.resumed && !program->IsSessionRunning() &&
-					 app->destroyRequested == 0)
-						? -1
-						: 0;
+				const int kTimeoutMilliseconds = (!app_state.resumed && !program->IsSessionRunning() && app->destroyRequested == 0) ? -1 : 0;
 				if (ALooper_pollAll(kTimeoutMilliseconds, nullptr, &events, (void **)&source) < 0) {
 					break;
 				}

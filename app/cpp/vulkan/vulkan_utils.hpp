@@ -16,7 +16,7 @@
 
 namespace vulkan {
 
-void CheckResult(VkResult result, const std::string &file, uint32_t line);
+void CheckResult(VkResult result, const std::string& file, uint32_t line);
 
 std::vector<VkExtensionProperties> GetAvailableInstanceExtensions(std::string layer_name);
 
@@ -40,3 +40,23 @@ VkCompareOp GetVkCompareOp(CompareOp compare_op);
 
 VkShaderStageFlagBits GetVkShaderStageFlag(ShaderType shader_type);
 }  // namespace vulkan
+
+constexpr uint8_t hexCharToUint(char c) {
+	if (c >= '0' && c <= '9') return c - '0';
+	if (c >= 'a' && c <= 'f') return 10 + c - 'a';
+	if (c >= 'A' && c <= 'F') return 10 + c - 'A';
+	throw std::invalid_argument("Invalid hex character");
+}
+
+constexpr VkClearColorValue hexToVkClearColorValue(const char* hex) {
+	if (hex[0] != '#' || (hex[7] != '\0' && hex[9] != '\0')) {
+		throw std::invalid_argument("Invalid hex color format");
+	}
+	return VkClearColorValue{
+		{
+			(hexCharToUint(hex[1]) * 16 + hexCharToUint(hex[2])) / 255.0f,
+			(hexCharToUint(hex[3]) * 16 + hexCharToUint(hex[4])) / 255.0f,
+			(hexCharToUint(hex[5]) * 16 + hexCharToUint(hex[6])) / 255.0f,
+			hex[7] != '\0' ? (hexCharToUint(hex[7]) * 16 + hexCharToUint(hex[8])) / 255.0f : 1.0f  // Default alpha to 1.0 if not specified
+		}};
+}
