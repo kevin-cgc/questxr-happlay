@@ -11,6 +11,8 @@
 #include <cmath>
 #include <vector>
 
+PFN_xrGetDeviceSampleRateFB xrGetDeviceSampleRateFB = nullptr;
+
 static inline XrVector3f XrVector3f_Zero() {
 	XrVector3f r;
 	r.x = r.y = r.z = 0.0f;
@@ -75,27 +77,45 @@ inline XrReferenceSpaceCreateInfo GetXrReferenceSpaceCreateInfo(const std::strin
 	} else if (EqualsIgnoreCase(reference_space_type_str, "Stage")) {
 		reference_space_create_info.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_STAGE;
 	} else if (EqualsIgnoreCase(reference_space_type_str, "StageLeft")) {
-		reference_space_create_info.poseInReferenceSpace =
-			Math::Pose::RotateCCWAboutYAxis(0.f, {-2.f, 0.f, -2.f});
+		reference_space_create_info.poseInReferenceSpace = Math::Pose::RotateCCWAboutYAxis(0.f, {-2.f, 0.f, -2.f});
 		reference_space_create_info.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_STAGE;
 	} else if (EqualsIgnoreCase(reference_space_type_str, "StageRight")) {
-		reference_space_create_info.poseInReferenceSpace =
-			Math::Pose::RotateCCWAboutYAxis(0.f, {2.f, 0.f, -2.f});
+		reference_space_create_info.poseInReferenceSpace = Math::Pose::RotateCCWAboutYAxis(0.f, {2.f, 0.f, -2.f});
 		reference_space_create_info.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_STAGE;
 	} else if (EqualsIgnoreCase(reference_space_type_str, "StageLeftRotated")) {
-		reference_space_create_info.poseInReferenceSpace =
-			Math::Pose::RotateCCWAboutYAxis(3.14f / 3.f, {-2.f, 0.5f, -2.f});
+		reference_space_create_info.poseInReferenceSpace = Math::Pose::RotateCCWAboutYAxis(3.14f / 3.f, {-2.f, 0.5f, -2.f});
 		reference_space_create_info.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_STAGE;
 	} else if (EqualsIgnoreCase(reference_space_type_str, "StageRightRotated")) {
-		reference_space_create_info.poseInReferenceSpace =
-			Math::Pose::RotateCCWAboutYAxis(-3.14f / 3.f, {2.f, 0.5f, -2.f});
+		reference_space_create_info.poseInReferenceSpace = Math::Pose::RotateCCWAboutYAxis(-3.14f / 3.f, {2.f, 0.5f, -2.f});
 		reference_space_create_info.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_STAGE;
 	} else {
-		throw std::invalid_argument(fmt::format("Unknown reference space type '{}'",
-												reference_space_type_str.c_str()));
+		throw std::invalid_argument(fmt::format("Unknown reference space type '{}'", reference_space_type_str.c_str()));
 	}
 	return reference_space_create_info;
 }
+
+// void CheckOpenXREnvironment(XrInstance instance) {
+//     spdlog::info("Checking OpenXR Environment");
+
+//     // Enumerate and get interaction profile info
+//     // Note: Adjust the path as needed for your specific use case
+//     const char* userPaths[] = {"/user/hand/left", "/user/hand/right"};
+//     for (const char* userPath : userPaths) {
+//         XrPath interactionProfilePath;
+//         xrStringToPath(instance, userPath, &interactionProfilePath);
+
+//         XrInteractionProfileState interactionProfileState{XR_TYPE_INTERACTION_PROFILE_STATE};
+//         XrResult result = xrGetCurrentInteractionProfile(session, interactionProfilePath, &interactionProfileState);
+//         if (XR_SUCCEEDED(result)) {
+//             char profilePathBuffer[XR_MAX_PATH_LENGTH];
+//             xrPathToString(instance, interactionProfileState.interactionProfile, XR_MAX_PATH_LENGTH, nullptr, profilePathBuffer);
+//             spdlog::info("Current Interaction Profile for {}: {}", userPath, profilePathBuffer);
+//         } else {
+//             spdlog::error("Failed to get current interaction profile for {}", userPath);
+//         }
+//     }
+// }
+
 
 OpenXrProgram::OpenXrProgram(std::shared_ptr<Platform> platform)
 	: platform_(platform), graphics_plugin_(CreateGraphicsPlugin()) {}
@@ -106,20 +126,30 @@ void OpenXrProgram::CreateInstance() {
 		throw std::runtime_error("xr instance must not have been inited");
 	}
 
+
+
+	{
+		uint32_t extensionCount;
+		xrEnumerateInstanceExtensionProperties(nullptr, 0, &extensionCount, nullptr);
+		std::vector<XrExtensionProperties> extensions(extensionCount, {XR_TYPE_EXTENSION_PROPERTIES});
+		xrEnumerateInstanceExtensionProperties(nullptr, extensionCount, &extensionCount, extensions.data());
+
+		spdlog::info("Available XR Extensions:");
+		for (const auto& extension : extensions) {
+			spdlog::info("- {}", extension.extensionName);
+		}
+	}
+
+
 	std::vector<const char *> extensions{};
+	// extensions.push_back(XR_META_TOUCH_CONTROLLER_PLUS_EXTENSION_NAME);
+	extensions.push_back(XR_FB_HAPTIC_PCM_EXTENSION_NAME);
 
 	const std::vector<std::string> kPlatformExtensions = platform_->GetInstanceExtensions();
-	std::transform(kPlatformExtensions.begin(),
-				   kPlatformExtensions.end(),
-				   std::back_inserter(extensions),
-				   [](const std::string &ext) { return ext.c_str(); });
+	std::transform(kPlatformExtensions.begin(), kPlatformExtensions.end(), std::back_inserter(extensions), [](const std::string &ext) { return ext.c_str(); });
 
-	const std::vector<std::string>
-		kGraphicsExtensions = graphics_plugin_->GetOpenXrInstanceExtensions();
-	std::transform(kGraphicsExtensions.begin(),
-				   kGraphicsExtensions.end(),
-				   std::back_inserter(extensions),
-				   [](const std::string &ext) { return ext.c_str(); });
+	const std::vector<std::string> kGraphicsExtensions = graphics_plugin_->GetOpenXrInstanceExtensions();
+	std::transform(kGraphicsExtensions.begin(), kGraphicsExtensions.end(), std::back_inserter(extensions), [](const std::string &ext) { return ext.c_str(); });
 
 	XrInstanceCreateInfo create_info{};
 	create_info.type = XR_TYPE_INSTANCE_CREATE_INFO;
@@ -133,7 +163,23 @@ void OpenXrProgram::CreateInstance() {
 
 	CHECK_XRCMD(xrCreateInstance(&create_info, &instance_));
 
+	{
+		spdlog::info("Enabled XR Extensions:");
+		for (const auto& extension : extensions) {
+			spdlog::info("- {} [ENABLED]", extension);
+		}
+	}
+
 	LogInstanceInfo(instance_);
+	CheckOpenXREnvironment(instance_);
+
+	spdlog::debug("about to xrGetInstanceProcAddr for xrGetDeviceSampleRateFB...");
+	auto res = xrGetInstanceProcAddr(instance_, "xrGetDeviceSampleRateFB", (PFN_xrVoidFunction*)(&xrGetDeviceSampleRateFB));
+	if (res != XR_SUCCESS) {
+		spdlog::error("xrGetInstanceProcAddr for xrGetDeviceSampleRateFB failed with error {}", res);
+	} else {
+		spdlog::debug("xrGetInstanceProcAddr for xrGetDeviceSampleRateFB succeeded");
+	}
 }
 
 void OpenXrProgram::InitializeSystem() {
@@ -451,6 +497,8 @@ bool OpenXrProgram::IsSessionRunning() const {
 	return session_running_;
 }
 
+#include "../test_audio/dog_barking_haptic.pcm_f32le.hpp"
+
 void OpenXrProgram::PollActions() {
 	input_.hand_active = {XR_FALSE, XR_FALSE};
 
@@ -472,19 +520,38 @@ void OpenXrProgram::PollActions() {
 		CHECK_XRCMD(xrGetActionStateFloat(session_, &get_info, &grab_value));
 		if (grab_value.isActive == XR_TRUE) {
 			input_.hand_scale[hand] = 1.0f - 0.5f * grab_value.currentState;
-			if (grab_value.currentState > 0.9f) {
-				XrHapticVibration vibration{};
-				vibration.type = XR_TYPE_HAPTIC_VIBRATION;
-				vibration.amplitude = 0.5;
-				vibration.duration = XR_MIN_HAPTIC_DURATION;
-				vibration.frequency = XR_FREQUENCY_UNSPECIFIED;
-
+			if (grab_value.currentState > 0.9f && !input_.grab_was_active[hand]) {
 				XrHapticActionInfo haptic_action_info{};
 				haptic_action_info.type = XR_TYPE_HAPTIC_ACTION_INFO;
 				haptic_action_info.action = input_.vibrate_action;
 				haptic_action_info.subactionPath = input_.hand_subaction_path[hand];
-				CHECK_XRCMD(xrApplyHapticFeedback(session_, &haptic_action_info,
-												  (XrHapticBaseHeader *)&vibration));
+
+				// XrDevicePcmSampleRateGetInfoFB sample_rate_info{XR_TYPE_DEVICE_PCM_SAMPLE_RATE_GET_INFO_FB};
+				// CHECK_XRCMD(xrGetDeviceSampleRateFB(session_, &haptic_action_info, &sample_rate_info));
+				// spdlog::info("Sample rate: {}", sample_rate_info.sampleRate);
+
+
+				XrHapticPcmVibrationFB pcm_vibration{XR_TYPE_HAPTIC_PCM_VIBRATION_FB, nullptr};
+				pcm_vibration.buffer = dog_barking_haptic_pcm_f32le;
+				pcm_vibration.bufferSize = dog_barking_haptic_pcm_f32le_len;
+				pcm_vibration.sampleRate = 8000;
+				uint32_t samplesUsed = 0;
+				pcm_vibration.samplesConsumed = &samplesUsed;
+				pcm_vibration.append = XR_FALSE;
+
+				// XrHapticPcmVibrationFB pcm_vibration{};
+
+
+				auto res = xrApplyHapticFeedback(session_, &haptic_action_info, (XrHapticBaseHeader *)&pcm_vibration);
+				if (res != XR_SUCCESS) {
+					spdlog::error("xrApplyHapticFeedback failed with error {}", res); // XR_ERROR_PATH_UNSUPPORTED??
+				}
+				todo("its not playing the full tacton");
+				spdlog::debug("Samples used: {}", samplesUsed);
+
+				input_.grab_was_active[hand] = true;
+			} else if (grab_value.currentState < 0.1f) {
+				input_.grab_was_active[hand] = false;
 			}
 		}
 

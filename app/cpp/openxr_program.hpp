@@ -28,6 +28,7 @@ struct InputState {
 	std::array<XrPath, side::COUNT> hand_subaction_path{};
 	std::array<XrSpace, side::COUNT> hand_space{};
 	std::array<float, side::COUNT> hand_scale = {{1.0f, 1.0f}};
+	std::array<bool, side::COUNT> grab_was_active = {{false, false}};
 	std::array<XrBool32, side::COUNT> hand_active{};
 };
 
