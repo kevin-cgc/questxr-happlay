@@ -62,7 +62,8 @@ android {
 
 
 tasks.named("clean") {
-    doLast {
-        delete(".cxx")
+    doFirst {
+        delete("app/.cxx")
+        delete("app/build")
     }
 }

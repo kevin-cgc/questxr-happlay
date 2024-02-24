@@ -36,4 +36,4 @@ set(SPIRV_REFLECT_EXECUTABLE OFF)
 set(SPIRV_REFLECT_STATIC_LIB ON)
 FetchContent_MakeAvailable(SPIRV-Reflect)
 
-add_subdirectory(cpp)
+add_subdirectory(src)
