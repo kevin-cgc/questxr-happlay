@@ -3,9 +3,9 @@
 #include "openxr-include.hpp"
 #include <glm/glm.hpp>
 
-#include "vulkan/vulkan_rendering_context.hpp"
-#include "vulkan/vulkan_rendering_pipeline.hpp"
-#include "vulkan/vulkan_utils.hpp"
+#include "vulkanwrapper/vulkan_rendering_context.hpp"
+#include "vulkanwrapper/vulkan_rendering_pipeline.hpp"
+#include "vulkanwrapper/vulkan_utils.hpp"
 
 class VulkanSwapchainContext {
    private:
