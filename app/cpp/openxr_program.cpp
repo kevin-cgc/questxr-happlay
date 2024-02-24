@@ -171,7 +171,7 @@ void OpenXrProgram::CreateInstance() {
 	}
 
 	LogInstanceInfo(instance_);
-	CheckOpenXREnvironment(instance_);
+	// CheckOpenXREnvironment(instance_);
 
 	spdlog::debug("about to xrGetInstanceProcAddr for xrGetDeviceSampleRateFB...");
 	auto res = xrGetInstanceProcAddr(instance_, "xrGetDeviceSampleRateFB", (PFN_xrVoidFunction*)(&xrGetDeviceSampleRateFB));
@@ -509,6 +509,12 @@ void OpenXrProgram::PollActions() {
 	sync_info.activeActionSets = &kActiveActionSet;
 	CHECK_XRCMD(xrSyncActions(session_, &sync_info));
 
+
+	const float* sample_buffer = dog_barking_haptic_pcm_f32le;
+	uint32_t total_samples = dog_barking_haptic_pcm_f32le_sample_len;
+	float sample_rate = 8000;
+
+
 	for (auto hand : {side::LEFT, side::RIGHT}) {
 		XrActionStateGetInfo get_info{};
 		get_info.type = XR_TYPE_ACTION_STATE_GET_INFO;
@@ -520,37 +526,44 @@ void OpenXrProgram::PollActions() {
 		CHECK_XRCMD(xrGetActionStateFloat(session_, &get_info, &grab_value));
 		if (grab_value.isActive == XR_TRUE) {
 			input_.hand_scale[hand] = 1.0f - 0.5f * grab_value.currentState;
-			if (grab_value.currentState > 0.9f && !input_.grab_was_active[hand]) {
-				XrHapticActionInfo haptic_action_info{};
-				haptic_action_info.type = XR_TYPE_HAPTIC_ACTION_INFO;
-				haptic_action_info.action = input_.vibrate_action;
-				haptic_action_info.subactionPath = input_.hand_subaction_path[hand];
 
-				// XrDevicePcmSampleRateGetInfoFB sample_rate_info{XR_TYPE_DEVICE_PCM_SAMPLE_RATE_GET_INFO_FB};
-				// CHECK_XRCMD(xrGetDeviceSampleRateFB(session_, &haptic_action_info, &sample_rate_info));
-				// spdlog::info("Sample rate: {}", sample_rate_info.sampleRate);
+			XrHapticActionInfo haptic_action_info{};
+			haptic_action_info.type = XR_TYPE_HAPTIC_ACTION_INFO;
+			haptic_action_info.action = input_.vibrate_action;
+			haptic_action_info.subactionPath = input_.hand_subaction_path[hand];
 
+			uint32_t &hap_samples_consumed = input_.hap_samples_consumed[hand];
 
-				XrHapticPcmVibrationFB pcm_vibration{XR_TYPE_HAPTIC_PCM_VIBRATION_FB, nullptr};
-				pcm_vibration.buffer = dog_barking_haptic_pcm_f32le;
-				pcm_vibration.bufferSize = dog_barking_haptic_pcm_f32le_len;
-				pcm_vibration.sampleRate = 8000;
-				uint32_t samplesUsed = 0;
-				pcm_vibration.samplesConsumed = &samplesUsed;
-				pcm_vibration.append = XR_FALSE;
+			if (grab_value.currentState > 0.7f) {
+				if (!input_.grab_was_active[hand]) {
+					XrDevicePcmSampleRateGetInfoFB sample_rate_info{XR_TYPE_DEVICE_PCM_SAMPLE_RATE_GET_INFO_FB};
+					CHECK_XRCMD(xrGetDeviceSampleRateFB(session_, &haptic_action_info, &sample_rate_info));
+					spdlog::info("Sample rate: {}", sample_rate_info.sampleRate);
 
-				// XrHapticPcmVibrationFB pcm_vibration{};
-
-
-				auto res = xrApplyHapticFeedback(session_, &haptic_action_info, (XrHapticBaseHeader *)&pcm_vibration);
-				if (res != XR_SUCCESS) {
-					spdlog::error("xrApplyHapticFeedback failed with error {}", res); // XR_ERROR_PATH_UNSUPPORTED??
+					hap_samples_consumed = 0;
 				}
-				todo("its not playing the full tacton");
-				spdlog::debug("Samples used: {}", samplesUsed);
+				if (hap_samples_consumed < total_samples) {
+					XrHapticPcmVibrationFB pcm_vibration{XR_TYPE_HAPTIC_PCM_VIBRATION_FB, nullptr};
+					// pcm_vibration.buffer = sample_buffer;
+					// pcm_vibration.bufferSize = total_samples;
+					pcm_vibration.buffer = sample_buffer + hap_samples_consumed;
+					pcm_vibration.bufferSize = total_samples - hap_samples_consumed;
+					pcm_vibration.sampleRate = sample_rate;
+					uint32_t samples_consumed_from_offset = 0;
+					pcm_vibration.samplesConsumed = &samples_consumed_from_offset;
+					pcm_vibration.append = input_.grab_was_active[hand] ? XR_TRUE : XR_FALSE;
+
+					CHECK_XRCMD(xrApplyHapticFeedback(session_, &haptic_action_info, (XrHapticBaseHeader *)&pcm_vibration));
+					hap_samples_consumed += samples_consumed_from_offset;
+
+					// todo("its not playing the full tacton");
+					spdlog::debug("current samples consumed: {}", hap_samples_consumed);
+				}
 
 				input_.grab_was_active[hand] = true;
 			} else if (grab_value.currentState < 0.1f) {
+				CHECK_XRCMD(xrStopHapticFeedback(session_, &haptic_action_info));
+
 				input_.grab_was_active[hand] = false;
 			}
 		}
