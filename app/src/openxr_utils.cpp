@@ -2,52 +2,36 @@
 
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
+#include "format_helpers.h"
 
 #include <vector>
 
 void CheckResult(XrResult result, const std::string &file, uint32_t line) {
 	if (XR_FAILED(result)) [[unlikely]] {
-		throw std::runtime_error(fmt::format("call failed with error {:#x} {}:{}\n",
-											 result,
-											 file,
-											 line));
+		throw std::runtime_error(fmt::format("call failed with error {:#x} {}:{}\n", result, file, line));
 	}
 }
 
 std::string GetXrVersionString(XrVersion ver) {
-	return fmt::format("{}.{}.{}",
-					   XR_VERSION_MAJOR(ver),
-					   XR_VERSION_MINOR(ver),
-					   XR_VERSION_PATCH(ver));
+	return fmt::format("{}.{}.{}", XR_VERSION_MAJOR(ver), XR_VERSION_MINOR(ver), XR_VERSION_PATCH(ver));
 }
 
 void LogLayersAndExtensions() {
 	const auto log_extensions = [](const char *layer_name, int indent = 0) {
 		uint32_t instance_extension_count;
-		CHECK_XRCMD(xrEnumerateInstanceExtensionProperties(layer_name,
-														   0,
-														   &instance_extension_count,
-														   nullptr));
+		CHECK_XRCMD(xrEnumerateInstanceExtensionProperties(layer_name, 0, &instance_extension_count, nullptr));
 
 		std::vector<XrExtensionProperties> extensions(instance_extension_count);
 		for (XrExtensionProperties &extension : extensions) {
 			extension.type = XR_TYPE_EXTENSION_PROPERTIES;
 		}
 
-		CHECK_XRCMD(xrEnumerateInstanceExtensionProperties(layer_name,
-														   extensions.size(),
-														   &instance_extension_count,
-														   extensions.data()));
+		CHECK_XRCMD(xrEnumerateInstanceExtensionProperties(layer_name, extensions.size(), &instance_extension_count, extensions.data()));
 
 		const std::string kIndentStr(indent, ' ');
-		spdlog::debug("{} Available Extensions: ({})",
-					  kIndentStr.c_str(),
-					  instance_extension_count);
+		spdlog::debug("{} Available Extensions: ({})", kIndentStr.c_str(), instance_extension_count);
 		for (const XrExtensionProperties &extension : extensions) {
-			spdlog::debug("{}  Name={} SpecVersion={}",
-						  kIndentStr.c_str(),
-						  extension.extensionName,
-						  extension.extensionVersion);
+			spdlog::debug("{}  Name={} SpecVersion={}", kIndentStr.c_str(), extension.extensionName, extension.extensionVersion);
 		}
 	};
 
@@ -62,17 +46,11 @@ void LogLayersAndExtensions() {
 			layer.type = XR_TYPE_API_LAYER_PROPERTIES;
 		}
 
-		CHECK_XRCMD(xrEnumerateApiLayerProperties((uint32_t)layers.size(),
-												  &layer_count,
-												  layers.data()));
+		CHECK_XRCMD(xrEnumerateApiLayerProperties((uint32_t)layers.size(), &layer_count, layers.data()));
 
 		spdlog::info("Available Layers: ({})", layer_count);
 		for (const XrApiLayerProperties &layer : layers) {
-			spdlog::debug("  Name={} SpecVersion={} LayerVersion={} Description={}",
-						  layer.layerName,
-						  GetXrVersionString(layer.specVersion).c_str(),
-						  layer.layerVersion,
-						  layer.description);
+			spdlog::debug("  Name={} SpecVersion={} LayerVersion={} Description={}", layer.layerName, GetXrVersionString(layer.specVersion).c_str(), layer.layerVersion, layer.description);
 			log_extensions(layer.layerName, 4);
 		}
 	}
@@ -101,17 +79,9 @@ void LogViewConfigurations(XrInstance instance, XrSystemId system_id) {
 	}
 
 	uint32_t view_config_type_count;
-	CHECK_XRCMD(xrEnumerateViewConfigurations(instance,
-											  system_id,
-											  0,
-											  &view_config_type_count,
-											  nullptr));
+	CHECK_XRCMD(xrEnumerateViewConfigurations(instance, system_id, 0, &view_config_type_count, nullptr));
 	std::vector<XrViewConfigurationType> view_config_types(view_config_type_count);
-	CHECK_XRCMD(xrEnumerateViewConfigurations(instance,
-											  system_id,
-											  view_config_type_count,
-											  &view_config_type_count,
-											  view_config_types.data()));
+	CHECK_XRCMD(xrEnumerateViewConfigurations(instance, system_id, view_config_type_count, &view_config_type_count, view_config_types.data()));
 
 	spdlog::info("Available View Configuration Types: ({})", view_config_type_count);
 	for (XrViewConfigurationType view_config_type : view_config_types) {
@@ -136,22 +106,12 @@ void LogViewConfigurations(XrInstance instance, XrSystemId system_id) {
 
 		XrViewConfigurationProperties view_config_properties{};
 		view_config_properties.type = XR_TYPE_VIEW_CONFIGURATION_PROPERTIES;
-		CHECK_XRCMD(xrGetViewConfigurationProperties(instance,
-													 system_id,
-													 view_config_type,
-													 &view_config_properties));
+		CHECK_XRCMD(xrGetViewConfigurationProperties(instance, system_id, view_config_type, &view_config_properties));
 
-		spdlog::debug("  View configuration FovMutable={}",
-					  view_config_properties.fovMutable == XR_TRUE ? "True"
-																   : "False");
+		spdlog::debug("  View configuration FovMutable={}", view_config_properties.fovMutable == XR_TRUE ? "True" : "False");
 
 		uint32_t view_count;
-		CHECK_XRCMD(xrEnumerateViewConfigurationViews(instance,
-													  system_id,
-													  view_config_type,
-													  0,
-													  &view_count,
-													  nullptr));
+		CHECK_XRCMD(xrEnumerateViewConfigurationViews(instance, system_id, view_config_type, 0, &view_count, nullptr));
 		if (view_count > 0) {
 			std::vector<XrViewConfigurationView> views(view_count);
 			for (uint32_t i = 0; i < view_count; i++) {
@@ -159,38 +119,20 @@ void LogViewConfigurations(XrInstance instance, XrSystemId system_id) {
 				views[i].next = nullptr;
 			}
 			CHECK_XRCMD(
-				xrEnumerateViewConfigurationViews(instance,
-												  system_id,
-												  view_config_type,
-												  view_count,
-												  &view_count,
-												  views.data()));
+				xrEnumerateViewConfigurationViews(instance, system_id, view_config_type, view_count, &view_count, views.data()));
 
 			for (uint32_t i = 0; i < views.size(); i++) {
 				const XrViewConfigurationView &view = views[i];
 
-				spdlog::debug("    View [{}]: Recommended Width={} Height={} SampleCount={}",
-							  i,
-							  view.recommendedImageRectWidth,
-							  view.recommendedImageRectHeight,
-							  view.recommendedSwapchainSampleCount);
-				spdlog::debug("    View [{}]:     Maximum Width={} Height={} SampleCount={}",
-							  i,
-							  view.maxImageRectWidth,
-							  view.maxImageRectHeight,
-							  view.maxSwapchainSampleCount);
+				spdlog::debug("    View [{}]: Recommended Width={} Height={} SampleCount={}", i, view.recommendedImageRectWidth, view.recommendedImageRectHeight, view.recommendedSwapchainSampleCount);
+				spdlog::debug("    View [{}]:     Maximum Width={} Height={} SampleCount={}", i, view.maxImageRectWidth, view.maxImageRectHeight, view.maxSwapchainSampleCount);
 			}
 		} else {
 			spdlog::error("Empty view configuration type");
 		}
 
 		uint32_t count;
-		CHECK_XRCMD(xrEnumerateEnvironmentBlendModes(instance,
-													 system_id,
-													 view_config_type,
-													 0,
-													 &count,
-													 nullptr));
+		CHECK_XRCMD(xrEnumerateEnvironmentBlendModes(instance, system_id, view_config_type, 0, &count, nullptr));
 		if (count < 0) {
 			throw std::runtime_error("must have at least 1 env blend mode");
 		}
@@ -198,12 +140,7 @@ void LogViewConfigurations(XrInstance instance, XrSystemId system_id) {
 		spdlog::info("Available Environment Blend Mode count : {}", count);
 
 		std::vector<XrEnvironmentBlendMode> blend_modes(count);
-		CHECK_XRCMD(xrEnumerateEnvironmentBlendModes(instance,
-													 system_id,
-													 view_config_type,
-													 count,
-													 &count,
-													 blend_modes.data()));
+		CHECK_XRCMD(xrEnumerateEnvironmentBlendModes(instance, system_id, view_config_type, count, &count, blend_modes.data()));
 
 		for (XrEnvironmentBlendMode mode : blend_modes) {
 			std::string blend_mode_name = "unknown";

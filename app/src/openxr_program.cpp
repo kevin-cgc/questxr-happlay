@@ -6,15 +6,11 @@
 
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
+#include "format_helpers.h"
 
 #include <array>
 #include <cmath>
 #include <vector>
-
-// stop spdlog deprecated default format map warning
-auto format_as(XrResult f) { return fmt::underlying(f); }
-auto format_as(XrSessionState f) { return fmt::underlying(f); }
-auto format_as(XrStructureType f) { return fmt::underlying(f); }
 
 PFN_xrGetDeviceSampleRateFB xrGetDeviceSampleRateFB = nullptr;
 

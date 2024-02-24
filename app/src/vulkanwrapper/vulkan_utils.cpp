@@ -4,13 +4,11 @@
 
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
+#include "format_helpers.h"
 
 void vulkan::CheckResult(VkResult result, const std::string &file, uint32_t line) {
 	if (result != VK_SUCCESS) [[unlikely]] {
-		throw std::runtime_error(fmt::format("call failed with error {:#x} {}:{}\n",
-											 result,
-											 file,
-											 line));
+		throw std::runtime_error(fmt::format("call failed with error {:#x} {}:{}\n", result, file, line));
 	}
 }
 

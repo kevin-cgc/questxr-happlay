@@ -1,6 +1,7 @@
 #include "vulkan_shader.hpp"
 
 #include <spdlog/fmt/fmt.h>
+#include "format_helpers.h"
 
 vulkan::VulkanShader::VulkanShader(const std::shared_ptr<VulkanRenderingContext> &context,
 								   const std::vector<uint32_t> &code,
