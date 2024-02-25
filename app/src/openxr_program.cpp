@@ -505,7 +505,7 @@ void OpenXrProgram::send_ws_message(const std::string message) {
 
 void OpenXrProgram::handle_ws_message(const std::vector<uint8_t> &message, bool is_binary) {
 	if (is_binary) {
-		spdlog::info("Received binary message of size {}", message.size());
+		spdlog::info("Received binary message of size {}, replacing haptic buffer", message.size());
 
 		// stop any ongoing tacton playback
 		input_.hap_samples_consumed[side::LEFT].reset();

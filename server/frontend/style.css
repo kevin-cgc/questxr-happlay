@@ -1,0 +1,67 @@
+:root {
+	--primary-color: #0d1011; /* Dark slate gray for base elements */
+	--secondary-color: #4A9C8E; /* Teal for accent elements, vibrant yet industrial */
+	--tertiary-color-light: #B0BEC5; /* Light gray for secondary elements and backgrounds */
+	--tertiary-color-dark: #37474F; /* Darker gray for additional contrast */
+	--text-color: #ECEFF1; /* Soft white for text for readability */
+	--error-color: #D32F2F; /* Muted red for errors, alerts, and warnings */
+}
+
+html {
+	background: #000;
+	height: 100vh;
+	width: 100vw;
+	display: grid;
+	grid-template-columns: auto;
+	grid-template-rows: auto;
+}
+
+body {
+	/* background-color: var(--primary-color); */
+	margin: 0;
+	padding: 2em;
+	background: linear-gradient(to bottom right, #2b2d2f, #2b383f);
+	background-repeat: no-repeat;
+	color: var(--text-color);
+	font-family: 'Courier New', Courier, monospace; /* Emphasizing the monospace theme */
+	display: grid;
+	grid-template-rows: auto 1fr;
+}
+
+*::-webkit-scrollbar {
+	width: 1.8ex;
+}
+*::-webkit-scrollbar-thumb {
+	background: var(--secondary-color);
+}
+*::-webkit-scrollbar-track {
+	background: var(--tertiary-color-dark);
+}
+
+
+a,
+button {
+	color: var(--secondary-color);
+}
+
+.error,
+.alert {
+	color: var(--error-color);
+}
+
+div#root {
+	display: grid;
+	grid-template-columns: auto auto auto;
+	grid-template-rows: auto auto auto auto;
+}
+
+.logcontainer {
+	display: grid;
+	background-color: var(--primary-color);
+	padding: 1em;
+	grid-template-rows: auto 1fr;
+	max-height: 30vh;
+}
+.logcontainer .msglog {
+	overflow-y: scroll;
+}
