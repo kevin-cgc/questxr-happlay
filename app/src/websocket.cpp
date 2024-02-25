@@ -16,27 +16,29 @@ void lws_spdlog_emit_function(int level, const char* line);
 int HPB_WebsocketClient::happlay_cb(struct lws* wsi, enum lws_callback_reasons reason, void* in, size_t len) {
     switch (reason) {
         case LWS_CALLBACK_CLIENT_ESTABLISHED:
-            spdlog::info("Connection established\n");
-            // Connection established
+            spdlog::info("WS Connection established");
+            this->conn_established = true;
             break;
 
         case LWS_CALLBACK_CLIENT_RECEIVE:
             // Handle incoming messages here
-            spdlog::info("Received data: %s\n", (const char*)in);
+            spdlog::info("Received WS data: {}", (const char*)in);
             break;
 
         case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
-            lwsl_err("Connection error\n");
+            spdlog::error("WS Connection error");
             // Handle connection error
             break;
 
         case LWS_CALLBACK_CLIENT_CLOSED:
-            spdlog::info("Connection closed\n");
+            spdlog::info("WS Connection closed");
             // Cleanup and possibly reconnect
             break;
 
 		case LWS_CALLBACK_CLIENT_WRITEABLE:
 			spdlog::debug("WebSocket is writeable: LWS_CALLBACK_CLIENT_WRITEABLE");
+			spdlog::debug("WS TX Queue size: {}", msg_tx_queue.size());
+
 			if (msg_tx_queue.size() > 0) {
 				size_t start_send_idx = 0;
 				size_t remaining_length = 0;
@@ -68,6 +70,7 @@ int HPB_WebsocketClient::happlay_cb(struct lws* wsi, enum lws_callback_reasons r
 					return -1;
 				} else if (bytes_sent < static_cast<int>(remaining_length)) {
                     partial_send = {start_send_idx + bytes_sent, message_len};
+					// lws_callback_on_writable needs to be called (is below)
                 } else {
                     msg_tx_queue.pop(); // Remove the message from the queue if sent successfully
 					partial_send.reset();
@@ -79,13 +82,23 @@ int HPB_WebsocketClient::happlay_cb(struct lws* wsi, enum lws_callback_reasons r
             break;
     }
 
+	// spdlog::debug("Queue size: {}", msg_tx_queue.size());
+	// check if there are messages in the queue and if connection has been established
+	if (msg_tx_queue.size() > 0 && this->conn_established) {
+		spdlog::debug("WS TX Queue size = {} so lws_callback_on_writable", msg_tx_queue.size());
+		auto res = lws_callback_on_writable(wsi);
+		// spdlog::debug("Queue size: {}, so lws_callback_on_writable(wsi) which returned {}", msg_tx_queue.size(), res);
+	}
+
     return 0;
 }
 
 
 void HPB_WebsocketClient::connect() {
-	spdlog::info("Starting websocket for {}", WS_SERVER_DOMAIN);
-	lws_set_log_level(LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO | LLL_DEBUG, lws_spdlog_emit_function);
+	// lws_set_log_level(LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO | LLL_DEBUG, lws_spdlog_emit_function);
+	// lws_set_log_level(LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO, lws_spdlog_emit_function);
+	lws_set_log_level(LLL_ERR | LLL_WARN | LLL_NOTICE, lws_spdlog_emit_function);
+	spdlog::info("Starting websocket for " WS_SERVER_DOMAIN);
 
 	struct lws_context_creation_info info;
 	memset(&info, 0, sizeof(info));
@@ -93,29 +106,32 @@ void HPB_WebsocketClient::connect() {
 	info.port = CONTEXT_PORT_NO_LISTEN; // We don't run a server
 	const struct lws_protocols protocols[] = {
 		{
-			"happlay",
-			HPB_WebsocketClient::callback_wrapper, //make sure to set info.user to `this`
-			0,
-			4096,
+			.name = "happlay",
+			.callback = HPB_WebsocketClient::callback_wrapper, //make sure to set lws_protocols.user to `this`
+			.per_session_data_size = 0,
+			.rx_buffer_size =  4096,
+			// .id = 0, // ignored by lws, i dont use it
+			// .user = this // idk where this even comes out
 		},
 		{ NULL, NULL, 0, 0 } // terminator
 	};
 	info.protocols = protocols;
 	info.gid = -1;
 	info.uid = -1;
-	info.user = this;
+	// spdlog::debug("setting this {}", (size_t)this);
+	info.user = this; // this is used in the callback_wrapper (lws_context_user(lws_get_context(wsi)))
 
 	context = lws_create_context(&info);
 	if (context == NULL) throw std::runtime_error("lws context creation failed");
 
 	struct lws_client_connect_info connect_info = {
 		.context = context,
-		.address = WS_SERVER_DOMAIN,
-		.port = 80,
+		.address = WS_SERVER_DOMAIN, //"10.20.0.100"
+		.port = 80, // 8080,
 		.ssl_connection = false,
-		.path = "/", // Adjust according to your server's path
-		.host = lws_canonical_hostname(context),
-		.origin = "origin",
+		.path = "/",
+		.host = WS_SERVER_DOMAIN, //lws_canonical_hostname(context),
+		.origin = WS_SERVER_DOMAIN,
 		.protocol = protocols[0].name,
 	};
 
@@ -128,9 +144,7 @@ void HPB_WebsocketClient::connect() {
 void HPB_WebsocketClient::service() {
 	auto res = lws_service(context, -1); // -1 is non-blocking
 	// spdlog::debug("lws_service returned: {}", res);
-	if (res < 0) {
-		spdlog::error("lws_service failed: {}", res);
-	}
+	if (res < 0) spdlog::error("lws_service failed: {}", res);
 }
 void HPB_WebsocketClient::disconnect() {
 	lws_context_destroy(context);
@@ -142,13 +156,11 @@ void HPB_WebsocketClient::send(const char* message) {
 		return;
 	}
 
-	spdlog::debug("Queuing message to send: {}", message);
+	spdlog::debug("WS Queuing message to send: {}", message);
 	msg_tx_queue.push(message);
 
 	auto res = lws_callback_on_writable(wsi);
-	if (res != 0) {
-		spdlog::error("Failed to set callback on writable: {}", res);
-	}
+	if (res != 0) spdlog::error("Failed lws_callback_on_writable: {}", res);
 }
 
 

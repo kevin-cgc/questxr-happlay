@@ -53,9 +53,10 @@ static void AppHandleCmd(struct android_app *app, int32_t cmd) {
 }
 
 void android_main(struct android_app *app) {
-	auto android_logger = spdlog::android_logger_mt("android_logger", "HapPB");
+	auto android_logger = spdlog::android_logger_mt("main", "HapPB"); //main android logger
 	spdlog::set_default_logger(android_logger);
 	spdlog::set_level(spdlog::level::debug);
+	spdlog::debug("awaken");
 	try {
 		JNIEnv *env;
 		app->activity->vm->AttachCurrentThread(&env, nullptr);
