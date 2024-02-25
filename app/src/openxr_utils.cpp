@@ -29,10 +29,10 @@ void LogLayersAndExtensions() {
 		CHECK_XRCMD(xrEnumerateInstanceExtensionProperties(layer_name, extensions.size(), &instance_extension_count, extensions.data()));
 
 		const std::string kIndentStr(indent, ' ');
-		spdlog::debug("{} Available Extensions: ({})", kIndentStr.c_str(), instance_extension_count);
-		for (const XrExtensionProperties &extension : extensions) {
-			spdlog::debug("{}  Name={} SpecVersion={}", kIndentStr.c_str(), extension.extensionName, extension.extensionVersion);
-		}
+		// spdlog::debug("{} Available Extensions: ({})", kIndentStr.c_str(), instance_extension_count);
+		// for (const XrExtensionProperties &extension : extensions) {
+		// 	spdlog::debug("{}  Name={} SpecVersion={}", kIndentStr.c_str(), extension.extensionName, extension.extensionVersion);
+		// }
 	};
 
 	log_extensions(nullptr);

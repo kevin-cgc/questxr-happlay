@@ -127,18 +127,16 @@ void OpenXrProgram::CreateInstance() {
 		throw std::runtime_error("xr instance must not have been inited");
 	}
 
-
-
 	{
 		uint32_t extensionCount;
 		xrEnumerateInstanceExtensionProperties(nullptr, 0, &extensionCount, nullptr);
 		std::vector<XrExtensionProperties> extensions(extensionCount, {XR_TYPE_EXTENSION_PROPERTIES});
 		xrEnumerateInstanceExtensionProperties(nullptr, extensionCount, &extensionCount, extensions.data());
 
-		spdlog::info("Available XR Extensions:");
-		for (const auto& extension : extensions) {
-			spdlog::info("- {}", extension.extensionName);
-		}
+		// spdlog::info("Available XR Extensions:");
+		// for (const auto& extension : extensions) {
+		// 	spdlog::info("- {}", extension.extensionName);
+		// }
 	}
 
 

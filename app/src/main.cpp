@@ -71,8 +71,9 @@ void android_main(struct android_app *app) {
 
 		std::shared_ptr<OpenXrProgram> program = CreateOpenXrProgram(CreatePlatform(data));
 
-		HPB_WebsocketClient client;
-		client.connect();
+		HPB_WebsocketClient ws_client;
+		ws_client.connect();
+		// ws_client.send("hellp");
 
 		program->CreateInstance();
 		program->InitializeSystem();
@@ -90,6 +91,8 @@ void android_main(struct android_app *app) {
 					source->process(app, source);
 				}
 			}
+
+			ws_client.service();
 
 			program->PollEvents();
 			if (!program->IsSessionRunning()) {
