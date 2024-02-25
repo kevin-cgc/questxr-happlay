@@ -27,6 +27,21 @@ public:
 
 	std::optional<HPBWSMessageHandler> handle_message_external;
 private:
+	struct lws_protocols protocols[2] = {
+		{
+			.name = "happlay",
+			.callback = HPB_WebsocketClient::callback_wrapper, //make sure to set lws_protocols.user to `this`
+			.per_session_data_size = 0,
+			.rx_buffer_size =  4096,
+			// .id = 0, // ignored by lws, i dont use it
+			// .user = this // idk where this even comes out
+		},
+		{ NULL, NULL, 0, 0 } // terminator
+	};
+
+	size_t reconnect_attempts = 0;
+	std::optional<std::chrono::time_point<std::chrono::steady_clock>> restart_after = std::nullopt;
+
 	std::queue<std::string> msg_tx_queue;
 	std::vector<uint8_t> send_buffer;
 	std::optional<std::pair<size_t, size_t>> partial_send;

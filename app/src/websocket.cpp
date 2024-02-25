@@ -28,6 +28,7 @@ int HPB_WebsocketClient::happlay_cb(struct lws* wsi, enum lws_callback_reasons r
         case LWS_CALLBACK_CLIENT_ESTABLISHED: {
             spdlog::info("WS Connection established");
             this->conn_established = true;
+			this->reconnect_attempts = 0;
             break;
 		}
 
@@ -49,13 +50,19 @@ int HPB_WebsocketClient::happlay_cb(struct lws* wsi, enum lws_callback_reasons r
 
         case LWS_CALLBACK_CLIENT_CONNECTION_ERROR: {
             spdlog::error("WS Connection error");
-            // Handle connection error
-            break;
+            if (!this->conn_established) {
+				// fall through to LWS_CALLBACK_CLOSED
+			} else {
+            	break;
+			}
 		}
 
         case LWS_CALLBACK_CLIENT_CLOSED: {
             spdlog::info("WS Connection closed");
-            // Cleanup and possibly reconnect
+            // try to reconnect
+			this->conn_established = false;
+			this->wsi = nullptr;
+			this->restart_after = std::chrono::steady_clock::now() + std::chrono::seconds(std::max(2 * (int)this->reconnect_attempts, 10));
             break;
 		}
 
@@ -121,34 +128,17 @@ int HPB_WebsocketClient::happlay_cb(struct lws* wsi, enum lws_callback_reasons r
 
 
 void HPB_WebsocketClient::connect() {
-	// lws_set_log_level(LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO | LLL_DEBUG, lws_spdlog_emit_function);
-	// lws_set_log_level(LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO, lws_spdlog_emit_function);
-	lws_set_log_level(LLL_ERR | LLL_WARN | LLL_NOTICE, lws_spdlog_emit_function);
-	spdlog::info("Starting websocket for " WS_SERVER_DOMAIN);
+	static const uint32_t backoff_ms[] = { 1000, 2000, 3000, 4000, 5000 };
+	static const lws_retry_bo_t retry = {
+		.retry_ms_table = backoff_ms, // i dont use this, i think its just for sul w event loops?
+		.retry_ms_table_count = LWS_ARRAY_SIZE(backoff_ms),
+		.conceal_count = 500,
 
-	struct lws_context_creation_info info;
-	memset(&info, 0, sizeof(info));
+		.secs_since_valid_ping = 3,	   /* force PINGs after secs idle */
+		.secs_since_valid_hangup = 10, /* hangup after secs idle */
 
-	info.port = CONTEXT_PORT_NO_LISTEN; // We don't run a server
-	const struct lws_protocols protocols[] = {
-		{
-			.name = "happlay",
-			.callback = HPB_WebsocketClient::callback_wrapper, //make sure to set lws_protocols.user to `this`
-			.per_session_data_size = 0,
-			.rx_buffer_size =  4096,
-			// .id = 0, // ignored by lws, i dont use it
-			// .user = this // idk where this even comes out
-		},
-		{ NULL, NULL, 0, 0 } // terminator
+		.jitter_percent = 20,
 	};
-	info.protocols = protocols;
-	info.gid = -1;
-	info.uid = -1;
-	// spdlog::debug("setting this {}", (size_t)this);
-	info.user = this; // this is used in the callback_wrapper (lws_context_user(lws_get_context(wsi)))
-
-	context = lws_create_context(&info);
-	if (context == NULL) throw std::runtime_error("lws context creation failed");
 
 	struct lws_client_connect_info connect_info = {
 		.context = context,
@@ -159,6 +149,7 @@ void HPB_WebsocketClient::connect() {
 		.host = WS_SERVER_DOMAIN, //lws_canonical_hostname(context),
 		.origin = WS_SERVER_DOMAIN,
 		.protocol = protocols[0].name,
+		.retry_and_idle_policy = &retry,
 	};
 
 	wsi = lws_client_connect_via_info(&connect_info);
@@ -168,6 +159,13 @@ void HPB_WebsocketClient::connect() {
 }
 
 void HPB_WebsocketClient::service() {
+	if (restart_after.has_value() && std::chrono::steady_clock::now() > restart_after.value()) {
+		this->reconnect_attempts++;
+		spdlog::info("Reconnecting to websocket (attempt {})", this->reconnect_attempts);
+		connect();
+		restart_after.reset();
+	}
+
 	auto res = lws_service(context, -1); // -1 is non-blocking
 	// spdlog::debug("lws_service returned: {}", res);
 	if (res < 0) spdlog::error("lws_service failed: {}", res);
@@ -190,8 +188,27 @@ void HPB_WebsocketClient::send(std::string message) {
 }
 
 
-HPB_WebsocketClient::HPB_WebsocketClient() {}
+HPB_WebsocketClient::HPB_WebsocketClient() {
+	// lws_set_log_level(LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO | LLL_DEBUG, lws_spdlog_emit_function);
+	// lws_set_log_level(LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO, lws_spdlog_emit_function);
+	lws_set_log_level(LLL_ERR | LLL_WARN | LLL_NOTICE, lws_spdlog_emit_function);
+	spdlog::info("Starting websocket for " WS_SERVER_DOMAIN);
+
+	struct lws_context_creation_info info;
+	memset(&info, 0, sizeof(info));
+
+	info.port = CONTEXT_PORT_NO_LISTEN; // We don't run a server
+	info.protocols = protocols;
+	info.gid = -1;
+	info.uid = -1;
+	// spdlog::debug("setting this {}", (size_t)this);
+	info.user = this; // this is used in the callback_wrapper (lws_context_user(lws_get_context(wsi)))
+
+	context = lws_create_context(&info);
+	if (context == NULL) throw std::runtime_error("lws context creation failed");
+}
 HPB_WebsocketClient::HPB_WebsocketClient(HPBWSMessageHandler handler) {
+	HPB_WebsocketClient();
 	handle_message_external = handler;
 }
 
