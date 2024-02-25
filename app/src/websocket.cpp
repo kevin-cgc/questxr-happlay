@@ -13,29 +13,51 @@
 
 void lws_spdlog_emit_function(int level, const char* line);
 
+void HPB_WebsocketClient::handle_message(const std::vector<uint8_t>& message, bool is_binary) {
+	if (is_binary) {
+		spdlog::info("WS rx binary msg len: {}", message.size());
+	} else {
+		spdlog::info("WS rx text msg: {}", std::string(message.begin(), message.end()));
+	}
+}
+
 int HPB_WebsocketClient::happlay_cb(struct lws* wsi, enum lws_callback_reasons reason, void* in, size_t len) {
     switch (reason) {
-        case LWS_CALLBACK_CLIENT_ESTABLISHED:
+        case LWS_CALLBACK_CLIENT_ESTABLISHED: {
             spdlog::info("WS Connection established");
             this->conn_established = true;
             break;
+		}
 
-        case LWS_CALLBACK_CLIENT_RECEIVE:
+        case LWS_CALLBACK_CLIENT_RECEIVE: {
             // Handle incoming messages here
-            spdlog::info("Received WS data: {}", (const char*)in);
-            break;
 
-        case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
+			const char* incoming_data = reinterpret_cast<const char*>(in);
+			const size_t remaining = lws_remaining_packet_payload(wsi);
+			if (!remaining && lws_is_final_fragment(wsi)) {
+				this->msg_rx_buffer.insert(this->msg_rx_buffer.end(), incoming_data, incoming_data + len);
+				this->handle_message(this->msg_rx_buffer, lws_frame_is_binary(wsi));
+				this->msg_rx_buffer.clear();
+			} else {
+				this->msg_rx_buffer.insert(this->msg_rx_buffer.end(), incoming_data, incoming_data + len);
+			}
+
+            break;
+		}
+
+        case LWS_CALLBACK_CLIENT_CONNECTION_ERROR: {
             spdlog::error("WS Connection error");
             // Handle connection error
             break;
+		}
 
-        case LWS_CALLBACK_CLIENT_CLOSED:
+        case LWS_CALLBACK_CLIENT_CLOSED: {
             spdlog::info("WS Connection closed");
             // Cleanup and possibly reconnect
             break;
+		}
 
-		case LWS_CALLBACK_CLIENT_WRITEABLE:
+		case LWS_CALLBACK_CLIENT_WRITEABLE: {
 			spdlog::debug("WebSocket is writeable: LWS_CALLBACK_CLIENT_WRITEABLE");
 			spdlog::debug("WS TX Queue size: {}", msg_tx_queue.size());
 
@@ -49,15 +71,15 @@ int HPB_WebsocketClient::happlay_cb(struct lws* wsi, enum lws_callback_reasons r
 					message_len = partial_send.value().second;
 					remaining_length = message_len - start_send_idx;
 				} else {
-					const char* message = msg_tx_queue.front();
-					message_len = strlen(message);
+					std::string message = msg_tx_queue.front();
+					message_len = message.length();
 
 					// Ensure the send buffer is large enough, including LWS_PRE space
 					if (send_buffer.capacity() < message_len + LWS_PRE) {
 						send_buffer.resize(message_len + LWS_PRE);
 					}
 					// Copy the message into the send buffer, respecting LWS_PRE
-					memcpy(&send_buffer[LWS_PRE], message, message_len);
+					memcpy(&send_buffer[LWS_PRE], message.c_str(), message_len);
 					start_send_idx = LWS_PRE;
 					remaining_length = message_len;
 				}
@@ -77,9 +99,11 @@ int HPB_WebsocketClient::happlay_cb(struct lws* wsi, enum lws_callback_reasons r
                 }
 			}
 			break;
+		}
 
-        default:
+        default: {
             break;
+		}
     }
 
 	// spdlog::debug("Queue size: {}", msg_tx_queue.size());
@@ -150,7 +174,7 @@ void HPB_WebsocketClient::disconnect() {
 	lws_context_destroy(context);
 }
 
-void HPB_WebsocketClient::send(const char* message) {
+void HPB_WebsocketClient::send(std::string message) {
 	if (wsi == nullptr) {
 		spdlog::error("Websocket is not connected");
 		return;
