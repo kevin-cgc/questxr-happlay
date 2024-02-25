@@ -13,7 +13,7 @@ async function main() {
 			console.log(`Received message => ${message}`);
 		});
 
-		ws.send("hello");
+		ws.send("hello dear client");
 	});
 
 	console.log("Server started on port 8080");

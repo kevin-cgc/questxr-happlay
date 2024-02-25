@@ -126,7 +126,8 @@ void HPB_WebsocketClient::connect() {
 }
 
 void HPB_WebsocketClient::service() {
-	auto res = lws_service(context, 0);
+	auto res = lws_service(context, -1); // -1 is non-blocking
+	// spdlog::debug("lws_service returned: {}", res);
 	if (res < 0) {
 		spdlog::error("lws_service failed: {}", res);
 	}
