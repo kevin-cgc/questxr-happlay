@@ -17,7 +17,8 @@
             "defines": [
                 "_DEBUG",
                 "UNICODE",
-                "_UNICODE"
+                "_UNICODE",
+                "WS_SERVER_DOMAIN=\"fakedomain.invalid\""
             ],
             "cStandard": "c17",
             "cppStandard": "c++20",

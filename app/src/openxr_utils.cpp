@@ -199,20 +199,15 @@ void LogSystemProperties(XrInstance instance, XrSystemId system_id) {
 	system_properties.type = XR_TYPE_SYSTEM_PROPERTIES;
 	CHECK_XRCMD(xrGetSystemProperties(instance, system_id, &system_properties));
 
-	spdlog::info("System Properties: Name={} VendorId={}",
-				 system_properties.systemName,
-				 system_properties.vendorId);
+	spdlog::info("System Properties: Name={} VendorId={}", system_properties.systemName, system_properties.vendorId);
 	spdlog::info("System Graphics Properties: MaxWidth={} MaxHeight={} MaxLayers={}",
 				 system_properties.graphicsProperties.maxSwapchainImageWidth,
 				 system_properties.graphicsProperties.maxSwapchainImageHeight,
 				 system_properties.graphicsProperties.maxLayerCount);
 	spdlog::info(
 		"System Tracking Properties: OrientationTracking={} PositionTracking={}",
-		system_properties.trackingProperties.orientationTracking == XR_TRUE
-			? "True"
-			: "False",
-		system_properties.trackingProperties.positionTracking == XR_TRUE ? "True"
-																		 : "False");
+		system_properties.trackingProperties.orientationTracking == XR_TRUE ? "True" : "False",
+		system_properties.trackingProperties.positionTracking == XR_TRUE ? "True" : "False");
 }
 
 void LogActionSourceName(XrSession session, XrAction action, const std::string &action_name) {
@@ -222,11 +217,7 @@ void LogActionSourceName(XrSession session, XrAction action, const std::string &
 	uint32_t path_count = 0;
 	CHECK_XRCMD(xrEnumerateBoundSourcesForAction(session, &get_info, 0, &path_count, nullptr));
 	std::vector<XrPath> paths(path_count);
-	CHECK_XRCMD(xrEnumerateBoundSourcesForAction(session,
-												 &get_info,
-												 static_cast<uint32_t>(paths.size()),
-												 &path_count,
-												 paths.data()));
+	CHECK_XRCMD(xrEnumerateBoundSourcesForAction(session, &get_info, static_cast<uint32_t>(paths.size()), &path_count, paths.data()));
 
 	std::string source_name;
 	for (uint32_t i = 0; i < path_count; ++i) {
@@ -245,11 +236,7 @@ void LogActionSourceName(XrSession session, XrAction action, const std::string &
 			continue;
 		}
 		std::vector<char> grab_source(size);
-		CHECK_XRCMD(xrGetInputSourceLocalizedName(session,
-												  &name_info,
-												  static_cast<uint32_t>(grab_source.size()),
-												  &size,
-												  grab_source.data()));
+		CHECK_XRCMD(xrGetInputSourceLocalizedName(session, &name_info, static_cast<uint32_t>(grab_source.size()), &size, grab_source.data()));
 		if (!source_name.empty()) {
 			source_name += " and ";
 		}
@@ -258,7 +245,5 @@ void LogActionSourceName(XrSession session, XrAction action, const std::string &
 		source_name += "'";
 	}
 
-	spdlog::info("{} action is bound to {}",
-				 action_name.c_str(),
-				 !source_name.empty() ? source_name.c_str() : "nothing");
+	spdlog::info("{} action is bound to {}", action_name.c_str(), !source_name.empty() ? source_name.c_str() : "nothing");
 }

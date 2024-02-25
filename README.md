@@ -11,9 +11,11 @@ Only the following dependencies are required:
 
 - [Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
 
-Set sdk.dir in `local.properties` to the path of the Android SDK. For example:
+Set sdk.dir in `local.properties` to the path of the Android SDK and WS_SERVER_DOMAIN to the domain of the happlay controller server.
+For example:
 ```
 sdk.dir=C\:\\Users\\USERNAME\\AppData\\Local\\Android\\Sdk
+WS_SERVER_DOMAIN=example-example-example.ngrok-free.app
 ```
 
 To build the project just run the following in the project directory:

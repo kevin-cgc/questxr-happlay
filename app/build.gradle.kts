@@ -1,6 +1,15 @@
 plugins {
     id("com.android.application")
 }
+
+import java.util.Properties
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) { localProperties.load(localPropertiesFile.inputStream()) }
+
+// Extract the value you need
+val WsServerDomain: String? = localProperties.getProperty("WS_SERVER_DOMAIN")
+
 android {
     compileSdk = 32
     ndkVersion = "26.1.10909125"
@@ -15,6 +24,7 @@ android {
             cmake {
                 arguments.add("-DANDROID_STL=c++_shared")
                 arguments.add("-DANDROID_USE_LEGACY_TOOLCHAIN_FILE=OFF")
+                if (WsServerDomain != null) { arguments.add("-DWS_SERVER_DOMAIN=${WsServerDomain}") }
             }
             ndk {
                 abiFilters.add("arm64-v8a")

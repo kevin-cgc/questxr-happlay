@@ -1,0 +1,15 @@
+{
+  "name": "happlay-server",
+  "version": "0.0.1",
+  "description": "",
+  "main": "src/main.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@ngrok/ngrok": "^1.0.0",
+    "ws": "^8.16.0"
+  }
+}

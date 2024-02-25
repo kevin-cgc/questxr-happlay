@@ -7,6 +7,7 @@
 
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
 
+#include "websocket.hpp"
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/android_sink.h>
@@ -52,9 +53,9 @@ static void AppHandleCmd(struct android_app *app, int32_t cmd) {
 }
 
 void android_main(struct android_app *app) {
-  auto android_logger = spdlog::android_logger_mt("android_logger", "HapPB");
-  spdlog::set_default_logger(android_logger);
-  spdlog::set_level(spdlog::level::debug);
+	auto android_logger = spdlog::android_logger_mt("android_logger", "HapPB");
+	spdlog::set_default_logger(android_logger);
+	spdlog::set_level(spdlog::level::debug);
 	try {
 		JNIEnv *env;
 		app->activity->vm->AttachCurrentThread(&env, nullptr);
@@ -69,6 +70,9 @@ void android_main(struct android_app *app) {
 		data->application_activity = app->activity->clazz;
 
 		std::shared_ptr<OpenXrProgram> program = CreateOpenXrProgram(CreatePlatform(data));
+
+		HPB_WebsocketClient client;
+		client.connect();
 
 		program->CreateInstance();
 		program->InitializeSystem();

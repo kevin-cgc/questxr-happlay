@@ -36,4 +36,16 @@ set(SPIRV_REFLECT_EXECUTABLE OFF)
 set(SPIRV_REFLECT_STATIC_LIB ON)
 FetchContent_MakeAvailable(SPIRV-Reflect)
 
+
+FetchContent_Declare(
+        libwebsockets
+        GIT_REPOSITORY https://github.com/warmcat/libwebsockets.git
+        GIT_TAG v4.3-stable # Replace with the desired version
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+set(LWS_WITH_SSL OFF)
+set(LWS_WITHOUT_TESTAPPS ON)
+FetchContent_MakeAvailable(libwebsockets)
+
 add_subdirectory(src)
