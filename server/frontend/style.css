@@ -53,6 +53,7 @@ div#root {
 	display: grid;
 	grid-template-columns: auto auto auto;
 	grid-template-rows: auto auto auto auto;
+	gap: 2ex;
 }
 
 .logcontainer {
@@ -61,7 +62,28 @@ div#root {
 	padding: 1em;
 	grid-template-rows: auto 1fr;
 	max-height: 30vh;
+	gap: 2ex;
+}
+.logcontainer > h2 {
+	margin: 0;
 }
 .logcontainer .msglog {
 	overflow-y: scroll;
+}
+
+#dragndroptacton {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 2ex;
+	flex-direction: column;
+	grid-template-columns: auto;
+	grid-template-rows: auto auto auto;
+	border: 2px dashed var(--tertiary-color-light);
+}
+#dragndroptacton strong {
+	font-size: 2em;
+}
+#dragndroptacton.dragover {
+	background-color: var(--tertiary-color-dark);
 }

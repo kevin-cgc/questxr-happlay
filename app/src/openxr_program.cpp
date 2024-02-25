@@ -521,7 +521,7 @@ void OpenXrProgram::handle_ws_message(const std::vector<uint8_t> &message, bool 
 			std::string cmd = j.at("cmd").get<std::string>();
 
 			if (cmd == "getinfo") {
-				json sys_info = GetSystemInfoAsJson(instance_);
+				auto sys_info = GetSystemInfoAsJson(instance_);
 
 				XrHapticActionInfo haptic_action_info{};
 				haptic_action_info.type = XR_TYPE_HAPTIC_ACTION_INFO;

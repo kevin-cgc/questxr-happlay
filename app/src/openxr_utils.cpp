@@ -248,7 +248,7 @@ void LogActionSourceName(XrSession session, XrAction action, const std::string &
 	spdlog::info("{} action is bound to {}", action_name.c_str(), !source_name.empty() ? source_name.c_str() : "nothing");
 }
 
-json GetSystemInfoAsJson(XrInstance instance) {
+ordered_json GetSystemInfoAsJson(XrInstance instance) {
     XrSystemGetInfo getInfo = {XR_TYPE_SYSTEM_GET_INFO};
     getInfo.formFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY; // Targeting VR headsets
     XrSystemId systemId;
@@ -270,7 +270,7 @@ json GetSystemInfoAsJson(XrInstance instance) {
 
 
     // Create a JSON object and populate it with system information
-    json systemInfoJson = {
+    ordered_json systemInfoJson = {
         {"systemName", systemProperties.systemName},
         {"systemId", systemId},
         {"vendorId", systemProperties.vendorId},
