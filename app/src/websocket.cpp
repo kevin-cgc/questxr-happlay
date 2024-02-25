@@ -67,8 +67,8 @@ int HPB_WebsocketClient::happlay_cb(struct lws* wsi, enum lws_callback_reasons r
 		}
 
 		case LWS_CALLBACK_CLIENT_WRITEABLE: {
-			spdlog::debug("WebSocket is writeable: LWS_CALLBACK_CLIENT_WRITEABLE");
-			spdlog::debug("WS TX Queue size: {}", msg_tx_queue.size());
+			// spdlog::debug("WebSocket is writeable: LWS_CALLBACK_CLIENT_WRITEABLE");
+			// spdlog::debug("WS TX Queue size: {}", msg_tx_queue.size());
 
 			if (msg_tx_queue.size() > 0) {
 				size_t start_send_idx = 0;
@@ -134,8 +134,8 @@ void HPB_WebsocketClient::connect() {
 		.retry_ms_table_count = LWS_ARRAY_SIZE(backoff_ms),
 		.conceal_count = 500,
 
-		.secs_since_valid_ping = 3,	   /* force PINGs after secs idle */
-		.secs_since_valid_hangup = 10, /* hangup after secs idle */
+		.secs_since_valid_ping = 24, /* force PINGs after secs idle */
+		.secs_since_valid_hangup = 52, /* hangup after secs idle */
 
 		.jitter_percent = 20,
 	};
