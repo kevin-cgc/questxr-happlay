@@ -3,10 +3,14 @@
 #include <spdlog/spdlog.h>
 #include <libwebsockets.h>
 #include <queue>
+#include "openxr_program.hpp"
+
+using HPBWSMessageHandler = std::function<void(const std::vector<uint8_t>& message, bool is_binary)> ;
 
 class HPB_WebsocketClient {
 public:
 	HPB_WebsocketClient();
+	HPB_WebsocketClient(HPBWSMessageHandler handler);
 	~HPB_WebsocketClient();
 
 	void connect();
@@ -21,6 +25,7 @@ public:
         return client->happlay_cb(wsi, reason, in, len);
     }
 
+	std::optional<HPBWSMessageHandler> handle_message_external;
 private:
 	std::queue<std::string> msg_tx_queue;
 	std::vector<uint8_t> send_buffer;
@@ -32,9 +37,8 @@ private:
 
 	int happlay_cb(struct lws* wsi, enum lws_callback_reasons reason, void* in, size_t len);
 
-	void handle_message(const std::vector<uint8_t>& message, bool is_binary);
+	void handle_message_internal(const std::vector<uint8_t>& message, bool is_binary);
 
-
-	struct lws_context* context;
-	struct lws* wsi;
+	struct lws_context* context = nullptr;
+	struct lws* wsi = nullptr;
 };

@@ -70,16 +70,20 @@ void android_main(struct android_app *app) {
 		data->application_vm = app->activity->vm;
 		data->application_activity = app->activity->clazz;
 
+		HPB_WebsocketClient ws_client = HPB_WebsocketClient();
 		std::shared_ptr<OpenXrProgram> program = CreateOpenXrProgram(CreatePlatform(data));
 
-		HPB_WebsocketClient ws_client;
-		ws_client.connect();
-		// ws_client.send("hellp");
+		program->ws_send = std::bind(&HPB_WebsocketClient::send, &ws_client, std::placeholders::_1);
+		ws_client.handle_message_external = std::bind(&OpenXrProgram::handle_ws_message, program, std::placeholders::_1, std::placeholders::_2);
 
 		program->CreateInstance();
 		program->InitializeSystem();
 		program->InitializeSession();
 		program->CreateSwapchains();
+
+		ws_client.connect();
+		// ws_client.send("hellp");
+
 		while (app->destroyRequested == 0) {
 			for (;;) {
 				int events;

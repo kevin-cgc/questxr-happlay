@@ -247,3 +247,43 @@ void LogActionSourceName(XrSession session, XrAction action, const std::string &
 
 	spdlog::info("{} action is bound to {}", action_name.c_str(), !source_name.empty() ? source_name.c_str() : "nothing");
 }
+
+json GetSystemInfoAsJson(XrInstance instance) {
+    XrSystemGetInfo getInfo = {XR_TYPE_SYSTEM_GET_INFO};
+    getInfo.formFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY; // Targeting VR headsets
+    XrSystemId systemId;
+    XrResult result = xrGetSystem(instance, &getInfo, &systemId);
+
+    if (XR_FAILED(result)) {
+        spdlog::error("Failed to get system ID");
+        return { "systemId", "unknown" };
+    }
+
+    XrSystemProperties systemProperties = {XR_TYPE_SYSTEM_PROPERTIES};
+    result = xrGetSystemProperties(instance, systemId, &systemProperties);
+
+    if (XR_FAILED(result)) {
+        spdlog::error("Failed to get system properties");
+        return { "systemId", systemId };
+    }
+
+
+
+    // Create a JSON object and populate it with system information
+    json systemInfoJson = {
+        {"systemName", systemProperties.systemName},
+        {"systemId", systemId},
+        {"vendorId", systemProperties.vendorId},
+        {"graphicsProperties", {
+            {"maxWidth", systemProperties.graphicsProperties.maxSwapchainImageWidth},
+            {"maxHeight", systemProperties.graphicsProperties.maxSwapchainImageHeight},
+            {"maxLayerCount", systemProperties.graphicsProperties.maxLayerCount}
+        }},
+        {"trackingProperties", {
+            {"orientationTracking", systemProperties.trackingProperties.orientationTracking},
+            {"positionTracking", systemProperties.trackingProperties.positionTracking}
+        }}
+    };
+
+    return systemInfoJson;
+}

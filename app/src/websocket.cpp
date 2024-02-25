@@ -13,12 +13,14 @@
 
 void lws_spdlog_emit_function(int level, const char* line);
 
-void HPB_WebsocketClient::handle_message(const std::vector<uint8_t>& message, bool is_binary) {
+void HPB_WebsocketClient::handle_message_internal(const std::vector<uint8_t>& message, bool is_binary) {
 	if (is_binary) {
 		spdlog::info("WS rx binary msg len: {}", message.size());
 	} else {
 		spdlog::info("WS rx text msg: {}", std::string(message.begin(), message.end()));
 	}
+
+	if (this->handle_message_external.has_value()) this->handle_message_external.value()(message, is_binary);
 }
 
 int HPB_WebsocketClient::happlay_cb(struct lws* wsi, enum lws_callback_reasons reason, void* in, size_t len) {
@@ -36,7 +38,7 @@ int HPB_WebsocketClient::happlay_cb(struct lws* wsi, enum lws_callback_reasons r
 			const size_t remaining = lws_remaining_packet_payload(wsi);
 			if (!remaining && lws_is_final_fragment(wsi)) {
 				this->msg_rx_buffer.insert(this->msg_rx_buffer.end(), incoming_data, incoming_data + len);
-				this->handle_message(this->msg_rx_buffer, lws_frame_is_binary(wsi));
+				this->handle_message_internal(this->msg_rx_buffer, lws_frame_is_binary(wsi));
 				this->msg_rx_buffer.clear();
 			} else {
 				this->msg_rx_buffer.insert(this->msg_rx_buffer.end(), incoming_data, incoming_data + len);
@@ -188,9 +190,9 @@ void HPB_WebsocketClient::send(std::string message) {
 }
 
 
-HPB_WebsocketClient::HPB_WebsocketClient() {
-	context = nullptr;
-	wsi = nullptr;
+HPB_WebsocketClient::HPB_WebsocketClient() {}
+HPB_WebsocketClient::HPB_WebsocketClient(HPBWSMessageHandler handler) {
+	handle_message_external = handler;
 }
 
 HPB_WebsocketClient::~HPB_WebsocketClient() {

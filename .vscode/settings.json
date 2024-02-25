@@ -79,7 +79,9 @@
 		"unordered_set": "cpp",
 		"variant": "cpp",
 		"cinttypes": "cpp",
-		"codecvt": "cpp"
+		"codecvt": "cpp",
+		"valarray": "cpp"
 	},
 	"cmake.sourceDirectory": "C:/oculusdevel/questxr-happlay/app",
+	"cmake.configureOnOpen": false,
 }

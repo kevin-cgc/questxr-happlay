@@ -32,9 +32,13 @@ struct InputState {
 
 	// haptic feedback
 	std::array<bool, side::COUNT> grab_was_active = {{false, false}};
-	std::array<uint32_t, side::COUNT> hap_samples_consumed = {{0, 0}};
+	/// if playing, samples consumed
+	std::array<std::optional<uint32_t>, side::COUNT> hap_samples_consumed = {{std::nullopt, std::nullopt}};
 };
 
+#include "../test_audio/dog_barking_haptic.pcm_f32le.hpp"
+
+using WebSocketSendFunction = std::function<void(const std::string)>;
 class OpenXrProgram {
    public:
 	OpenXrProgram(std::shared_ptr<Platform> platform);
@@ -44,6 +48,7 @@ class OpenXrProgram {
 	void InitializeSession();
 	void CreateSwapchains();
 
+	void handle_ws_message(const std::vector<uint8_t>& message, bool is_binary);
 	void PollEvents();
 	void PollActions();
 	void RenderFrame();
@@ -52,7 +57,11 @@ class OpenXrProgram {
 
 	~OpenXrProgram();
 
+	std::optional<WebSocketSendFunction> ws_send;
+
    private:
+	void send_ws_message(const std::string message);
+
 	void InitializeActions();
 	void CreateVisualizedSpaces();
 
@@ -63,6 +72,8 @@ class OpenXrProgram {
 					 XrCompositionLayerProjection &layer);
 
    private:
+	std::vector<float> haptic_pcm_buffer = dog_barking_haptic_pcm_f32le;
+
 	std::shared_ptr<Platform> platform_;
 	std::shared_ptr<GraphicsPlugin> graphics_plugin_;
 

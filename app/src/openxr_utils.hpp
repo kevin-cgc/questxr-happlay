@@ -1,6 +1,8 @@
 #pragma once
 
 #include "openxr-include.hpp"
+#include "nlohmann/json.hpp"
+using json = nlohmann::json;
 
 #include <string>
 
@@ -15,3 +17,4 @@ void LogViewConfigurations(XrInstance instance, XrSystemId system_id);
 void LogReferenceSpaces(XrSession session);
 void LogSystemProperties(XrInstance instance, XrSystemId system_id);
 void LogActionSourceName(XrSession session, XrAction action, const std::string &action_name);
+json GetSystemInfoAsJson(XrInstance instance);

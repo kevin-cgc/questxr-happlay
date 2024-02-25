@@ -8,6 +8,9 @@
 #include <spdlog/spdlog.h>
 #include "format_helpers.h"
 
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 #include <array>
 #include <cmath>
 #include <vector>
@@ -496,7 +499,50 @@ bool OpenXrProgram::IsSessionRunning() const {
 	return session_running_;
 }
 
-#include "../test_audio/dog_barking_haptic.pcm_f32le.hpp"
+void OpenXrProgram::send_ws_message(const std::string message) {
+	if (ws_send.has_value()) ws_send.value()(message);
+}
+
+void OpenXrProgram::handle_ws_message(const std::vector<uint8_t> &message, bool is_binary) {
+	if (is_binary) {
+		spdlog::info("Received binary message of size {}", message.size());
+
+		// stop any ongoing tacton playback
+		input_.hap_samples_consumed[side::LEFT].reset();
+		input_.hap_samples_consumed[side::RIGHT].reset();
+
+		// replace haptic_pcm_buffer with the received message
+		haptic_pcm_buffer.resize(message.size() / sizeof(float));
+		std::memcpy(haptic_pcm_buffer.data(), message.data(), message.size()); // msg must be f32le
+
+	} else {
+		try {
+			json j = json::parse(message);
+			std::string cmd = j.at("cmd").get<std::string>();
+
+			if (cmd == "getinfo") {
+				json sys_info = GetSystemInfoAsJson(instance_);
+
+				XrHapticActionInfo haptic_action_info{};
+				haptic_action_info.type = XR_TYPE_HAPTIC_ACTION_INFO;
+				haptic_action_info.action = input_.vibrate_action;
+				sys_info["haptic_sample_rate"] = json::object();
+				for (auto hand : {side::LEFT, side::RIGHT}) {
+					haptic_action_info.subactionPath = input_.hand_subaction_path[hand];
+					XrDevicePcmSampleRateGetInfoFB sample_rate_info{XR_TYPE_DEVICE_PCM_SAMPLE_RATE_GET_INFO_FB};
+					CHECK_XRCMD(xrGetDeviceSampleRateFB(session_, &haptic_action_info, &sample_rate_info));
+					sys_info["haptic_sample_rate"][hand == side::LEFT ? "left" : "right"] = sample_rate_info.sampleRate;
+				}
+
+				send_ws_message(sys_info.dump());
+			} else {
+				spdlog::warn("Unknown command: {}", cmd);
+			}
+		} catch (const json::exception &e) {
+			spdlog::error("Failed to parse json message: {}", e.what());
+		}
+	}
+}
 
 void OpenXrProgram::PollActions() {
 	input_.hand_active = {XR_FALSE, XR_FALSE};
@@ -509,8 +555,8 @@ void OpenXrProgram::PollActions() {
 	CHECK_XRCMD(xrSyncActions(session_, &sync_info));
 
 
-	const float* sample_buffer = dog_barking_haptic_pcm_f32le;
-	uint32_t total_samples = dog_barking_haptic_pcm_f32le_sample_len;
+	const float* sample_buffer = this->haptic_pcm_buffer.data();
+	uint32_t total_samples = haptic_pcm_buffer.size();
 	float sample_rate = 8000;
 
 
@@ -531,39 +577,68 @@ void OpenXrProgram::PollActions() {
 			haptic_action_info.action = input_.vibrate_action;
 			haptic_action_info.subactionPath = input_.hand_subaction_path[hand];
 
-			uint32_t &hap_samples_consumed = input_.hap_samples_consumed[hand];
+			std::optional<uint32_t> &hap_samples_consumed_opt = input_.hap_samples_consumed[hand];
 
-			if (grab_value.currentState > 0.7f) {
-				if (!input_.grab_was_active[hand]) {
-					XrDevicePcmSampleRateGetInfoFB sample_rate_info{XR_TYPE_DEVICE_PCM_SAMPLE_RATE_GET_INFO_FB};
-					CHECK_XRCMD(xrGetDeviceSampleRateFB(session_, &haptic_action_info, &sample_rate_info));
-					spdlog::info("Sample rate: {}", sample_rate_info.sampleRate);
-
-					hap_samples_consumed = 0;
-				}
-				if (hap_samples_consumed < total_samples) {
-					XrHapticPcmVibrationFB pcm_vibration{XR_TYPE_HAPTIC_PCM_VIBRATION_FB, nullptr};
-					// pcm_vibration.buffer = sample_buffer;
-					// pcm_vibration.bufferSize = total_samples;
-					pcm_vibration.buffer = sample_buffer + hap_samples_consumed;
-					pcm_vibration.bufferSize = total_samples - hap_samples_consumed;
-					pcm_vibration.sampleRate = sample_rate;
-					uint32_t samples_consumed_from_offset = 0;
-					pcm_vibration.samplesConsumed = &samples_consumed_from_offset;
-					pcm_vibration.append = input_.grab_was_active[hand] ? XR_TRUE : XR_FALSE;
-
-					CHECK_XRCMD(xrApplyHapticFeedback(session_, &haptic_action_info, (XrHapticBaseHeader *)&pcm_vibration));
-					hap_samples_consumed += samples_consumed_from_offset;
-
-					// todo("its not playing the full tacton");
-					spdlog::debug("current samples consumed: {}", hap_samples_consumed);
-				}
-
-				input_.grab_was_active[hand] = true;
-			} else if (grab_value.currentState < 0.1f) {
+			if (grab_value.currentState < 0.15f && input_.grab_was_active[hand]) {
 				CHECK_XRCMD(xrStopHapticFeedback(session_, &haptic_action_info));
 
+				json early_stop_playback = {
+					{"cmd", "stopping_playback"},
+					{"data", {
+						{"hand", hand == side::LEFT ? "left" : "right"}
+					}}
+				};
+				this->send_ws_message(early_stop_playback.dump());
+
+				hap_samples_consumed_opt.reset(); // not really necessary?
 				input_.grab_was_active[hand] = false;
+			} else {
+				if (!input_.grab_was_active[hand] && grab_value.currentState > 0.8f) {
+					XrDevicePcmSampleRateGetInfoFB sample_rate_info{XR_TYPE_DEVICE_PCM_SAMPLE_RATE_GET_INFO_FB};
+					CHECK_XRCMD(xrGetDeviceSampleRateFB(session_, &haptic_action_info, &sample_rate_info));
+					spdlog::info("device sample rate: {}", sample_rate_info.sampleRate);
+
+					spdlog::info("starting tacton playback...");
+
+					hap_samples_consumed_opt = 0;
+
+					json starting_playback = {
+						{"cmd", "starting_playback"},
+						{"data", {
+							{"hand", hand == side::LEFT ? "left" : "right"},
+							{"device_sample_rate", sample_rate_info.sampleRate},
+							{"tacton", {
+								{"sample_rate", sample_rate},
+								{"total_samples", total_samples}
+							}}
+						}}
+					};
+					this->send_ws_message(starting_playback.dump());
+
+					input_.grab_was_active[hand] = true;
+				}
+				if (hap_samples_consumed_opt.has_value()) { //playback started
+					auto hap_samples_consumed = hap_samples_consumed_opt.value();
+					if (hap_samples_consumed < total_samples) {
+						XrHapticPcmVibrationFB pcm_vibration{XR_TYPE_HAPTIC_PCM_VIBRATION_FB, nullptr};
+						// pcm_vibration.buffer = sample_buffer;
+						// pcm_vibration.bufferSize = total_samples;
+						pcm_vibration.buffer = sample_buffer + hap_samples_consumed;
+						pcm_vibration.bufferSize = total_samples - hap_samples_consumed;
+						pcm_vibration.sampleRate = sample_rate;
+						uint32_t samples_consumed_from_offset = 0;
+						pcm_vibration.samplesConsumed = &samples_consumed_from_offset;
+						pcm_vibration.append = hap_samples_consumed == 0 ? XR_FALSE : XR_TRUE;
+
+						CHECK_XRCMD(xrApplyHapticFeedback(session_, &haptic_action_info, (XrHapticBaseHeader *)&pcm_vibration));
+						hap_samples_consumed_opt = samples_consumed_from_offset + hap_samples_consumed;
+
+						spdlog::debug("current samples consumed: {}", hap_samples_consumed);
+					} else { // tacton playback fully queued but not fully rendered (~2s delay?)
+						spdlog::info("tacton playback fully queued");
+						hap_samples_consumed_opt.reset(); // not really necessary
+					}
+				}
 			}
 		}
 

@@ -35,4 +35,5 @@ target_link_libraries(
         spdlog
         vulkan-wrapper
         websockets
+        nlohmann_json::nlohmann_json
 )
