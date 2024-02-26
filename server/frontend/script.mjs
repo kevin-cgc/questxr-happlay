@@ -1,3 +1,4 @@
+const SAMPLE_RATE = 8000;
 
 const serverwslog = document.getElementById("serverwslog");
 function log_to_logcontainer(message, logcontainer) {
@@ -21,6 +22,12 @@ const send_msg = msg => {
 ws.onmessage = event => {
 	const data = JSON.parse(event.data);
 	swslog(`Received message => ${JSON.stringify(data)}`);
+
+	if (data.cmd == "starting_playback") {
+		start_playback();
+	} else if (data.cmd == "stopping_playback") {
+		stop_playback();
+	}
 };
 
 ws.onopen = () => {
@@ -41,7 +48,7 @@ ws.onclose = async () => {
 	ws = nws;
 }
 
-const dragndroptacton_div = document.getElementById("dragndroptacton");
+const dragndroptacton_form = document.getElementById("dragndroptacton");
 document.body.addEventListener("dragenter", event => {
 	event.preventDefault();
 	// flash the dragndroptacton_div
@@ -53,17 +60,17 @@ document.body.addEventListener("dragenter", event => {
 });
 document.addEventListener("drop", event => event.preventDefault());
 
-dragndroptacton_div.addEventListener("dragover", event => {
+dragndroptacton_form.addEventListener("dragover", event => {
 	event.preventDefault();
-	dragndroptacton_div.classList.add("dragover");
+	dragndroptacton_form.classList.add("dragover");
 });
-dragndroptacton_div.addEventListener("dragleave", event => {
+dragndroptacton_form.addEventListener("dragleave", event => {
 	event.preventDefault();
-	dragndroptacton_div.classList.remove("dragover");
+	dragndroptacton_form.classList.remove("dragover");
 });
-dragndroptacton_div.addEventListener("drop", event => {
+dragndroptacton_form.addEventListener("drop", event => {
 	event.preventDefault();
-	dragndroptacton_div.classList.remove("dragover");
+	dragndroptacton_form.classList.remove("dragover");
 	const files = event.dataTransfer.files;
 	if (files.length > 0) {
 		const file = files[0];
@@ -82,7 +89,7 @@ dragndroptacton_div.addEventListener("drop", event => {
 				const data = reader.result;
 				if (typeof data === "string") throw new TypeError("unreachable");
 
-				const audio_ctx = new AudioContext({ sampleRate: 8000, latencyHint: "playback" });
+				const audio_ctx = new AudioContext({ sampleRate: SAMPLE_RATE, latencyHint: "playback" });
 				const decoded_pcm = await audio_ctx.decodeAudioData(data);
 				console.log(decoded_pcm);
 
@@ -92,12 +99,14 @@ dragndroptacton_div.addEventListener("drop", event => {
 				}
 
 				const pcm = decoded_pcm.getChannelData(0); // device expects f32le
-				ws.send(pcm.buffer);
 
-				// send_msg({ cmd: "upload", data });
+				draw_waveform(pcm);
+
+				swslog(`Sending ${pcm.length} samples (${decoded_pcm.duration}s) to devices...`);
+				ws.send(pcm.buffer);
 			} catch (err) {
 				console.error(err);
-				alert("Error reading file, see console for details");
+				alert("Error reading file, see browser console for details");
 			}
 		};
 		reader.readAsArrayBuffer(file);
@@ -105,3 +114,66 @@ dragndroptacton_div.addEventListener("drop", event => {
 		alert("No files dropped");
 	}
 });
+
+
+
+const waveformcanvas = /** @type {HTMLCanvasElement} **/ (document.getElementById("waveformcanvas"));
+const wf_ctx = waveformcanvas.getContext("2d");
+wf_ctx.fillStyle = "black";
+wf_ctx.fillRect(0, 0, waveformcanvas.width, waveformcanvas.height);
+// put question mark
+wf_ctx.font = "50px monospace";
+wf_ctx.fillStyle = "white";
+wf_ctx.textAlign = "center";
+wf_ctx.fillText("Unknown current waveform", waveformcanvas.width / 2, waveformcanvas.height / 2);
+
+let last_step = 0;
+
+const draw_waveform = pcm => {
+	wf_ctx.fillStyle = "black";
+	wf_ctx.fillRect(0, 0, waveformcanvas.width, waveformcanvas.height);
+
+	const { width, height } = waveformcanvas;
+	last_step = pcm.length / width;
+	wf_ctx.strokeStyle = "white";
+	wf_ctx.beginPath();
+	wf_ctx.moveTo(0, height / 2);
+	for (let i = 0; i < width; i++) {
+		const sample = pcm[Math.floor(i * last_step)];
+		wf_ctx.lineTo(i, height / 2 - sample * height / 2);
+	}
+	wf_ctx.stroke();
+}
+
+
+let playback_started_at = null;
+function start_playback() {
+	playback_started_at = performance.now();
+
+	const tick = () => {
+		if (playback_started_at == null) {
+			draw_playback_head(0);
+			return;
+		} else {
+			const elapsed = performance.now() - playback_started_at;
+			draw_playback_head(elapsed);
+			requestAnimationFrame(tick);
+		}
+	};
+
+	tick();
+}
+function stop_playback() {
+	playback_started_at = null;
+}
+
+const playbackheadcanvas = /** @type {HTMLCanvasElement} **/ (document.getElementById("playbackheadcanvas"));
+const pbh_ctx = playbackheadcanvas.getContext("2d");
+const draw_playback_head = elapsed => {
+	const { width, height } = playbackheadcanvas;
+	pbh_ctx.clearRect(0, 0, width, height);
+	pbh_ctx.fillStyle = "red";
+	const position = (elapsed / 1000) * SAMPLE_RATE / last_step;
+	pbh_ctx.fillRect(position, 0, 2, height);
+}
+

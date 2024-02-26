@@ -15,11 +15,18 @@
 				<div class="logmsg">connecting...</div>
 			</div>
 		</div>
-		<div></div>
-		<div></div>
-		<div id="dragndroptacton">
-			<span>Drag and drop a .wav file here to upload to all connected Quests</span>
+		<form id="dragndroptacton">
+			<span>Drag and drop a .wav file here to upload to all connected Quests.</span>
 			<strong>⭳</strong>
+			<small>NOTE: all audio files will automatically be resampled to 8000Hz by the browser <small>prlly with windowed-sinc</small></small>
+			<!--
+			<input type="file" name="filefallback" id="tactonfilefallback">
+			<input type="submit" value="submit">
+			-->
+		</form>
+		<div id="waveformcontainer">
+			<canvas id="waveformcanvas" width="800" height="200"></canvas>
+			<canvas id="playbackheadcanvas" width="800" height="200"></canvas>
 		</div>
 	</div>
 	<script type="module" src="script.mjs"></script>

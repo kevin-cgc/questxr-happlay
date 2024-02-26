@@ -56,6 +56,10 @@ div#root {
 	gap: 2ex;
 }
 
+#serverwslog {
+	grid-column: span 2;
+}
+
 .logcontainer {
 	display: grid;
 	background-color: var(--primary-color);
@@ -72,6 +76,8 @@ div#root {
 }
 
 #dragndroptacton {
+	grid-column: span 3;
+
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -86,4 +92,21 @@ div#root {
 }
 #dragndroptacton.dragover {
 	background-color: var(--tertiary-color-dark);
+}
+#dragndroptacton > small {
+	font-size: 0.75em;
+	font-weight: bold;
+}
+
+#waveformcontainer {
+	grid-column: span 3;
+
+	display: grid;
+	grid-template-columns: auto;
+	grid-template-rows: auto;
+	gap: 2ex;
+}
+
+#waveformcontainer > canvas {
+	grid-area: 1 / 1 / 2 / 2;
 }

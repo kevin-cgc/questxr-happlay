@@ -633,7 +633,7 @@ void OpenXrProgram::PollActions() {
 						CHECK_XRCMD(xrApplyHapticFeedback(session_, &haptic_action_info, (XrHapticBaseHeader *)&pcm_vibration));
 						hap_samples_consumed_opt = samples_consumed_from_offset + hap_samples_consumed;
 
-						spdlog::debug("current samples consumed: {}", hap_samples_consumed);
+						// spdlog::debug("current samples consumed: {}", hap_samples_consumed);
 					} else { // tacton playback fully queued but not fully rendered (~2s delay?)
 						spdlog::info("tacton playback fully queued");
 						hap_samples_consumed_opt.reset(); // not really necessary

@@ -4,12 +4,13 @@
 import ngrok from "@ngrok/ngrok";
 import { WebSocketServer, WebSocket } from "ws";
 import express from "express";
+import path from "path";
 
 
 async function main() {
-
 	const app = express();
-	app.use(express.static("frontend"));
+	const static_path = path.join(import.meta.dirname, "../frontend");
+	app.use(express.static(static_path));
 	const server = app.listen(8081, () => console.log("Controller started on http://localhost:8081"));
 
 	const controller_wss = new WebSocketServer({ server, path: "/ws" });
