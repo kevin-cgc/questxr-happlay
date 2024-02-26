@@ -34,10 +34,15 @@ body {
 *::-webkit-scrollbar-thumb {
 	background: var(--secondary-color);
 }
+*::-webkit-scrollbar-thumb:hover {
+	background: var(--tertiary-color-light);
+}
 *::-webkit-scrollbar-track {
 	background: var(--tertiary-color-dark);
 }
-
+*::-webkit-scrollbar-corner {
+	background: var(--tertiary-color-dark);
+}
 
 a,
 button {
