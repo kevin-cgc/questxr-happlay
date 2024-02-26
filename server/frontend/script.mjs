@@ -27,6 +27,23 @@ ws.onmessage = event => {
 		start_playback();
 	} else if (data.cmd == "stopping_playback") {
 		stop_playback();
+	} else if ("systemId" in data) {
+		const olddiv = devicelist.querySelector(`[data-system-id="${data.systemId}"]`);
+		if (olddiv) olddiv.remove();
+
+		const div = new DOMParser().parseFromString(`
+		<div class="device" data-system-id="${data.systemId}">
+			<h2>${data.systemName} <small class="id">${data.systemId}</small></h2>
+			<h3>Haptic Sample Rate <!--<br><small>(quest controllers must be connected when getting info)</small>--></h3>
+			<div>
+				Left: ${data.haptic_sample_rate?.left}Hz ${data.haptic_sample_rate?.left == 0 ? "(disconnected?)":""}
+				<br>
+				Right: ${data.haptic_sample_rate?.right}Hz ${data.haptic_sample_rate?.right == 0 ? "(disconnected?)":""}
+			</div>
+		</div>
+		`, "text/html").body.firstChild;
+
+		devicelist.appendChild(div);
 	}
 };
 
@@ -47,6 +64,14 @@ ws.onclose = async () => {
 	nws.onclose = ws.onclose;
 	ws = nws;
 }
+
+const qdevices = document.getElementById("qdevices");
+const devicelist = qdevices.querySelector(".devicelist");
+const refresh_button = qdevices.querySelector("button.refresh");
+refresh_button.addEventListener("click", () => {
+	devicelist.innerHTML = "";
+	send_msg({ cmd: "getinfo" })
+});
 
 const dragndroptacton_form = document.getElementById("dragndroptacton");
 document.body.addEventListener("dragenter", event => {

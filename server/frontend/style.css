@@ -30,6 +30,7 @@ body {
 
 *::-webkit-scrollbar {
 	width: 1.8ex;
+	height: 1.8ex;
 }
 *::-webkit-scrollbar-thumb {
 	background: var(--secondary-color);
@@ -44,8 +45,17 @@ body {
 	background: var(--tertiary-color-dark);
 }
 
-a,
+
 button {
+	color: var(--secondary-color);
+	background-color: var(--tertiary-color-dark);
+	border: none;
+	font-size: 1em;
+	padding: 0.5ex 1ex;
+	font-weight: bold;
+	cursor: pointer;
+}
+a {
 	color: var(--secondary-color);
 }
 
@@ -56,8 +66,8 @@ button {
 
 div#root {
 	display: grid;
-	grid-template-columns: auto auto auto;
-	grid-template-rows: auto auto auto auto;
+	grid-template-columns: auto 1fr auto;
+	grid-template-rows: minmax(auto, 30vh) auto auto auto;
 	gap: 2ex;
 }
 
@@ -70,7 +80,6 @@ div#root {
 	background-color: var(--primary-color);
 	padding: 1em;
 	grid-template-rows: auto 1fr;
-	max-height: 30vh;
 	gap: 2ex;
 }
 .logcontainer > h2 {
@@ -78,6 +87,39 @@ div#root {
 }
 .logcontainer .msglog {
 	overflow-y: scroll;
+}
+
+#qdevices {
+	display: grid;
+	grid-template-columns: auto;
+	grid-template-rows: auto 1fr;
+
+	gap: 1ex;
+}
+#qdevices :is(h1, h2, h3, h4, h5, h6) {
+	margin: 0;
+}
+#qdevices > .devicelist {
+	display: flex;
+	flex-direction: column;
+	gap: 1ex;
+	overflow-y: scroll;
+}
+#qdevices > .devicelist > .device {
+	background-color: var(--primary-color);
+	padding: 1ex;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5ex;
+}
+#qdevices > .devicelist > .device > h2 {
+	margin-top: 0;
+}
+#qdevices > .devicelist > .device > h2 > small {
+	font-size: 0.5em;
+}
+#qdevices > .devicelist > .device > h3 > small {
+	font-size: 0.6em;
 }
 
 #dragndroptacton {
@@ -105,7 +147,6 @@ div#root {
 
 #waveformcontainer {
 	grid-column: span 3;
-
 	display: grid;
 	grid-template-columns: auto;
 	grid-template-rows: auto;
