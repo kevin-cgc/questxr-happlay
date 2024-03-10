@@ -84,4 +84,5 @@
 	},
 	"cmake.sourceDirectory": "C:/oculusdevel/questxr-happlay/app",
 	"cmake.configureOnOpen": false,
+	"terminal.integrated.splitCwd": "workspaceRoot",
 }
