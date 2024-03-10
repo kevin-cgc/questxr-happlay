@@ -183,6 +183,9 @@ function load_and_send_pcm(file) {
 
 
 const waveformcanvas = /** @type {HTMLCanvasElement} **/ (document.getElementById("waveformcanvas"));
+const playbackheadcanvas = /** @type {HTMLCanvasElement} **/ (document.getElementById("playbackheadcanvas"));
+playbackheadcanvas.width = waveformcanvas.width = waveformcanvas.parentElement.clientWidth;
+
 const wf_ctx = waveformcanvas.getContext("2d");
 wf_ctx.fillStyle = "black";
 wf_ctx.fillRect(0, 0, waveformcanvas.width, waveformcanvas.height);
@@ -232,7 +235,6 @@ function stop_playback() {
 	playback_started_at = null;
 }
 
-const playbackheadcanvas = /** @type {HTMLCanvasElement} **/ (document.getElementById("playbackheadcanvas"));
 const pbh_ctx = playbackheadcanvas.getContext("2d");
 const draw_playback_head = elapsed => {
 	const { width, height } = playbackheadcanvas;
