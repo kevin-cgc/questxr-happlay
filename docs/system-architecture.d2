@@ -1,0 +1,40 @@
+quest: Quest Device {
+	happlay: Tacton Player App (c++, openxr+vulkan)\nNo GUI, can be used headless
+	# icon: https://media.cnn.com/api/v1/images/stellar/prod/oculus-quest-2-comparison-card.jpg
+}
+touchpro: Touch Pro Controllers {
+	shape: image
+	icon: https://www.knoxlabs.com/cdn/shop/files/MetaQuestTouchProRightController_701x700.webp
+}
+quest.happlay <-> touchpro: Tacton Playback
+
+pc: PC {
+	browser: Browser {
+		controlwapp: Control Web App {
+			shape: image
+			icon: ./gui.png
+		}
+	}
+
+	server: Persistent Coordinating Server\nsupports multiple devices/controllers {
+		# icon: https://cdn.freebiesupply.com/logos/large/2x/nodejs-logo-png-transparent.png
+	}
+
+	browser.controlwapp <-> server: Websocket
+}
+pc.server <-> quest.happlay: Websocket
+
+ngrok: {
+	label: ""
+	shape: image
+	icon: https://avatars.githubusercontent.com/u/10625446?s=280&v=4
+}
+pc.server <-> ngrok: (tunnel, allows 0 effort firewall bypass) {
+	style.stroke-dash: 5
+}
+ngrok <-> quest.happlay: (tunnel, constant domain so no\ntyping IPs in the headset) {
+	style.stroke-dash: 5
+}
+
+
+
