@@ -29,7 +29,7 @@ After that, apk can be found in `app/build/outputs/apk/` directory.
 
 ## Running the Controller Server
 
-The controller server is a simple node.js server that serves the controller web app facilitates communication with the Quest app via websockets. To run the server, first install the dependencies, then start the server:
+The controller server is a simple node.js server that serves the controller web app and facilitates communication with the Quest app via websockets. To run the server, first install the dependencies, then start the server:
 
 ```bash
 (cd server && npm i)
