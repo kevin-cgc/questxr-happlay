@@ -1,3 +1,5 @@
+import * as idbkv from "./thirdparty/idb-keyval.js";
+
 const SAMPLE_RATE = 8000;
 
 const serverwslog = document.getElementById("serverwslog");
@@ -244,3 +246,82 @@ const draw_playback_head = elapsed => {
 	pbh_ctx.fillRect(position, 0, 2, height);
 }
 
+
+const hapfilepicker_div = /** @type {HTMLDivElement} **/ (document.getElementById("hapfilepicker"));
+const folderselect_div = /** @type {HTMLDivElement} **/ (hapfilepicker_div.querySelector("div .folderselect"));
+const openfolder_button = /** @type {HTMLButtonElement} **/ (hapfilepicker_div.querySelector("button.openfolder"));
+const openeddirectory_div = /** @type {HTMLDivElement} **/ (hapfilepicker_div.querySelector("div.openeddirectory"));
+const changefolder_button = /** @type {HTMLButtonElement} **/ (openeddirectory_div.querySelector("button.changefolder"));
+const opendirname_h2 = /** @type {HTMLHeadingElement} **/ (openeddirectory_div.querySelector("h2"));
+const filelist_div = /** @type {HTMLDivElement} **/ (openeddirectory_div.querySelector(".filelist"));
+
+for (const button of [openfolder_button, changefolder_button]) {
+	button.addEventListener("click", async () => {
+		try {
+			if (!("showDirectoryPicker" in window)) {
+				alert("Directory picker not supported in this browser");
+				return;
+			}
+			const dir_handle = await window.showDirectoryPicker();
+			idbkv.set("last_used_dir_handle", dir_handle);
+			await open_directory(dir_handle);
+		} catch (e) {
+			if (e.name == "AbortError") {
+				//do nothing
+			} else {
+				throw e;
+			}
+		}
+	});
+}
+
+{ // load last used directory
+	const last_used_dir_handle = /** @type {FileSystemDirectoryHandle | null} **/ (await idbkv.get("last_used_dir_handle"));
+	if (last_used_dir_handle) {
+		console.log("Opening last used directory", last_used_dir_handle);
+		await open_directory(last_used_dir_handle);
+	}
+}
+{ // rescan last used directory when tab is focused
+	document.addEventListener("visibilitychange", async () => {
+		if (!document.hidden || document.visibilityState === "visible") {
+			const last_used_dir_handle = /** @type {FileSystemDirectoryHandle | null} **/ (await idbkv.get("last_used_dir_handle"));
+			if (last_used_dir_handle) {
+				console.debug("rescanning last used directory", last_used_dir_handle);
+				await open_directory(last_used_dir_handle);
+			}
+		}
+	});
+	window.addEventListener("focus", async () => {
+		const last_used_dir_handle = /** @type {FileSystemDirectoryHandle | null} **/ (await idbkv.get("last_used_dir_handle"));
+		if (last_used_dir_handle) {
+			console.debug("focus rescanning last used directory", last_used_dir_handle);
+			await open_directory(last_used_dir_handle);
+		}
+	});
+
+}
+
+async function open_directory(dir_handle) {
+	openeddirectory_div.style.display = "";
+	folderselect_div.style.display = "none";
+	opendirname_h2.textContent = dir_handle.name;
+	filelist_div.innerHTML = "";
+	for await (const entry of dir_handle.values()) {
+		if (entry.kind == "file") {
+			const file_div = new DOMParser().parseFromString(`
+				<div class="file">
+					<span>${entry.name}</span>
+					<button>Upload</button>
+				</div>
+			`, "text/html").body.querySelector("div");
+			file_div.addEventListener("click", async () => {
+				const file = await entry.getFile();
+				load_and_send_pcm(file);
+			});
+			filelist_div.appendChild(file_div);
+		} else {
+			// console.log("Ignoring non-file entry", entry);
+		}
+	}
+}

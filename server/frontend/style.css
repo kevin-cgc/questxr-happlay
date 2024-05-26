@@ -1,8 +1,10 @@
 :root {
 	--primary-color: #0d1011; /* Dark slate gray for base elements */
+	/* --primary-color-alt: #0d1011; */
 	--secondary-color: #4A9C8E; /* Teal for accent elements, vibrant yet industrial */
 	--tertiary-color-light: #B0BEC5; /* Light gray for secondary elements and backgrounds */
 	--tertiary-color-dark: #37474F; /* Darker gray for additional contrast */
+	--tertiary-color-darker: #252829; /* Darkest gray for additional contrast */
 	--text-color: #ECEFF1; /* Soft white for text for readability */
 	--error-color: #D32F2F; /* Muted red for errors, alerts, and warnings */
 }
@@ -51,7 +53,7 @@ button {
 	background-color: var(--tertiary-color-dark);
 	border: none;
 	font-size: 1em;
-	padding: 0.5ex 1ex;
+	padding: 1.6ex 2.8ex;
 	font-weight: bold;
 	cursor: pointer;
 }
@@ -67,7 +69,7 @@ a {
 div#root {
 	display: grid;
 	grid-template-columns: auto 1fr auto;
-	grid-template-rows: minmax(auto, 30vh) auto auto auto;
+	grid-template-rows: minmax(auto, 30vh) minmax(auto, 30vh)auto auto;
 	gap: 2ex;
 }
 
@@ -96,6 +98,9 @@ div#root {
 
 	gap: 1ex;
 }
+#qdevices button.refresh {
+	padding: 0.5ex 1ex;
+}
 #qdevices :is(h1, h2, h3, h4, h5, h6) {
 	margin: 0;
 }
@@ -123,8 +128,7 @@ div#root {
 }
 
 #dragndroptacton {
-	grid-column: span 3;
-
+	grid-column: span 2;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -133,6 +137,8 @@ div#root {
 	grid-template-columns: auto;
 	grid-template-rows: auto auto auto;
 	border: 2px dashed var(--tertiary-color-light);
+	padding: 2ex;
+	text-align: center;
 }
 #dragndroptacton strong {
 	font-size: 2em;
@@ -144,6 +150,70 @@ div#root {
 	font-size: 0.75em;
 	font-weight: bold;
 }
+
+#hapfilepicker {
+	grid-column: span 1;
+	display: grid;
+	grid-template:
+		"single" 100% / 100%;
+}
+#hapfilepicker > div.folderselect {
+	grid-area: single;
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background: linear-gradient(to bottom right, #2b383f, #2b2d2f);
+	/* background-color: var(--tertiary-color-darker); */
+	/* border: 2px solid var(--tertiary-color-light); */
+	/* background: repeating-linear-gradient(
+		45deg,
+		var(--tertiary-color-darker),
+		var(--tertiary-color-darker) 20px,
+		var(--tertiary-color-light) 20px,
+		var(--tertiary-color-light) 30px
+	); */
+}
+#hapfilepicker > div.openeddirectory {
+	grid-area: single;
+	background: linear-gradient(to bottom right, #2b383f, #2b2d2f);
+	display: grid;
+	grid-template:
+		"header" auto
+		"filelist" 1fr / auto;
+}
+#hapfilepicker > div.openeddirectory > div.dirheader {
+	grid-area: header;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 1ex;
+	gap: 4ex;
+}
+#hapfilepicker > div.openeddirectory div.filelist {
+	grid-area: filelist;
+	display: flex;
+	flex-direction: column;
+	gap: 1ex;
+	overflow-y: auto;
+}
+#hapfilepicker > div.openeddirectory div.filelist > div.file {
+	background-color: var(--primary-color);
+	padding: 1ex;
+	display: flex;
+	gap: 0.5ex;
+	justify-content: space-between;
+
+	cursor: pointer;
+}
+
+#hapfilepicker > div.openeddirectory div.filelist > div.file > span {display: flex;align-items : center;}
+
+#hapfilepicker > div.openeddirectory div.filelist > div.file > button {
+	padding: 0.5ex 1ex;
+}
+
+
 
 #waveformcontainer {
 	grid-column: span 3;
