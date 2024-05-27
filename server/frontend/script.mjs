@@ -187,19 +187,27 @@ function load_and_send_pcm(file) {
 const waveformcanvas = /** @type {HTMLCanvasElement} **/ (document.getElementById("waveformcanvas"));
 const playbackheadcanvas = /** @type {HTMLCanvasElement} **/ (document.getElementById("playbackheadcanvas"));
 playbackheadcanvas.width = waveformcanvas.width = waveformcanvas.parentElement.clientWidth;
+window.addEventListener("resize", () => {
+	playbackheadcanvas.width = waveformcanvas.width = waveformcanvas.parentElement.clientWidth;
+	if (last_waveform) draw_waveform(last_waveform);
+	else draw_unknown_waveform();
+});
 
 const wf_ctx = waveformcanvas.getContext("2d");
-wf_ctx.fillStyle = "black";
-wf_ctx.fillRect(0, 0, waveformcanvas.width, waveformcanvas.height);
-// put question mark
-wf_ctx.font = "50px monospace";
-wf_ctx.fillStyle = "white";
-wf_ctx.textAlign = "center";
-wf_ctx.fillText("Unknown current waveform", waveformcanvas.width / 2, waveformcanvas.height / 2);
+function draw_unknown_waveform() {
+	wf_ctx.fillStyle = "black";
+	wf_ctx.fillRect(0, 0, waveformcanvas.width, waveformcanvas.height);
+	wf_ctx.font = "50px monospace";
+	wf_ctx.fillStyle = "white";
+	wf_ctx.textAlign = "center";
+	wf_ctx.fillText("Unknown current waveform", waveformcanvas.width / 2, waveformcanvas.height / 2);
+}
+draw_unknown_waveform();
 
 let last_step = 0;
-
+let last_waveform = null;
 const draw_waveform = pcm => {
+	last_waveform = pcm;
 	wf_ctx.fillStyle = "black";
 	wf_ctx.fillRect(0, 0, waveformcanvas.width, waveformcanvas.height);
 

@@ -10,12 +10,11 @@
 }
 
 html {
-	background: #000;
+	background: #2b383f;
 	height: 100vh;
 	width: 100vw;
 	display: grid;
-	grid-template-columns: auto;
-	grid-template-rows: auto;
+	grid-template: 100% / 100%;
 }
 
 body {
@@ -27,7 +26,7 @@ body {
 	color: var(--text-color);
 	font-family: 'Courier New', Courier, monospace; /* Emphasizing the monospace theme */
 	display: grid;
-	grid-template-rows: auto 1fr;
+	grid-template-rows: auto minmax(0, 1fr);
 }
 
 *::-webkit-scrollbar {
@@ -68,13 +67,18 @@ a {
 
 div#root {
 	display: grid;
-	grid-template-columns: auto 1fr auto;
-	grid-template-rows: minmax(auto, 30vh) minmax(auto, 30vh)auto auto;
+	/* grid-template-columns: auto 1fr auto;
+	grid-template-rows: minmax(auto, 30vh) minmax(auto, 30vh) auto auto; */
+	grid-template:
+		"wavform wavform wavform wavform" min-content
+		"fileupload filepicker filepicker filepicker" minmax(30ex, 1fr)
+		"serverwslog serverwslog connquests connquests" minmax(auto, 30vh) / auto 1fr 0.5fr auto;
 	gap: 2ex;
 }
 
 #serverwslog {
-	grid-column: span 2;
+	grid-area: serverwslog;
+	/* grid-column: span 2; */
 }
 
 .logcontainer {
@@ -92,13 +96,22 @@ div#root {
 }
 
 #qdevices {
+	grid-area: connquests;
+
 	display: grid;
 	grid-template-columns: auto;
 	grid-template-rows: auto 1fr;
 
 	gap: 1ex;
 }
+#qdevices div.header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 2ex;
+}
 #qdevices button.refresh {
+	font-size: 1.5em;
 	padding: 0.5ex 1ex;
 }
 #qdevices :is(h1, h2, h3, h4, h5, h6) {
@@ -128,7 +141,9 @@ div#root {
 }
 
 #dragndroptacton {
-	grid-column: span 2;
+	grid-area: fileupload;
+	/* grid-column: span 2; */
+
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -152,7 +167,8 @@ div#root {
 }
 
 #hapfilepicker {
-	grid-column: span 1;
+	grid-area: filepicker;
+	/* grid-column: span 1; */
 	display: grid;
 	grid-template:
 		"single" 100% / 100%;
@@ -180,7 +196,7 @@ div#root {
 	display: grid;
 	grid-template:
 		"header" auto
-		"filelist" 1fr / auto;
+		"filelist" minmax(0, 1fr) / auto;
 }
 #hapfilepicker > div.openeddirectory > div.dirheader {
 	grid-area: header;
@@ -216,7 +232,8 @@ div#root {
 
 
 #waveformcontainer {
-	grid-column: span 3;
+	grid-area: wavform;
+	/* grid-column: span 3; */
 	display: grid;
 	grid-template-columns: auto;
 	grid-template-rows: auto;
