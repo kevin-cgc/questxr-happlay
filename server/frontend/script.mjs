@@ -263,6 +263,63 @@ const changefolder_button = /** @type {HTMLButtonElement} **/ (openeddirectory_d
 const opendirname_h2 = /** @type {HTMLHeadingElement} **/ (openeddirectory_div.querySelector("h2"));
 const filelist_div = /** @type {HTMLDivElement} **/ (openeddirectory_div.querySelector(".filelist"));
 
+const SYMBOL_FILE_HANDLE = Symbol("file_handle");
+/**
+ *
+ * @param {FileSystemDirectoryHandle} dir_handle
+ */
+async function open_directory(dir_handle) {
+	if (dir_handle)
+	openeddirectory_div.style.display = "";
+	folderselect_div.style.display = "none";
+	opendirname_h2.textContent = dir_handle.name;
+
+	const filelist_files = new Set([...filelist_div.querySelectorAll("div.file")]);
+
+
+	for await (const entry of dir_handle.values()) {
+		if (entry.kind == "file") {
+
+			const fdiv = await (async () => {
+				for (const fdiv of filelist_files) {
+					if (await entry.isSameEntry(fdiv[SYMBOL_FILE_HANDLE])) return fdiv;
+				}
+				return null;
+			})();
+
+			if (fdiv) {
+				filelist_files.delete(fdiv);
+				continue;
+			} else {
+				const file_div = document.createElement("div");
+				{ // init file_div
+					file_div.className = "file";
+					file_div[SYMBOL_FILE_HANDLE] = entry;
+
+					const span = document.createElement("span");
+					span.textContent = entry.name;
+					file_div.appendChild(span);
+					const button = document.createElement("button");
+					button.textContent = "Upload";
+					file_div.appendChild(button);
+
+					file_div.addEventListener("click", async () => {
+						const file = await entry.getFile();
+						load_and_send_pcm(file);
+					});
+				}
+				filelist_div.append(file_div);
+			}
+		} else {
+			// console.log("Ignoring non-file entry", entry);
+		}
+	}
+
+	for (const file_div of filelist_files) {
+		file_div.remove();
+	}
+}
+
 for (const button of [openfolder_button, changefolder_button]) {
 	button.addEventListener("click", async () => {
 		try {
@@ -308,28 +365,4 @@ for (const button of [openfolder_button, changefolder_button]) {
 		}
 	});
 
-}
-
-async function open_directory(dir_handle) {
-	openeddirectory_div.style.display = "";
-	folderselect_div.style.display = "none";
-	opendirname_h2.textContent = dir_handle.name;
-	filelist_div.innerHTML = "";
-	for await (const entry of dir_handle.values()) {
-		if (entry.kind == "file") {
-			const file_div = new DOMParser().parseFromString(`
-				<div class="file">
-					<span>${entry.name}</span>
-					<button>Upload</button>
-				</div>
-			`, "text/html").body.querySelector("div");
-			file_div.addEventListener("click", async () => {
-				const file = await entry.getFile();
-				load_and_send_pcm(file);
-			});
-			filelist_div.appendChild(file_div);
-		} else {
-			// console.log("Ignoring non-file entry", entry);
-		}
-	}
 }

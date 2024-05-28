@@ -17,7 +17,7 @@ async function main() {
 	const device_wss = new WebSocketServer({ port: 8080 });
 
 	for (const config of [
-		{ rx_wss: controller_wss, name: "controller", tx_wss: device_wss},
+		{ rx_wss: controller_wss, name: "controller", tx_wss: device_wss },
 		{ rx_wss: device_wss, name: "device", tx_wss: controller_wss },
 	]) {
 		config.rx_wss.on("connection", (ws, req) => {
