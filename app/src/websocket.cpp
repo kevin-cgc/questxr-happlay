@@ -158,7 +158,7 @@ void HPB_WebsocketClient::connect() {
 	wsi = lws_client_connect_via_info(&connect_info);
 	if (wsi == NULL) throw std::runtime_error("lws connection failed");
 
-	spdlog::info("lws connecting...");
+	spdlog::info("lws connecting to {}:{} ...", WS_SERVER_DOMAIN, WS_SERVER_PORT);
 }
 
 void HPB_WebsocketClient::service() {
