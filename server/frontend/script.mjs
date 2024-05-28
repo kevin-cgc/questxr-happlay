@@ -14,7 +14,12 @@ function log_to_logcontainer(message, logcontainer) {
 const swslog = msg => log_to_logcontainer(msg, serverwslog);
 
 const url = new URL(location.href);
-let ws = new WebSocket(`ws://${url.host}/ws`);
+const create_websocket = () => {
+	const ws = new WebSocket(`${url.protocol == "https:" ? "wss" : "ws" }://${url.host}/ws`);
+	// ws.binaryType = "arraybuffer";
+	return ws;
+}
+let ws = create_websocket();
 
 const send_msg = msg => {
 	swslog(`Sending message => ${JSON.stringify(msg)}`);
@@ -60,7 +65,7 @@ ws.onclose = async () => {
 	swslog("Waiting 2 seconds before reconnecting...");
 	await new Promise(r => setTimeout(r, 2000));
 	swslog("Reconnecting to server...");
-	const nws = new WebSocket(`ws://${url.host}/ws`);
+	const nws = create_websocket();
 	nws.onopen = ws.onopen;
 	nws.onmessage = ws.onmessage;
 	nws.onclose = ws.onclose;
