@@ -408,7 +408,8 @@ class VulkanGraphicsPlugin : public GraphicsPlugin {
 	void RenderView(const XrCompositionLayerProjectionView &layer_view,
 					XrSwapchainImageBaseHeader *swapchain_images,
 					const uint32_t image_index,
-					const std::vector<math::Transform> &cube_transforms) override {
+					const std::vector<math::Transform> &cube_transforms
+	) override {
 		if (layer_view.subImage.imageArrayIndex != 0) {
 			throw std::runtime_error("Texture arrays not supported");
 		}

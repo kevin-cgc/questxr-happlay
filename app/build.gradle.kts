@@ -9,6 +9,7 @@ if (localPropertiesFile.exists()) { localProperties.load(localPropertiesFile.inp
 
 // Extract the value you need
 val WsServerDomain: String? = localProperties.getProperty("WS_SERVER_DOMAIN")
+val WsServerPort: String? = localProperties.getProperty("WS_SERVER_PORT")
 
 android {
     compileSdk = 32
@@ -25,6 +26,7 @@ android {
                 arguments.add("-DANDROID_STL=c++_shared")
                 arguments.add("-DANDROID_USE_LEGACY_TOOLCHAIN_FILE=OFF")
                 if (WsServerDomain != null) { arguments.add("-DWS_SERVER_DOMAIN=${WsServerDomain}") }
+                if (WsServerPort != null) { arguments.add("-DWS_SERVER_PORT=${WsServerPort}") }
             }
             ndk {
                 abiFilters.add("arm64-v8a")

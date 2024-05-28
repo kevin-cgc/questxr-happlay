@@ -5,6 +5,9 @@
 #ifndef WS_SERVER_DOMAIN
 #error "WS_SERVER_DOMAIN is not defined. Please define it in your build configuration."
 #endif
+#ifndef WS_SERVER_PORT
+#error "WS_SERVER_PORT is not defined. Please define it in your build configuration."
+#endif
 
 // #define STRINGIFY(x) #x
 // #define TOSTRING(x) STRINGIFY(x)
@@ -143,7 +146,7 @@ void HPB_WebsocketClient::connect() {
 	struct lws_client_connect_info connect_info = {
 		.context = context,
 		.address = WS_SERVER_DOMAIN, //"10.20.0.100"
-		.port = 80, // 8080,
+		.port = WS_SERVER_PORT, // 8080,
 		.ssl_connection = false,
 		.path = "/",
 		.host = WS_SERVER_DOMAIN, //lws_canonical_hostname(context),
@@ -155,7 +158,7 @@ void HPB_WebsocketClient::connect() {
 	wsi = lws_client_connect_via_info(&connect_info);
 	if (wsi == NULL) throw std::runtime_error("lws connection failed");
 
-	spdlog::info("lws connection success");
+	spdlog::info("lws connecting...");
 }
 
 void HPB_WebsocketClient::service() {

@@ -6,7 +6,10 @@ target_include_directories(native_app_glue PUBLIC ${ANDROID_NDK}/sources/android
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
 
 if(NOT DEFINED WS_SERVER_DOMAIN)
-    message(FATAL_ERROR "WS_SERVER_DOMAIN is not defined. Please specify -DWS_SERVER_DOMAIN=your_domain when invoking CMake.")
+        message(FATAL_ERROR "WS_SERVER_DOMAIN is not defined. Please specify -DWS_SERVER_DOMAIN=your_domain when invoking CMake.")
+endif()
+if (NOT DEFINED WS_SERVER_PORT)
+        message(FATAL_ERROR "WS_SERVER_PORT is not defined. Please specify -DWS_SERVER_PORT=your_port when invoking CMake.")
 endif()
 
 add_library(happb SHARED
@@ -23,6 +26,7 @@ target_compile_definitions(happb PRIVATE XR_USE_PLATFORM_ANDROID
         XR_USE_GRAPHICS_API_VULKAN
         VK_USE_PLATFORM_ANDROID_KHR
         WS_SERVER_DOMAIN="${WS_SERVER_DOMAIN}"
+        WS_SERVER_PORT=${WS_SERVER_PORT}
         )
 
 target_link_libraries(

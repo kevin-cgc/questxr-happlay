@@ -16,6 +16,7 @@ For example:
 ```
 sdk.dir=C\:\\Users\\USERNAME\\AppData\\Local\\Android\\Sdk
 WS_SERVER_DOMAIN=example-example-example.ngrok-free.app
+WS_SERVER_PORT=80 # 80 for ngrok, 8080 for default local server
 ```
 
 To build the project just run the following in the project directory:
