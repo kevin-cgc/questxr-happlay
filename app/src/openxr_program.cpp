@@ -515,6 +515,16 @@ void OpenXrProgram::handle_ws_message(const std::vector<uint8_t> &message, bool 
 		haptic_pcm_buffer.resize(message.size() / sizeof(float));
 		std::memcpy(haptic_pcm_buffer.data(), message.data(), message.size()); // msg must be f32le
 
+
+		json ack_haptic_signal = {
+			{"cmd", "ack_haptic_signal"},
+			{"data", {
+				{"size", message.size()},
+				{"system_id", std::to_string(system_id_)}
+			}}
+		};
+		send_ws_message(ack_haptic_signal.dump());
+
 	} else {
 		try {
 			json j = json::parse(message);

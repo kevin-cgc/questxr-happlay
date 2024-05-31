@@ -264,7 +264,7 @@ ordered_json GetSystemInfoAsJson(XrInstance instance) {
 
     if (XR_FAILED(result)) {
         spdlog::error("Failed to get system properties");
-        return { "systemId", systemId };
+        return { "systemId", std::to_string(systemId) };
     }
 
 
@@ -272,7 +272,7 @@ ordered_json GetSystemInfoAsJson(XrInstance instance) {
     // Create a JSON object and populate it with system information
     ordered_json systemInfoJson = {
         {"systemName", systemProperties.systemName},
-        {"systemId", systemId},
+        {"systemId", std::to_string(systemId)},
         {"vendorId", systemProperties.vendorId},
         {"graphicsProperties", {
             {"maxWidth", systemProperties.graphicsProperties.maxSwapchainImageWidth},

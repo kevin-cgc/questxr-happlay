@@ -129,7 +129,22 @@ div#root {
 	display: flex;
 	flex-direction: column;
 	gap: 0.5ex;
+	border-left: 4px solid var(--secondary-color);
 }
+#qdevices > .devicelist > .device.notacked {
+	border-left: 4px solid var(--secondary-color);
+	transition: border-color 1s linear;
+	animation: notackedDeviceFlash 1.6s linear infinite;
+}
+@keyframes notackedDeviceFlash {
+	from, to {
+		border-color: var(--secondary-color);
+	}
+	40%, 60% {
+		border-color: var(--primary-color);
+	}
+}
+
 #qdevices > .devicelist > .device > h2 {
 	margin-top: 0;
 }

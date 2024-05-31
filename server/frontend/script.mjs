@@ -27,30 +27,36 @@ const send_msg = msg => {
 };
 
 ws.onmessage = event => {
-	const data = JSON.parse(event.data);
-	swslog(`Received message => ${JSON.stringify(data)}`);
+	const msg = JSON.parse(event.data);
+	swslog(`Received message => ${JSON.stringify(msg)}`);
 
-	if (data.cmd == "starting_playback") {
+	if (msg.cmd == "starting_playback") {
 		start_playback();
-	} else if (data.cmd == "stopping_playback") {
+	} else if (msg.cmd == "stopping_playback") {
 		stop_playback();
-	} else if ("systemId" in data) {
-		const olddiv = devicelist.querySelector(`[data-system-id="${data.systemId}"]`);
+	} else if (msg.cmd == "ack_haptic_signal") {
+		const div = devicelist.querySelector(`[data-system-id="${msg.data.system_id}"]`);
+		div?.classList.remove("notacked");
+	} else if ("systemId" in msg) {
+		const olddiv = devicelist.querySelector(`[data-system-id="${msg.systemId}"]`);
 		if (olddiv) olddiv.remove();
 
 		const div = new DOMParser().parseFromString(`
-		<div class="device" data-system-id="${data.systemId}">
-			<h2>${data.systemName} <small class="id">${data.systemId}</small></h2>
+		<div class="device" data-system-id="${msg.systemId}">
+			<h2>${msg.systemName} <small class="id">${msg.systemId}</small></h2>
 			<h3>Haptic Sample Rate <!--<br><small>(quest controllers must be connected when getting info)</small>--></h3>
 			<div>
-				Left: ${data.haptic_sample_rate?.left}Hz ${data.haptic_sample_rate?.left == 0 ? "(disconnected?)":""}
+				Left: ${msg.haptic_sample_rate?.left}Hz ${msg.haptic_sample_rate?.left == 0 ? "(disconnected?)":""}
 				<br>
-				Right: ${data.haptic_sample_rate?.right}Hz ${data.haptic_sample_rate?.right == 0 ? "(disconnected?)":""}
+				Right: ${msg.haptic_sample_rate?.right}Hz ${msg.haptic_sample_rate?.right == 0 ? "(disconnected?)":""}
 			</div>
 		</div>
 		`, "text/html").body.firstChild;
 
 		devicelist.appendChild(div);
+	} else {
+		swslog(`[WARN] Unknown message cmd => ${msg.cmd}`);
+		console.error("Unknown message", msg);
 	}
 };
 
@@ -179,6 +185,10 @@ function load_and_send_pcm(file) {
 
 			swslog(`Sending ${pcm.length} samples (${decoded_pcm.duration}s) to devices...`);
 			ws.send(pcm.buffer);
+
+			const device_divs = devicelist.querySelectorAll(".device");
+			for (const device_div of device_divs) device_div.classList.add("notacked");
+
 		} catch (err) {
 			console.error(err);
 			alert("Error reading file, see browser console for details");
