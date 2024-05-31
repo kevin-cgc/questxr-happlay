@@ -6,15 +6,17 @@ import { WebSocketServer, WebSocket } from "ws";
 import express from "express";
 import path from "path";
 
+const CONTROLLER_HTTP_PORT = Number.parseInt(process.env["HAPPLAY_CONTROLLER_HTTP_PORT"]) || 8081;
+const DEVICE_WS_PORT = Number.parseInt(process.env["HAPPLAY_DEVICE_WS_PORT"]) || 8080;
 
 async function main() {
 	const app = express();
 	const static_path = path.join(import.meta.dirname, "../frontend");
 	app.use(express.static(static_path));
-	const server = app.listen(8081, () => console.log("Controller started on http://localhost:8081"));
+	const server = app.listen(CONTROLLER_HTTP_PORT, () => console.log(`Controller started on http://localhost:${CONTROLLER_HTTP_PORT}`));
 
 	const controller_wss = new WebSocketServer({ server, path: "/ws" });
-	const device_wss = new WebSocketServer({ port: 8080 });
+	const device_wss = new WebSocketServer({ port: DEVICE_WS_PORT });
 
 	for (const config of [
 		{ rx_wss: controller_wss, name: "controller", tx_wss: device_wss },
@@ -45,7 +47,7 @@ async function main() {
 		});
 	}
 
-	console.log("Oculus websocket server started on port 8080");
+	console.log(`Oculus websocket server started on port ${DEVICE_WS_PORT}`);
 }
 
 await main();
