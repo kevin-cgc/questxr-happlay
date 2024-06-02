@@ -49,6 +49,7 @@ class OpenXrProgram {
 	void CreateSwapchains();
 
 	void handle_ws_message(const std::vector<uint8_t>& message, bool is_binary);
+	void handle_ws_incoming_long_binary();
 	void PollEvents();
 	void PollActions();
 	void RenderFrame();
@@ -72,6 +73,7 @@ class OpenXrProgram {
 					 XrCompositionLayerProjection &layer);
 
    private:
+	bool loading_haptic_signal = false;
 	std::vector<float> haptic_pcm_buffer = dog_barking_haptic_pcm_f32le;
 
 	std::shared_ptr<Platform> platform_;

@@ -46,6 +46,10 @@ int HPB_WebsocketClient::happlay_cb(struct lws* wsi, enum lws_callback_reasons r
 				this->msg_rx_buffer.clear();
 			} else {
 				this->msg_rx_buffer.insert(this->msg_rx_buffer.end(), incoming_data, incoming_data + len);
+				if (lws_frame_is_binary(wsi)) {
+					// spdlog::debug("long binary incoming...");
+					if (this->handle_incoming_long_binary_external.has_value()) this->handle_incoming_long_binary_external.value()();
+				}
 			}
 
             break;
@@ -187,7 +191,7 @@ void HPB_WebsocketClient::send(std::string message) {
 	msg_tx_queue.push(message);
 
 	auto res = lws_callback_on_writable(wsi);
-	if (res != 0) spdlog::error("Failed lws_callback_on_writable: {}", res);
+	// if (res != 0) spdlog::error("Failed lws_callback_on_writable: {}", res); //idc
 }
 
 
@@ -210,9 +214,10 @@ HPB_WebsocketClient::HPB_WebsocketClient() {
 	context = lws_create_context(&info);
 	if (context == NULL) throw std::runtime_error("lws context creation failed");
 }
-HPB_WebsocketClient::HPB_WebsocketClient(HPBWSMessageHandler handler) {
+HPB_WebsocketClient::HPB_WebsocketClient(HPBWSMessageHandler msg_handler, HPBWSLBIHandler lbi_handler) {
 	HPB_WebsocketClient();
-	handle_message_external = handler;
+	handle_message_external = msg_handler;
+	handle_incoming_long_binary_external = lbi_handler;
 }
 
 HPB_WebsocketClient::~HPB_WebsocketClient() {

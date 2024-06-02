@@ -75,6 +75,7 @@ void android_main(struct android_app *app) {
 
 		program->ws_send = std::bind(&HPB_WebsocketClient::send, &ws_client, std::placeholders::_1);
 		ws_client.handle_message_external = std::bind(&OpenXrProgram::handle_ws_message, program, std::placeholders::_1, std::placeholders::_2);
+		ws_client.handle_incoming_long_binary_external = std::bind(&OpenXrProgram::handle_ws_incoming_long_binary, program);
 
 		program->CreateInstance();
 		program->InitializeSystem();

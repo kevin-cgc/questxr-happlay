@@ -6,11 +6,12 @@
 #include "openxr_program.hpp"
 
 using HPBWSMessageHandler = std::function<void(const std::vector<uint8_t>& message, bool is_binary)> ;
+using HPBWSLBIHandler = std::function<void()> ;
 
 class HPB_WebsocketClient {
 public:
 	HPB_WebsocketClient();
-	HPB_WebsocketClient(HPBWSMessageHandler handler);
+	HPB_WebsocketClient(HPBWSMessageHandler msg_handler, HPBWSLBIHandler lbi_handler);
 	~HPB_WebsocketClient();
 
 	void connect();
@@ -26,6 +27,7 @@ public:
     }
 
 	std::optional<HPBWSMessageHandler> handle_message_external;
+	std::optional<HPBWSLBIHandler> handle_incoming_long_binary_external;
 private:
 	struct lws_protocols protocols[2] = {
 		{

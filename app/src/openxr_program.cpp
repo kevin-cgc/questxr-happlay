@@ -515,6 +515,7 @@ void OpenXrProgram::handle_ws_message(const std::vector<uint8_t> &message, bool 
 		haptic_pcm_buffer.resize(message.size() / sizeof(float));
 		std::memcpy(haptic_pcm_buffer.data(), message.data(), message.size()); // msg must be f32le
 
+		this->loading_haptic_signal = false;
 
 		json ack_haptic_signal = {
 			{"cmd", "ack_haptic_signal"},
@@ -554,6 +555,14 @@ void OpenXrProgram::handle_ws_message(const std::vector<uint8_t> &message, bool 
 	}
 }
 
+void OpenXrProgram::handle_ws_incoming_long_binary() {
+	// stop any ongoing tacton playback
+	input_.hap_samples_consumed[side::LEFT].reset();
+	input_.hap_samples_consumed[side::RIGHT].reset();
+
+	this->loading_haptic_signal = true;
+}
+
 void OpenXrProgram::PollActions() {
 	input_.hand_active = {XR_FALSE, XR_FALSE};
 
@@ -589,20 +598,15 @@ void OpenXrProgram::PollActions() {
 
 			std::optional<uint32_t> &hap_samples_consumed_opt = input_.hap_samples_consumed[hand];
 
-			if (grab_value.currentState < 0.15f && input_.grab_was_active[hand]) {
+			if ((grab_value.currentState < 0.15f || this->loading_haptic_signal) && input_.grab_was_active[hand]) {
 				CHECK_XRCMD(xrStopHapticFeedback(session_, &haptic_action_info));
 
-				json early_stop_playback = {
-					{"cmd", "stopping_playback"},
-					{"data", {
-						{"hand", hand == side::LEFT ? "left" : "right"}
-					}}
-				};
+				json early_stop_playback = { {"cmd", "stopping_playback"}, {"data", { {"hand", hand == side::LEFT ? "left" : "right"} }} };
 				this->send_ws_message(early_stop_playback.dump());
 
 				hap_samples_consumed_opt.reset(); // not really necessary?
 				input_.grab_was_active[hand] = false;
-			} else {
+			} else if (!this->loading_haptic_signal) {
 				if (!input_.grab_was_active[hand] && grab_value.currentState > 0.8f) {
 					XrDevicePcmSampleRateGetInfoFB sample_rate_info{XR_TYPE_DEVICE_PCM_SAMPLE_RATE_GET_INFO_FB};
 					CHECK_XRCMD(xrGetDeviceSampleRateFB(session_, &haptic_action_info, &sample_rate_info));
