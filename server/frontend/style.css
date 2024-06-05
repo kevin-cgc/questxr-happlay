@@ -70,7 +70,7 @@ div#root {
 	/* grid-template-columns: auto 1fr auto;
 	grid-template-rows: minmax(auto, 30vh) minmax(auto, 30vh) auto auto; */
 	grid-template:
-		"wavform wavform wavform wavform" min-content
+		"playbackv playbackv playbackv playbackv" min-content
 		"fileupload filepicker filepicker filepicker" minmax(30ex, 1fr)
 		"serverwslog serverwslog connquests connquests" minmax(auto, 30vh) / auto 1fr 0.5fr auto;
 	gap: 2ex;
@@ -245,16 +245,50 @@ div#root {
 }
 
 
+div#playbackv {
+	grid-area: playbackv;
+	display: grid;
+	grid-template:
+		"waveformcontainer" 1fr
+		"playbackstatus" auto / 100%;
+	gap: 0ex;
+}
 
 #waveformcontainer {
-	grid-area: wavform;
+	grid-area: waveformcontainer;
 	/* grid-column: span 3; */
 	display: grid;
 	grid-template-columns: auto;
 	grid-template-rows: auto;
-	gap: 2ex;
 }
 
 #waveformcontainer > canvas {
 	grid-area: 1 / 1 / 2 / 2;
+}
+
+div#playbackv > div.playbackstatus {
+	grid-area: playbackstatus;
+	display: grid;
+	grid-template-columns: auto;
+	grid-template-rows: auto;
+	grid-template-areas: "main";
+}
+div.playbackstatus > span.filename {
+	grid-area: main;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 0.3ex;
+	font-size: 1.3em;
+}
+div.playbackstatus > progress.playback {
+	grid-area: main;
+	width: 100%;
+	height: 100%;
+	appearance: none;
+	color: var(--primary-color);
+}
+div.playbackstatus > progress.playback:not([value]) {
+	border: 3ex solid var(--tertiary-color-light);
+	animation: notackedDeviceFlash 1.5s infinite;
 }

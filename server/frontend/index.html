@@ -9,9 +9,15 @@
 <body>
 	<h1>MQTP Haptic Playback Controller</h1>
 	<div id="root">
-		<div id="waveformcontainer">
-			<canvas id="waveformcanvas" width="1800" height="200"></canvas>
-			<canvas id="playbackheadcanvas" width="1800" height="200"></canvas>
+		<div id="playbackv">
+			<div id="waveformcontainer">
+				<canvas id="waveformcanvas" width="1800" height="200"></canvas>
+				<canvas id="playbackheadcanvas" width="1800" height="200"></canvas>
+			</div>
+			<div class="playbackstatus">
+				<progress class="playback" value="0" max="100"></progress>
+				<span class="filename"></span>
+			</div>
 		</div>
 		<form id="dragndroptacton">
 			<span>Drag and drop a .wav file here to upload to all connected Quests.</span>

@@ -2,6 +2,10 @@ import * as idbkv from "./thirdparty/idb-keyval.js";
 
 const SAMPLE_RATE = 8000;
 
+const hash_params = new URLSearchParams(location.hash.slice(1));
+const WORKSHOP_MODE = hash_params.has("workshop");
+
+
 const serverwslog = document.getElementById("serverwslog");
 function log_to_logcontainer(message, logcontainer) {
 	const msglog = logcontainer.querySelector(".msglog");
@@ -37,6 +41,7 @@ ws.onmessage = event => {
 	} else if (msg.cmd == "ack_haptic_signal") {
 		const div = devicelist.querySelector(`[data-system-id="${msg.data.system_id}"]`);
 		div?.classList.remove("notacked");
+		playback_progress.value = 0;
 	} else if ("systemId" in msg) {
 		const olddiv = devicelist.querySelector(`[data-system-id="${msg.systemId}"]`);
 		if (olddiv) olddiv.remove();
@@ -52,6 +57,11 @@ ws.onmessage = event => {
 			</div>
 		</div>
 		`, "text/html").body.firstChild;
+
+		if (last_waveform) {
+			swslog("Resending last waveform due to new device");
+			send_pcm(last_waveform.pcm);
+		}
 
 		devicelist.appendChild(div);
 	} else {
@@ -181,13 +191,9 @@ function load_and_send_pcm(file) {
 
 			const pcm = decoded_pcm.getChannelData(0); // device expects f32le
 
-			draw_waveform(pcm);
+			draw_waveform(pcm, file.name);
 
-			swslog(`Sending ${pcm.length} samples (${decoded_pcm.duration}s) to devices...`);
-			ws.send(pcm.buffer);
-
-			const device_divs = devicelist.querySelectorAll(".device");
-			for (const device_div of device_divs) device_div.classList.add("notacked");
+			send_pcm(pcm);
 
 		} catch (err) {
 			console.error(err);
@@ -197,19 +203,38 @@ function load_and_send_pcm(file) {
 	reader.readAsArrayBuffer(file);
 }
 
+/**
+ * @param {Float32Array} pcm
+ */
+function send_pcm(pcm) {
+	const duration = pcm.length / SAMPLE_RATE;
+	swslog(`Sending ${pcm.length} samples (${duration}s) to devices...`);
+	ws.send(pcm.buffer);
+
+	const device_divs = devicelist.querySelectorAll(".device");
+	for (const device_div of device_divs) device_div.classList.add("notacked");
+	if (device_divs.length > 0) playback_progress.removeAttribute("value"); // show loading while not acked (sending)
+}
 
 
+const playbackv_div = /** @type {HTMLDivElement} **/ (document.getElementById("playbackv"));
+const waveformcontainer_div = /** @type {HTMLDivElement} **/ (document.getElementById("waveformcontainer"));
 const waveformcanvas = /** @type {HTMLCanvasElement} **/ (document.getElementById("waveformcanvas"));
 const playbackheadcanvas = /** @type {HTMLCanvasElement} **/ (document.getElementById("playbackheadcanvas"));
+const playbackstatus_div = /** @type {HTMLDivElement} **/ (playbackv_div.querySelector(".playbackstatus"));
+const filename_span = /** @type {HTMLSpanElement} **/ (playbackstatus_div.querySelector("span.filename"));
+const playback_progress = /** @type {HTMLProgressElement} **/ (playbackstatus_div.querySelector("progress"));
 playbackheadcanvas.width = waveformcanvas.width = waveformcanvas.parentElement.clientWidth;
 window.addEventListener("resize", () => {
 	playbackheadcanvas.width = waveformcanvas.width = waveformcanvas.parentElement.clientWidth;
-	if (last_waveform) draw_waveform(last_waveform);
+	if (last_waveform) draw_waveform(last_waveform.pcm, last_waveform.filename);
 	else draw_unknown_waveform();
 });
 
 const wf_ctx = waveformcanvas.getContext("2d");
 function draw_unknown_waveform() {
+	filename_span.textContent = "Unknown current filename";
+
 	wf_ctx.fillStyle = "black";
 	wf_ctx.fillRect(0, 0, waveformcanvas.width, waveformcanvas.height);
 	wf_ctx.font = "50px monospace";
@@ -219,10 +244,15 @@ function draw_unknown_waveform() {
 }
 draw_unknown_waveform();
 
+/** samples per pixel */
 let last_step = 0;
 let last_waveform = null;
-const draw_waveform = pcm => {
-	last_waveform = pcm;
+/** @type {(pcm: Float32Array, filename: string) => void} */
+const draw_waveform = (pcm, filename) => {
+	last_waveform = { pcm, filename };
+
+	filename_span.textContent = filename;
+
 	wf_ctx.fillStyle = "black";
 	wf_ctx.fillRect(0, 0, waveformcanvas.width, waveformcanvas.height);
 
@@ -265,8 +295,15 @@ const draw_playback_head = elapsed => {
 	const { width, height } = playbackheadcanvas;
 	pbh_ctx.clearRect(0, 0, width, height);
 	pbh_ctx.fillStyle = "red";
-	const position = (elapsed / 1000) * SAMPLE_RATE / last_step;
+	const samples_elapsed = (elapsed / 1000) * SAMPLE_RATE;
+	const position = samples_elapsed / last_step;
 	pbh_ctx.fillRect(position, 0, 2, height);
+
+	playback_progress.value = 100 * samples_elapsed / last_waveform.pcm.length;
+}
+
+if (WORKSHOP_MODE) {
+	waveformcontainer_div.style.display = "none";
 }
 
 
