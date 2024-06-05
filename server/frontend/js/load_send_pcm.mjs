@@ -1,4 +1,4 @@
-import { SAMPLE_RATE } from "../script.mjs";
+import { SAMPLE_RATE } from "./appmode.mjs";
 import { get_num_devices, mark_devices_notacked } from "./devicelist.mjs";
 import { draw_waveform, mark_playback_loading } from "./playback_waveform.mjs";
 import { notnull } from "./util.mjs";

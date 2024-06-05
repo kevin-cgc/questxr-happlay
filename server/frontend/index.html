@@ -43,28 +43,34 @@
 			</div>
 		</div>
 		<div class="genmodelpromptcont">
-			<h2>Generate Haptic Signal</h2>
-			<div class="promptcont">
-				<label for="genmodelprompt">Prompt:</label>
-				<input type="text" name="prompt" id="genmodelprompt" placeholder="Enter a prompt here">
-			</div>
-			<div class="btmrow">
-				<div>
-					<label for="genmodelmodel">Model:</label>
-					<select name="model" id="genmodelmodel">
-						<option value="audiogenLB">audiogenLB</option>
-						<option value="audiogenP">audiogenP</option>
-						<option value="audiogenR">audiogenR</option>
-					</select>
+
+			<script type="module" src="https://gradio.s3-us-west-2.amazonaws.com/4.26.0/gradio.js"></script>
+			<gradio-app style="display: none;" src="https://s672-genhaptic-workshop.hf.space"></gradio-app>
+
+			<div class="apiprompt">
+				<h2>Generate Haptic Signal</h2>
+				<div class="promptcont">
+					<label for="genmodelprompt">Prompt:</label>
+					<input type="text" name="prompt" id="genmodelprompt" placeholder="Enter a prompt here">
 				</div>
-				<div>
-					<div class="durationrow">
-						<label for="genmodelduration">Duration<span class="unit">(s)</span>:</label>
-						<input type="number" name="duration" id="genmodelduration" value="1.0" step="0.1" min="0.5" max="10.0">
+				<div class="btmrow">
+					<div>
+						<label for="genmodelmodel">Model:</label>
+						<select name="model" id="genmodelmodel">
+							<option value="audiogenLB">audiogenLB</option>
+							<option value="audiogenP">audiogenP</option>
+							<option value="audiogenR">audiogenR</option>
+						</select>
 					</div>
-					<input type="range" name="duration" id="genmodelduration_range" value="1.0" step="0.25" min="0.5" max="10.0">
+					<div>
+						<div class="durationrow">
+							<label for="genmodelduration">Duration<span class="unit">(s)</span>:</label>
+							<input type="number" name="duration" id="genmodelduration" value="1.0" step="0.1" min="0.5" max="10.0">
+						</div>
+						<input type="range" name="duration" id="genmodelduration_range" value="1.0" step="0.25" min="0.5" max="10.0">
+					</div>
+					<button class="generate">Generate</button>
 				</div>
-				<button class="generate">Generate</button>
 			</div>
 		</div>
 		<div id="serverwslog" class="logcontainer">

@@ -1,5 +1,4 @@
-import { SAMPLE_RATE } from "../script.mjs";
-import { WORKSHOP_MODE } from "./appmode.mjs";
+import { SAMPLE_RATE, WORKSHOP_MODE } from "./appmode.mjs";
 import { notnull } from "./util.mjs";
 
 const playbackv_div = /** @type {HTMLDivElement} **/ (document.getElementById("playbackv"));
@@ -96,5 +95,5 @@ export function mark_playback_loaded() {
 }
 
 if (WORKSHOP_MODE) {
-	waveformcontainer_div.style.display = "none";
+	playbackv_div.classList.add("workshopmode")
 }

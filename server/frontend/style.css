@@ -275,14 +275,18 @@ div#root {
 
 div.genmodelpromptcont {
 	grid-area: mprompt;
-	display: flex;
-	flex-direction: column;
-	gap: 4.5ex;
-	background-color: var(--primary-color);
-	padding: 2ex;
-	font-size: 1.2em;
 
+	background-color: var(--primary-color);
 	user-select: none;
+	overflow-y: auto;
+
+	div.apiprompt {
+		display: flex;
+		flex-direction: column;
+		gap: 4.5ex;
+		padding: 2ex;
+		font-size: 1.2em;
+	}
 
 	h2 {
 		margin-bottom: 0;
@@ -324,6 +328,15 @@ div#playbackv {
 		"waveformcontainer" minmax(0px, 1fr)
 		"playbackstatus" auto / 100%;
 	gap: 0ex;
+}
+div#playbackv.workshopmode {
+	div#waveformcontainer {
+		display: none;
+	}
+	div.playbackstatus span.filename {
+		font-size: 1.5em;
+		padding: 1ex;
+	}
 }
 
 #waveformcontainer {

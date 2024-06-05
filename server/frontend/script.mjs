@@ -1,8 +1,5 @@
 export * as idbkv from "./thirdparty/idb-keyval.js";
 
-export const SAMPLE_RATE = 8000;
-
-
 import { swslog, register_ws_onmessage } from "./js/websocket.mjs";
 import { add_or_update_device, mark_device_acked } from "./js/devicelist.mjs";
 import { send_pcm } from "./js/load_send_pcm.mjs";

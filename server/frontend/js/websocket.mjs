@@ -1,5 +1,4 @@
-import { SAMPLE_RATE } from "../script.mjs";
-
+import { SAMPLE_RATE } from "./appmode.mjs";
 
 const serverwslog = document.getElementById("serverwslog");
 function log_to_logcontainer(message, logcontainer) {
