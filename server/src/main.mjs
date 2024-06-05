@@ -6,8 +6,8 @@ import { WebSocketServer, WebSocket } from "ws";
 import express from "express";
 import path from "path";
 
-const CONTROLLER_HTTP_PORT = Number.parseInt(process.env["HAPPLAY_CONTROLLER_HTTP_PORT"]) || 8081;
-const DEVICE_WS_PORT = Number.parseInt(process.env["HAPPLAY_DEVICE_WS_PORT"]) || 8080;
+const CONTROLLER_HTTP_PORT = Number.parseInt(process.env["HAPPLAY_CONTROLLER_HTTP_PORT"] || "8081");
+const DEVICE_WS_PORT = Number.parseInt(process.env["HAPPLAY_DEVICE_WS_PORT"] || "8080");
 
 async function main() {
 	const app = express();

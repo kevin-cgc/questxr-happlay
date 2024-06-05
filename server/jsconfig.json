@@ -1,6 +1,7 @@
 {
 	"compilerOptions": {
 		"checkJs": true,
+		"strictNullChecks": true,
 		"module": "ES2022",
 		"target": "ES2022",
 		"lib": ["ES7", "DOM", "DOM.Iterable"]
