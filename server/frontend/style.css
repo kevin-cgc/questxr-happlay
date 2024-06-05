@@ -59,6 +59,33 @@ button {
 a {
 	color: var(--secondary-color);
 }
+input[type="text"], input[type="number"] {
+	background-color: var(--tertiary-color-dark);
+	color: var(--text-color);
+	border: none;
+	padding: 0.5ex 1ex;
+	font-size: 1em;
+}
+input[type="range"] {
+	background-color: var(--tertiary-color-dark);
+	color: var(--text-color);
+	border: none;
+	padding: 0.5ex 1ex;
+	font-size: 1em;
+}
+select {
+	background-color: var(--tertiary-color-dark);
+	color: var(--text-color);
+	border: none;
+	padding: 0.5ex 1ex;
+	font-size: 1em;
+}
+
+label span.unit {
+	font-size: 0.8em;
+	margin-left: 1ex;
+}
+
 
 .error,
 .alert {
@@ -71,8 +98,9 @@ div#root {
 	grid-template-rows: minmax(auto, 30vh) minmax(auto, 30vh) auto auto; */
 	grid-template:
 		"playbackv playbackv playbackv playbackv" min-content
-		"fileupload filepicker filepicker filepicker" minmax(30ex, 1fr)
-		"serverwslog serverwslog connquests connquests" minmax(auto, 30vh) / auto 1fr 0.5fr auto;
+		"fileupload filepicker mprompt mprompt" minmax(30ex, 1fr)
+		"serverwslog serverwslog serverwslog connquests" minmax(auto, 30vh) /
+			minmax(min-content, 0.5fr) minmax(30ex, 1fr) minmax(1ex, 1fr) 0.8fr;
 	gap: 2ex;
 }
 
@@ -219,6 +247,7 @@ div#root {
 	justify-content: space-between;
 	align-items: center;
 	padding: 1ex;
+	padding-right: 0;
 	gap: 4ex;
 }
 #hapfilepicker > div.openeddirectory div.filelist {
@@ -244,6 +273,49 @@ div#root {
 	padding: 0.5ex 1ex;
 }
 
+div.genmodelpromptcont {
+	grid-area: mprompt;
+	display: flex;
+	flex-direction: column;
+	gap: 4.5ex;
+	background-color: var(--primary-color);
+	padding: 2ex;
+	font-size: 1.2em;
+
+	user-select: none;
+
+	h2 {
+		margin-bottom: 0;
+	}
+
+	& div.promptcont {
+		display: grid;
+		grid-template-rows: auto 1fr;
+		gap: 1ex;
+
+		input[type="text"] {
+			padding: 1.2ex;
+		}
+	}
+}
+
+div.genmodelpromptcont div.btmrow {
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	gap: 2.5ex;
+
+	&> div {
+		display: grid;
+		grid-template-rows: auto 1fr;
+		gap: 1ex
+	}
+
+	& div.durationrow {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		align-items: center;
+	}
+}
 
 div#playbackv {
 	grid-area: playbackv;
@@ -286,9 +358,14 @@ div.playbackstatus > progress.playback {
 	width: 100%;
 	height: 100%;
 	appearance: none;
-	color: var(--primary-color);
+}
+div.playbackstatus > progress.playback::-webkit-progress-bar {
+	background-color: var(--primary-color);
+}
+div.playbackstatus > progress.playback::-webkit-progress-value {
+	background-color: var(--secondary-color);
 }
 div.playbackstatus > progress.playback:not([value]) {
 	border: 3ex solid var(--tertiary-color-light);
-	animation: notackedDeviceFlash 1.5s infinite;
+	animation: notackedDeviceFlash 1.6s linear infinite;
 }
