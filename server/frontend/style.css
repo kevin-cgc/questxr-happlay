@@ -11,8 +11,8 @@
 
 html {
 	background: #2b383f;
-	height: 100vh;
-	width: 100vw;
+	height: 100%;
+	width: 100%;
 	display: grid;
 	grid-template: 100% / 100%;
 }
@@ -98,9 +98,9 @@ div#root {
 	grid-template-rows: minmax(auto, 30vh) minmax(auto, 30vh) auto auto; */
 	grid-template:
 		"playbackv playbackv playbackv playbackv" min-content
-		"fileupload filepicker mprompt mprompt" minmax(30ex, 1fr)
+		"fileupload filepicker mprompt mprompt" minmax(50ex, 1fr)
 		"serverwslog serverwslog serverwslog connquests" minmax(auto, 30vh) /
-			minmax(min-content, 0.5fr) minmax(30ex, 1fr) minmax(1ex, 1fr) 0.8fr;
+   			minmax(30ex, 0.5fr) minmax(60ex, 1fr) minmax(60ex, 1fr) 0.6fr;
 	gap: 2ex;
 }
 
@@ -321,7 +321,7 @@ div#playbackv {
 	grid-area: playbackv;
 	display: grid;
 	grid-template:
-		"waveformcontainer" 1fr
+		"waveformcontainer" minmax(0px, 1fr)
 		"playbackstatus" auto / 100%;
 	gap: 0ex;
 }

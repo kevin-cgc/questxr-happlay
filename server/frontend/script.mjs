@@ -2,9 +2,6 @@ export * as idbkv from "./thirdparty/idb-keyval.js";
 
 export const SAMPLE_RATE = 8000;
 
-const hash_params = new URLSearchParams(location.hash.slice(1));
-export const WORKSHOP_MODE = hash_params.has("workshop");
-
 
 import { swslog, register_ws_onmessage } from "./js/websocket.mjs";
 import { add_or_update_device, mark_device_acked } from "./js/devicelist.mjs";
@@ -12,6 +9,7 @@ import { send_pcm } from "./js/load_send_pcm.mjs";
 import { last_waveform, mark_playback_loaded, start_playback, stop_playback } from "./js/playback_waveform.mjs";
 import { } from "./js/dragndrop.mjs";
 import { } from "./js/folderfilepicker.mjs";
+import { } from "./js/prompting.mjs";
 
 
 register_ws_onmessage(msg => {
