@@ -54,11 +54,9 @@ ws.onopen = () => {
 };
 
 ws.onclose = async () => {
-	swslog("Disconnected from server");
-	// Reconnect
-	swslog("Waiting 2 seconds before reconnecting...");
+	swslog("Disconnected from server... Waiting 2 seconds before reconnecting...");
 	await new Promise(r => setTimeout(r, 2000));
-	swslog("Reconnecting to server...");
+	// swslog("Reconnecting to server...");
 	const nws = create_websocket();
 	nws.onopen = ws.onopen;
 	nws.onmessage = ws.onmessage;

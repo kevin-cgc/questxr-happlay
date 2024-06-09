@@ -29,6 +29,18 @@ body {
 	grid-template-rows: auto minmax(0, 1fr);
 }
 
+
+.material-symbols-outlined {
+	font-variation-settings:
+	'FILL' 0,
+	'wght' 400,
+	'GRAD' 0,
+	'opsz' 24;
+	/* vertical-align: initial; */
+	/* display: inline-flex; */
+	vertical-align: bottom;
+}
+
 *::-webkit-scrollbar {
 	width: 1.8ex;
 	height: 1.8ex;
@@ -63,7 +75,7 @@ input[type="text"], input[type="number"] {
 	background-color: var(--tertiary-color-dark);
 	color: var(--text-color);
 	border: none;
-	padding: 0.5ex 1ex;
+	padding: 1ex 1ex;
 	font-size: 1em;
 }
 input[type="range"] {
@@ -90,6 +102,13 @@ label span.unit {
 .error,
 .alert {
 	color: var(--error-color);
+}
+
+
+div.header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
 }
 
 div#root {
@@ -256,21 +275,46 @@ div#root {
 	flex-direction: column;
 	gap: 1ex;
 	overflow-y: auto;
-}
-#hapfilepicker > div.openeddirectory div.filelist > div.file {
-	background-color: var(--primary-color);
-	padding: 1ex;
-	display: flex;
-	gap: 0.5ex;
-	justify-content: space-between;
 
-	cursor: pointer;
-}
 
-#hapfilepicker > div.openeddirectory div.filelist > div.file > span {display: flex;align-items : center;}
+	div.file {
+		background-color: var(--primary-color);
+		padding: 1ex;
+		display: flex;
+		gap: 0.5ex;
+		justify-content: space-between;
 
-#hapfilepicker > div.openeddirectory div.filelist > div.file > button {
-	padding: 0.5ex 1ex;
+		cursor: pointer;
+
+		span.filename {
+			display: flex;
+			align-items: center;
+			padding: 0.2ex 2ex;
+		}
+
+		div.buttons {
+			display: flex;
+			gap: 1ex;
+		}
+
+		button {
+			padding: 0.5ex 1ex;
+		}
+		button.star .material-symbols-outlined {
+			transition: 0.12s;
+		}
+
+		&.starred button.star .material-symbols-outlined{
+			font-variation-settings:
+				'FILL' 1,
+				'wght' 400,
+				'GRAD' 0,
+				'opsz' 24;
+
+			color: gold;
+		}
+	}
+
 }
 
 div.genmodelpromptcont {

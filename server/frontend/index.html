@@ -4,10 +4,19 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>MQTP Haptic Playback Controller</title>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 	<link rel="stylesheet" href="style.css">
 </head>
 <body>
-	<h1>MQTP Haptic Playback Controller</h1>
+	<div class="header">
+		<h1>MQTP Haptic Playback Controller</h1>
+		<div class="participantinfo">
+			<div class="participantidcont">
+				<label for="participantid">Participant ID:</label>
+				<input type="text" name="participantid" id="participantid" placeholder="Enter participant ID">
+			</div>
+		</div>
+	</div>
 	<div id="root">
 		<div id="playbackv">
 			<div id="waveformcontainer">
@@ -30,12 +39,12 @@
 		</form>
 		<div id="hapfilepicker">
 			<div class="folderselect">
-				<button class="openfolder">🗁 OPEN HAPTIC WAV FOLDER</button>
+				<button class="openfolder"><span class="material-symbols-outlined">folder_open</span> OPEN HAPTIC WAV FOLDER</button>
 			</div>
 			<div class="openeddirectory" style="display:none;">
 				<div class="dirheader">
 					<h2>Open: DIRNAME</h2>
-					<button class="changefolder">CHANGE FOLDER 🗁</button>
+					<button class="changefolder">CHANGE FOLDER <span class="material-symbols-outlined">folder_open</span></button>
 				</div>
 				<div class="filelist">
 					<!-- <div class="file">FILENAME</div> -->
@@ -82,7 +91,7 @@
 		<div id="qdevices">
 			<div class="header">
 				<h2>Connected Quests</h2>
-				<button class="refresh">↻</button>
+				<button class="refresh"><span class="material-symbols-outlined">refresh</span></button>
 			</div>
 			<div class="devicelist">
 
