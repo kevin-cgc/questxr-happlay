@@ -131,7 +131,7 @@ div.participantinfo {
 		animation: loading_animation 1.6s linear infinite;
 	}
 	&.disabled span.material-symbols-outlined:before {
-		content: "sync_disabled";
+		content: "cloud_off";
 		animation: none;
 	}
 	&.committed span.material-symbols-outlined:before {
@@ -333,7 +333,7 @@ div#root {
 				z-index: 99;
 			}
 			span:before {
-				content: "sync_disabled";
+				content: "cloud_off";
 			}
 		}
 		&.sync-failed div.syncstatus {
