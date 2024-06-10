@@ -118,6 +118,27 @@ div.header {
 	justify-content: space-between;
 	align-items: center;
 }
+div.participantinfo {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 1ex;
+
+	& span.material-symbols-outlined:before {
+		content: "progress_activity";
+		animation: loading_animation 1.6s linear infinite;
+	}
+	&.disabled span.material-symbols-outlined:before {
+		content: "sync_disabled";
+		animation: none;
+	}
+	&.committed span.material-symbols-outlined:before {
+		content: "cloud_done";
+		animation: none;
+	}
+
+
+}
 
 div#root {
 	display: grid;
