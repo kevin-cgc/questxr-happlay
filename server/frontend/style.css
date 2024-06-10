@@ -123,8 +123,10 @@ div.participantinfo {
 	justify-content: space-between;
 	align-items: center;
 	gap: 1ex;
+	user-select: none;
 
 	& span.material-symbols-outlined:before {
+		display: block;
 		content: "progress_activity";
 		animation: loading_animation 1.6s linear infinite;
 	}
@@ -136,8 +138,6 @@ div.participantinfo {
 		content: "cloud_done";
 		animation: none;
 	}
-
-
 }
 
 div#root {

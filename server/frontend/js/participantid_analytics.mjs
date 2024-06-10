@@ -77,7 +77,7 @@ class ParticipantID {
 					this.#set(null);
 					return;
 				}
-				let res = await APC.confirm(`Confirm: Overwrite participant '${data.participant_id}' created at ${new Date(data.created_at).toLocaleString()}?`);
+				let res = await APC.confirm(`Confirm: Overwrite/append to existing server side save data for participant '${data.participant_id}' (created at ${new Date(data.created_at).toLocaleString()})?`);
 				if (!res) {
 					this.#set(null);
 					return;
