@@ -1,6 +1,6 @@
 import { notnull } from "./util.mjs";
 import { idbkv } from "../script.mjs";
-import { clean_open_and_sync_library } from "./folderfilepicker.mjs";
+import { clean_open_and_sync_library, close_opened_directory } from "./folderfilepicker.mjs";
 
 const participantinfo_div = /** @type {HTMLDivElement} */ (notnull(document.querySelector(".participantinfo")));
 const participantid_input = /** @type {HTMLInputElement} */ (notnull(participantinfo_div.querySelector("input[type=text]")));
@@ -101,14 +101,15 @@ class ParticipantID {
 	 */
 	async #set(participant_id_info) {
 		participantid_input.value = participant_id_info?.participant_id ?? "";
-		await idbkv.set("last_participant_id_info", participant_id_info);
 		this.#participant_id_info = participant_id_info;
 		const participant_id_digest = participant_id_info?.participant_id_digest ?? null;
+		await idbkv.set("last_participant_id_info", participant_id_info);
 		this.#filemeta_idbkv = participant_id_digest == null ?
 			DEFAULT_FILE_META_STORE :
 			await idbkv.createStore("file_metadata_"+participant_id_digest, "keyval");
 
-		await clean_open_and_sync_library();
+		// await clean_open_and_sync_library();
+		await close_opened_directory();
 
 		participantinfo_div.classList.toggle("committed", !!participant_id_digest);
 		participantinfo_div.classList.toggle("disabled", !participant_id_digest);

@@ -204,8 +204,17 @@ export async function clean_open_and_sync_library() {
 	if (!last_used_dir_handle) return;
 	filelist_div.querySelectorAll("div.file").forEach(file_div => file_div.remove());
 	await open_directory(last_used_dir_handle);
-
 }
+export async function close_opened_directory() {
+	openeddirectory_div.style.display = "none";
+	folderselect_div.style.display = "";
+
+	filelist_div.querySelectorAll("div.file").forEach(file_div => file_div.remove());
+
+	await idbkv.del("last_used_dir_handle");
+}
+
+
 
 /**
  *
