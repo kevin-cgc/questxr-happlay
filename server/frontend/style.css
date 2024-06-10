@@ -58,6 +58,14 @@ body {
 	background: var(--tertiary-color-dark);
 }
 
+@keyframes loading_animation {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
 
 button {
 	color: var(--secondary-color);
@@ -280,11 +288,58 @@ div#root {
 	div.file {
 		background-color: var(--primary-color);
 		padding: 1ex;
-		display: flex;
+		display: grid;
+		grid-template-columns: auto 1fr auto;
 		gap: 0.5ex;
-		justify-content: space-between;
+		/* justify-content: space-between; */
 
 		cursor: pointer;
+
+
+		div.syncstatus {
+			display: flex;
+			align-items: center;
+			position: relative;
+		}
+
+		div.syncstatus {
+			&:hover:after {
+				content: "sync is disabled. (set participant id)";
+				width: max-content;
+				position: absolute;
+				top: 5ex;
+				background-color: var(--tertiary-color-darker);
+				z-index: 99;
+			}
+			span:before {
+				content: "sync_disabled";
+			}
+		}
+		&.sync-failed div.syncstatus {
+			&:hover:after {
+				content: "sync failed. (check console)";
+			}
+			span:before {
+				content: "sync_problem";
+			}
+		}
+		&.syncing div.syncstatus {
+			&:hover:after {
+				content: "syncing...";
+			}
+			span:before {
+				content: "sync";
+				animation: loading_animation 1.6s linear infinite;
+			}
+		}
+		&.synced div.syncstatus {
+			&:hover:after {
+				content: "successfully synced.";
+			}
+			span:before {
+				content: "cloud_done";
+			}
+		}
 
 		span.filename {
 			display: flex;
