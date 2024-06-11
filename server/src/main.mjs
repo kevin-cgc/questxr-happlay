@@ -13,8 +13,8 @@ import crypto from "crypto";
 import fs from "fs/promises";
 
 
-const CONTROLLER_HTTP_PORT = Number.parseInt(process.env["HAPPLAY_CONTROLLER_HTTP_PORT"] || "8081");
-const DEVICE_WS_PORT = Number.parseInt(process.env["HAPPLAY_DEVICE_WS_PORT"] || "8080");
+const CONTROLLER_HTTP_PORT = Number.parseInt(process.env["HAPPLAY_CONTROLLER_HTTP_PORT"] || "8081"); //isntancing: 8181, 8281, 8381...
+const DEVICE_WS_PORT = Number.parseInt(process.env["HAPPLAY_DEVICE_WS_PORT"] || "8080"); // instancing: 8180, 8280, 8380...
 const HAPPLAY_DATA_DIR = process.env["HAPPLAY_DATA_DIR"] || path.join(import.meta.dirname, "../data");
 const WAV_FILES_DIR = path.join(HAPPLAY_DATA_DIR, "wavs");
 const PARTICIPANTS_DIR = path.join(HAPPLAY_DATA_DIR, "participants");
@@ -191,9 +191,13 @@ async function setup_api(app) {
 	app.put("/api/participant/file/meta", async (req, res) => {
 		const { file_meta_path } = get_filename_from_params(req);
 
+		/** @type {import("../frontend/js/folderfilepicker.mjs").FileEntry} */
 		const meta = JSON.parse(await fs.readFile(file_meta_path, "utf-8"));
-		if (req.query.starred) meta.starred = req.query.starred === "true";
-		if (req.query.trash) meta.trash = req.query.trash === "true";
+
+		if (typeof req.query.starred == "string") meta.starred = req.query.starred === "true";
+		if (typeof req.query.trash == "string") meta.trash = req.query.trash === "true";
+		if (typeof req.query.vote == "string") meta.vote = parseFloat(req.query.vote);
+
 		await fs.writeFile(file_meta_path, JSON.stringify(meta, null, 2));
 		res.json(meta);
 	});
@@ -215,7 +219,8 @@ async function setup_api(app) {
 			prompt: req.query.prompt,
 			starred: req.query.starred === "true",
 			trash: req.query.trash === "true",
-
+			// @ts-ignore
+			vote: parseFloat(req.query.vote) || 0,
 			uploaded_at: Date.now(),
 		};
 

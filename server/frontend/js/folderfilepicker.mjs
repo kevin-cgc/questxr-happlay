@@ -11,7 +11,7 @@ const changefolder_button = /** @type {HTMLButtonElement} **/ (openeddirectory_d
 const opendirname_h2 = /** @type {HTMLHeadingElement} **/ (openeddirectory_div.querySelector("h2"));
 const filelist_div = /** @type {HTMLDivElement} **/ (openeddirectory_div.querySelector(".filelist"));
 
-/** @typedef {{ name: string, filename: string, sha265: string, origin: string, model: string, prompt: string, starred: boolean, trash: boolean }} FileEntry */
+/** @typedef {{ name: string, filename: string, sha265: string, origin: string, model: string, prompt: string, starred: boolean, trash: boolean, vote: number }} FileEntry */
 
 const SYMBOL_FILE_HANDLE = Symbol("file_handle");
 
@@ -74,6 +74,7 @@ async function open_directory_internal(dir_handle) {
 				prompt: "",
 				starred: false,
 				trash: false,
+				vote: 0,
 			};
 
 			const filemeta_ikvs = PARTICIPANT_ID_GLO.get_filemeta_store();
@@ -105,33 +106,43 @@ async function open_directory_internal(dir_handle) {
 				file_div.appendChild(bdiv);
 
 				const upload_button = document.createElement("button");
-				upload_button.textContent = "Upload";
+				upload_button.textContent = "Select For Playback";
 				bdiv.appendChild(upload_button);
 
-				const star_button = document.createElement("button");
-				star_button.className = "star";
-				star_button.innerHTML = `<span class="material-symbols-outlined">star</span>`;
-				bdiv.appendChild(star_button);
+				// const star_button = document.createElement("button");
+				// star_button.className = "star";
+				// star_button.innerHTML = `<span class="material-symbols-outlined">star</span>`;
+				// bdiv.appendChild(star_button);
 
-				star_button.addEventListener("click", async ev => {
-					filemeta.starred = !filemeta.starred;
-					await idbkv.set(entry.name, filemeta, filemeta_ikvs);
-					file_div.classList.toggle("starred", filemeta.starred);
+				// star_button.addEventListener("click", async ev => {
+				// 	filemeta.starred = !filemeta.starred;
+				// 	file_div.classList.toggle("starred", filemeta.starred);
+				// 	await sync_file_meta(file_div, filemeta);
+				// });
 
-					try {
-						file_div.classList.remove("sync-failed");
-						file_div.classList.add("syncing");
-						const sync_enabled = await PARTICIPANT_ID_GLO.sync_file_meta(filemeta);
-						if (sync_enabled) file_div.classList.add("synced");
-						else file_div.classList.remove("synced");
-					} catch (e) {
-						console.error("Failed to sync file meta", e);
-						file_div.classList.add("sync-failed");
-					} finally {
-						file_div.classList.remove("syncing");
+				const upvote_button = document.createElement("button");
+				upvote_button.className = "upvote";
+				upvote_button.innerHTML = `<span class="material-symbols-outlined">thumb_up</span>`;
+				bdiv.appendChild(upvote_button);
+				const downvote_button = document.createElement("button");
+				downvote_button.className = "downvote";
+				downvote_button.innerHTML = `<span class="material-symbols-outlined">thumb_down</span>`;
+				bdiv.appendChild(downvote_button);
+				[upvote_button, downvote_button].forEach(b => b.addEventListener("click", async ev => {
+					const curr_vote = filemeta.vote;
+					const new_vote = ev.currentTarget == upvote_button ? +1 : -1;
+					if (curr_vote == new_vote) {
+						filemeta.vote = 0;
+						file_div.classList.remove("upvoted", "downvoted");
+					} else {
+						filemeta.vote = new_vote;
+						file_div.classList.toggle("upvoted", new_vote == +1);
+						file_div.classList.toggle("downvoted", new_vote == -1);
 					}
 
-				});
+					await sync_file_meta(entry, file_div, filemeta, filemeta_ikvs);
+				}));
+
 
 
 				[file_div, filename_span, upload_button].forEach(el => el.addEventListener("click", async ev => {
@@ -153,6 +164,30 @@ async function open_directory_internal(dir_handle) {
 	}
 
 	// console.debug("open_directory_internal done");
+}
+
+/**
+ * sync file meta and set sync status classes
+ *
+ * @param {FileSystemFileHandle} entry
+ * @param {HTMLDivElement} file_div
+ * @param {FileEntry} filemeta
+ * @param {*} filemeta_ikvs
+ */
+async function sync_file_meta(entry, file_div, filemeta, filemeta_ikvs) {
+	await idbkv.set(entry.name, filemeta, filemeta_ikvs);
+	try {
+		file_div.classList.remove("sync-failed");
+		file_div.classList.add("syncing");
+		const sync_enabled = await PARTICIPANT_ID_GLO.sync_file_meta(filemeta);
+		if (sync_enabled) file_div.classList.add("synced");
+		else file_div.classList.remove("synced");
+	} catch (e) {
+		console.error("Failed to sync file meta", e);
+		file_div.classList.add("sync-failed");
+	} finally {
+		file_div.classList.remove("syncing");
+	}
 }
 
 for (const button of [openfolder_button, changefolder_button]) {

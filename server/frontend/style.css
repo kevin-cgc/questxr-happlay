@@ -376,7 +376,7 @@ div#root {
 		button {
 			padding: 0.5ex 1ex;
 		}
-		button.star .material-symbols-outlined {
+		button .material-symbols-outlined {
 			transition: 0.12s;
 		}
 
@@ -388,6 +388,23 @@ div#root {
 				'opsz' 24;
 
 			color: gold;
+		}
+		&.upvoted button.upvote .material-symbols-outlined{
+			font-variation-settings:
+				'FILL' 1,
+				'wght' 400,
+				'GRAD' 0,
+				'opsz' 24;
+			color: #8ff8ff;
+		}
+		&.downvoted button.downvote .material-symbols-outlined{
+			font-variation-settings:
+				'FILL' 1,
+				'wght' 400,
+				'GRAD' 0,
+				'opsz' 24;
+
+			color: #f08080;
 		}
 	}
 
