@@ -13,34 +13,28 @@ import crypto from "crypto";
 import fs from "fs/promises";
 
 
-const CONTROLLER_HTTP_PORT = Number.parseInt(process.env["HAPPLAY_CONTROLLER_HTTP_PORT"] || "8081"); //isntancing: 8181, 8281, 8381...
-const DEVICE_WS_PORT = Number.parseInt(process.env["HAPPLAY_DEVICE_WS_PORT"] || "8080"); // instancing: 8180, 8280, 8380...
-const HAPPLAY_DATA_DIR = process.env["HAPPLAY_DATA_DIR"] || path.join(import.meta.dirname, "../data");
-const WAV_FILES_DIR = path.join(HAPPLAY_DATA_DIR, "wavs");
-const PARTICIPANTS_DIR = path.join(HAPPLAY_DATA_DIR, "participants");
-// const PARTICIPANTS_DB_FILE = path.join(HAPPLAY_DATA_DIR, "participants.json");
-
-// const wav_upload = multer({
-// 	dest: WAV_FILES_DIR,
-// 	limits: {
-// 		fileSize: 20 * 1024 * 1024,
-// 	}
-// });
-
-
-// const participants_db = await JSONFilePreset(PARTICIPANTS_DB_FILE, { participants: [] });
-
-async function main() {
+/**
+ *
+ * @param {object} param0
+ * @param {number} param0.controller_http_port
+ * @param {number} param0.device_ws_port
+ * @param {string} param0.participants_dir
+ */
+async function main({
+	controller_http_port,
+	device_ws_port,
+	participants_dir,
+}) {
 	const app = express();
 	const static_path = path.join(import.meta.dirname, "../frontend");
 	app.use(express.static(static_path));
 
-	await setup_api(app);
+	await setup_api(app, participants_dir);
 
-	const server = app.listen(CONTROLLER_HTTP_PORT, () => console.log(`Controller started on http://localhost:${CONTROLLER_HTTP_PORT}`));
+	const server = app.listen(controller_http_port, () => console.log(`Controller started on http://localhost:${controller_http_port}`));
 
 	const controller_wss = new WebSocketServer({ server, path: "/ws" });
-	const device_wss = new WebSocketServer({ port: DEVICE_WS_PORT });
+	const device_wss = new WebSocketServer({ port: device_ws_port });
 
 	for (const config of [
 		{ rx_wss: controller_wss, name: "controller", tx_wss: device_wss },
@@ -71,7 +65,7 @@ async function main() {
 		});
 	}
 
-	console.log(`Oculus websocket server started on port ${DEVICE_WS_PORT}`);
+	console.log(`Oculus websocket server started on port ${device_ws_port}`);
 }
 
 function generate_uid() {
@@ -108,8 +102,7 @@ function get_participant_id_digest(req) {
  * @param {express.Request | string} req_or_pid
  * @returns
  */
-function get_participant_dir(req_or_pid) {
-
+function get_participant_info_for_dir(participants_dir, req_or_pid) {
 	let participant_id_digest;
 	if (typeof req_or_pid === "string") {
 		participant_id_digest = req_or_pid;
@@ -122,7 +115,7 @@ function get_participant_dir(req_or_pid) {
 	}
 
 
-	const participant_dir = path.join(PARTICIPANTS_DIR, participant_id_digest);
+	const participant_dir = path.join(participants_dir, participant_id_digest);
 	const participant_uploads_dir = path.join(participant_dir, "uploads");
 	const participant_meta_file = path.join(participant_dir, "meta.json");
 	return {
@@ -138,10 +131,13 @@ const PID_DIGEST_SALT = "happlay_workshop1"
  *
  * @param {express.Express} app
  */
-async function setup_api(app) {
+async function setup_api(app, participants_dir) {
+	const get_participant_info = req => get_participant_info_for_dir(participants_dir, req);
+	const get_filename_from_params = req => get_filename_from_params_for_pdir(participants_dir, req);
+
 	app.get("/api/participant", async (req, res) => {
 		const { participant_id_digest } = get_participant_id_digest(req);
-		const { participant_meta_file } = get_participant_dir(participant_id_digest);
+		const { participant_meta_file } = get_participant_info(participant_id_digest);
 		try {
 			const meta = JSON.parse(await fs.readFile(participant_meta_file, "utf-8"));
 			res.json(meta);
@@ -153,7 +149,7 @@ async function setup_api(app) {
 	});
 	app.post("/api/participant", async (req, res) => {
 		const { participant_id, participant_id_digest } = get_participant_id_digest(req);
-		const { participant_dir, participant_uploads_dir, participant_meta_file } = get_participant_dir(participant_id_digest);
+		const { participant_dir, participant_uploads_dir, participant_meta_file } = get_participant_info(participant_id_digest);
 
 		if (await fs.access(participant_dir).then(() => true, () => false)) {
 			throw new ExpressAppError(409, "Participant already exists");
@@ -172,7 +168,7 @@ async function setup_api(app) {
 	});
 
 	app.get("/api/participant/files", async (req, res) => {
-		const { participant_uploads_dir } = get_participant_dir(req);
+		const { participant_uploads_dir } = get_participant_info(req);
 		const files = await fs.readdir(participant_uploads_dir);
 		res.json(files);
 	});
@@ -254,8 +250,8 @@ function sanitize_filename(filename) {
 /**
  * @param {express.Request} req
  */
-function get_filename_from_params(req) {
-	const { participant_uploads_dir } = get_participant_dir(req);
+function get_filename_from_params_for_pdir(participants_dir, req) {
+	const { participant_uploads_dir } = get_participant_info_for_dir(participants_dir, req);
 
 	const raw_filename = req.query.filename;
 	if (!raw_filename || typeof raw_filename !== "string") {
@@ -269,4 +265,21 @@ function get_filename_from_params(req) {
 	return { file_path, file_meta_path, raw_filename, sanitized_filename };
 }
 
-await main();
+
+const instance_num = Number.parseInt(process.argv[2]) || 1;
+
+const BASE_CONTROLLER_HTTP_PORT = Number.parseInt(process.env["HAPPLAY_CONTROLLER_HTTP_PORT"] || "8081"); //isntancing: 8181, 8281, 8381...
+const BASE_DEVICE_WS_PORT = Number.parseInt(process.env["HAPPLAY_DEVICE_WS_PORT"] || "8080"); // instancing: 8180, 8280, 8380...
+const HAPPLAY_DATA_DIR = process.env["HAPPLAY_DATA_DIR"] || path.join(import.meta.dirname, "../data");
+const PARTICIPANTS_DIR = path.join(HAPPLAY_DATA_DIR, "participants");
+
+for (let i=0; i<instance_num; i++) {
+	const controller_http_port = BASE_CONTROLLER_HTTP_PORT + i * 100;
+	const device_ws_port = BASE_DEVICE_WS_PORT + i * 100;
+
+	await main({
+		controller_http_port,
+		device_ws_port,
+		participants_dir: PARTICIPANTS_DIR // all instances share the same participants dir, since participant ids should be unique across instances
+	});
+}
