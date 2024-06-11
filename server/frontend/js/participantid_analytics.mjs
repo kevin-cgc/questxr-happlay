@@ -100,6 +100,7 @@ class ParticipantID {
 	 * @returns
 	 */
 	async #set(participant_id_info) {
+		const old_participant_id_info = this.#participant_id_info;
 		participantid_input.value = participant_id_info?.participant_id ?? "";
 		this.#participant_id_info = participant_id_info;
 		const participant_id_digest = participant_id_info?.participant_id_digest ?? null;
@@ -108,8 +109,12 @@ class ParticipantID {
 			DEFAULT_FILE_META_STORE :
 			await idbkv.createStore("file_metadata_"+participant_id_digest, "keyval");
 
-		// await clean_open_and_sync_library();
-		await close_opened_directory();
+		console.log("old_participant_id_info == participant_id_info =>", old_participant_id_info == participant_id_info)
+		if (old_participant_id_info == participant_id_info) await clean_open_and_sync_library(); //happens during init
+		else {
+			await close_opened_directory();
+			console.log("closing open directory");
+		}
 
 		participantinfo_div.classList.toggle("committed", !!participant_id_digest);
 		participantinfo_div.classList.toggle("disabled", !participant_id_digest);

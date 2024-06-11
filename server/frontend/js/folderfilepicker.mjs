@@ -206,12 +206,12 @@ export async function clean_open_and_sync_library() {
 	await open_directory(last_used_dir_handle);
 }
 export async function close_opened_directory() {
+	await idbkv.del("last_used_dir_handle");
+
 	openeddirectory_div.style.display = "none";
 	folderselect_div.style.display = "";
 
 	filelist_div.querySelectorAll("div.file").forEach(file_div => file_div.remove());
-
-	await idbkv.del("last_used_dir_handle");
 }
 
 
