@@ -1,4 +1,5 @@
 import { SAMPLE_RATE, WORKSHOP_MODE } from "./appmode.mjs";
+import { bump_playcount_on_filemeta } from "./folderfilepicker.mjs";
 import { notnull } from "./util.mjs";
 
 const playbackv_div = /** @type {HTMLDivElement} **/ (document.getElementById("playbackv"));
@@ -58,6 +59,8 @@ let playback_started_at = null;
 export function start_playback() {
 	playback_started_at = performance.now();
 
+	if (last_waveform) bump_playcount_on_filemeta(last_waveform.filename);
+
 	const tick = () => {
 		if (playback_started_at == null) {
 			draw_playback_head(0);
@@ -84,7 +87,9 @@ const draw_playback_head = elapsed => {
 	const position = samples_elapsed / last_step;
 	pbh_ctx.fillRect(position, 0, 2, height);
 
-	playback_progress.value = 100 * samples_elapsed / (last_waveform?.pcm.length ?? 0);
+	try {
+		playback_progress.value = 100 * samples_elapsed / (last_waveform?.pcm.length ?? 0);
+	} catch (e) {}
 }
 
 export function mark_playback_loading() {

@@ -124,7 +124,7 @@ class ParticipantID {
 	/**
 	 *
 	 * @param {FileSystemFileHandle} entry
-	 * @param {import("./folderfilepicker.mjs").FileEntry} meta
+	 * @param {import("./folderfilepicker.mjs").FileEntryMeta} meta
 	 * @returns {Promise<boolean>} false if sync not available
 	 */
 	async sync_file(entry, meta) {
@@ -152,7 +152,7 @@ class ParticipantID {
 	}
 
 	/**
-	 * @param {import("./folderfilepicker.mjs").FileEntry} meta
+	 * @param {import("./folderfilepicker.mjs").FileEntryMeta} meta
 	 * @returns {Promise<boolean>} false if sync not available
 	 */
 	async sync_file_meta(meta) {

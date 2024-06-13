@@ -187,12 +187,13 @@ async function setup_api(app, participants_dir) {
 	app.put("/api/participant/file/meta", async (req, res) => {
 		const { file_meta_path } = get_filename_from_params(req);
 
-		/** @type {import("../frontend/js/folderfilepicker.mjs").FileEntry} */
+		/** @type {import("../frontend/js/folderfilepicker.mjs").FileEntryMeta} */
 		const meta = JSON.parse(await fs.readFile(file_meta_path, "utf-8"));
 
 		if (typeof req.query.starred == "string") meta.starred = req.query.starred === "true";
 		if (typeof req.query.trash == "string") meta.trash = req.query.trash === "true";
 		if (typeof req.query.vote == "string") meta.vote = parseFloat(req.query.vote);
+		if (typeof req.query.playcount == "string") meta.playcount = parseInt(req.query.playcount);
 
 		await fs.writeFile(file_meta_path, JSON.stringify(meta, null, 2));
 		res.json(meta);

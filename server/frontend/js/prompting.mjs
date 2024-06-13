@@ -75,6 +75,7 @@ async function save_gradio_signal_to_file({ signal_url, prompt, model }) {
 		starred: false,
 		trash: false,
 		vote: 0,
+		playcount: 0,
 	});
 
 }
