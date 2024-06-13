@@ -313,3 +313,27 @@ async function sync_by_filename(new_files) {
 		}
 	}
 }
+
+/**
+ *
+ * @param {Blob} blob
+ * @param {FileEntry} filemeta
+ */
+export async function save_signal_blob_to_file(blob, filemeta) {
+	const last_used_dir_handle = /** @type {FileSystemDirectoryHandle | null} **/ (await idbkv.get("last_used_dir_handle"));
+	if (!last_used_dir_handle) {
+		alert("Please open a directory to save the signal");
+		throw new Error("No last used directory");
+	}
+
+	const fh = await last_used_dir_handle.getFileHandle(filemeta.filename, { create: true });
+	const writable = await fh.createWritable();
+	await writable.write(blob);
+	await writable.close();
+
+
+	const filemeta_ikvs = PARTICIPANT_ID_GLO.get_filemeta_store();
+	await idbkv.set(filemeta.filename, filemeta, filemeta_ikvs);
+
+	await open_directory(last_used_dir_handle); //will also sync the file
+}
