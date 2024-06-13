@@ -11,9 +11,10 @@ const changefolder_button = /** @type {HTMLButtonElement} **/ (openeddirectory_d
 const opendirname_h2 = /** @type {HTMLHeadingElement} **/ (openeddirectory_div.querySelector("h2"));
 const filelist_div = /** @type {HTMLDivElement} **/ (openeddirectory_div.querySelector(".filelist"));
 
-/** @typedef {{ name: string, filename: string, sha265: string, origin: string, model: string, prompt: string, starred: boolean, trash: boolean, vote: number }} FileEntry */
+/** @typedef {{ name: string, filename: string, sha265: string, origin: string, model: string, prompt: string, starred: boolean, trash: boolean, vote: number, playcount: number }} FileEntryMeta */
 
 const SYMBOL_FILE_HANDLE = Symbol("file_handle");
+const SYMBOL_FILE_NAME = Symbol("file_name");
 
 
 let open_directory_promise_queue = Promise.resolve(); // multiple concurrent open_directory calls result in duplicate dom elements
@@ -64,7 +65,7 @@ async function open_directory_internal(dir_handle) {
 			notnull(fdiv.querySelector("span.filename")).textContent = entry.name;
 			continue;
 		} else {
-			/** @type {FileEntry} */
+			/** @type {FileEntryMeta} */
 			const fallback_file_entry = {
 				name: entry.name,
 				filename: entry.name,
@@ -75,10 +76,11 @@ async function open_directory_internal(dir_handle) {
 				starred: false,
 				trash: false,
 				vote: 0,
+				playcount: 0,
 			};
 
 			const filemeta_ikvs = PARTICIPANT_ID_GLO.get_filemeta_store();
-			/** @type {FileEntry} */
+			/** @type {FileEntryMeta} */
 			const filemeta = await idbkv.get(entry.name, filemeta_ikvs) ?? (await idbkv.set(entry.name, fallback_file_entry, filemeta_ikvs), fallback_file_entry);
 
 
@@ -90,6 +92,7 @@ async function open_directory_internal(dir_handle) {
 				file_div.className = "file";
 				file_div.classList.toggle("starred", filemeta.starred);
 				file_div[SYMBOL_FILE_HANDLE] = entry;
+				file_div[SYMBOL_FILE_NAME] = entry.name;
 
 				const syncstatus_div = document.createElement("div");
 				syncstatus_div.className = "syncstatus";
@@ -140,7 +143,7 @@ async function open_directory_internal(dir_handle) {
 						file_div.classList.toggle("downvoted", new_vote == -1);
 					}
 
-					await sync_file_meta(entry, file_div, filemeta, filemeta_ikvs);
+					await sync_file_meta(entry.name, file_div, filemeta, filemeta_ikvs);
 				}));
 
 
@@ -169,13 +172,13 @@ async function open_directory_internal(dir_handle) {
 /**
  * sync file meta and set sync status classes
  *
- * @param {FileSystemFileHandle} entry
+ * @param {string} filename
  * @param {HTMLDivElement} file_div
- * @param {FileEntry} filemeta
+ * @param {FileEntryMeta} filemeta
  * @param {*} filemeta_ikvs
  */
-async function sync_file_meta(entry, file_div, filemeta, filemeta_ikvs) {
-	await idbkv.set(entry.name, filemeta, filemeta_ikvs);
+async function sync_file_meta(filename, file_div, filemeta, filemeta_ikvs) {
+	await idbkv.set(filename, filemeta, filemeta_ikvs);
 	try {
 		file_div.classList.remove("sync-failed");
 		file_div.classList.add("syncing");
@@ -189,6 +192,22 @@ async function sync_file_meta(entry, file_div, filemeta, filemeta_ikvs) {
 		file_div.classList.remove("syncing");
 	}
 }
+/**
+ *
+ * @param {string} filename
+ * @returns
+ */
+export async function bump_playcount_on_filemeta(filename) {
+	const filemeta_ikvs = PARTICIPANT_ID_GLO.get_filemeta_store();
+	/** @type {import("./folderfilepicker.mjs").FileEntryMeta} */
+	const filemeta = await idbkv.get(filename, filemeta_ikvs);
+	if (!filemeta) throw new Error("Filemeta not found");
+	filemeta.playcount = (filemeta.playcount ?? 0) + 1;
+
+	const div = /** @type {HTMLDivElement} */ (notnull([...filelist_div.querySelectorAll("div.file")].find(div => div[SYMBOL_FILE_NAME] == filename)));
+	await sync_file_meta(filename, div, filemeta, filemeta_ikvs);
+}
+
 
 for (const button of [openfolder_button, changefolder_button]) {
 	button.addEventListener("click", async () => {
@@ -317,7 +336,7 @@ async function sync_by_filename(new_files) {
 /**
  *
  * @param {Blob} blob
- * @param {FileEntry} filemeta
+ * @param {FileEntryMeta} filemeta
  */
 export async function save_signal_blob_to_file(blob, filemeta) {
 	const last_used_dir_handle = /** @type {FileSystemDirectoryHandle | null} **/ (await idbkv.get("last_used_dir_handle"));
