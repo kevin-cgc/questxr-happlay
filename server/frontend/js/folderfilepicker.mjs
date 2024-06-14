@@ -132,10 +132,10 @@ async function open_directory_internal(dir_handle) {
 				downvote_button.innerHTML = `<span class="material-symbols-outlined">thumb_down</span>`;
 				bdiv.appendChild(downvote_button);
 				[upvote_button, downvote_button].forEach(b => b.addEventListener("click", async ev => {
-					const filemeta = await idbkv.get(entry.name, filemeta_ikvs);
-					const curr_vote = filemeta.vote;
 					const new_vote = ev.currentTarget == upvote_button ? +1 : -1;
-					if (curr_vote == new_vote) {
+					const filemeta = await idbkv.get(entry.name, filemeta_ikvs);
+					const old_vote = filemeta.vote;
+					if (old_vote == new_vote) {
 						filemeta.vote = 0;
 						file_div.classList.remove("upvoted", "downvoted");
 					} else {
