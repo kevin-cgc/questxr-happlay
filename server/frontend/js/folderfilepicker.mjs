@@ -81,7 +81,7 @@ async function open_directory_internal(dir_handle) {
 
 			const filemeta_ikvs = PARTICIPANT_ID_GLO.get_filemeta_store();
 			/** @type {FileEntryMeta} */
-			const filemeta = await idbkv.get(entry.name, filemeta_ikvs) ?? (await idbkv.set(entry.name, fallback_file_entry, filemeta_ikvs), fallback_file_entry);
+			const filemeta_initial = await idbkv.get(entry.name, filemeta_ikvs) ?? (await idbkv.set(entry.name, fallback_file_entry, filemeta_ikvs), fallback_file_entry);
 
 
 			const file_div = document.createElement("div");
@@ -90,7 +90,7 @@ async function open_directory_internal(dir_handle) {
 
 			{ // init file_div
 				file_div.className = "file";
-				file_div.classList.toggle("starred", filemeta.starred);
+				file_div.classList.toggle("starred", filemeta_initial.starred);
 				file_div[SYMBOL_FILE_HANDLE] = entry;
 				file_div[SYMBOL_FILE_NAME] = entry.name;
 
@@ -132,6 +132,7 @@ async function open_directory_internal(dir_handle) {
 				downvote_button.innerHTML = `<span class="material-symbols-outlined">thumb_down</span>`;
 				bdiv.appendChild(downvote_button);
 				[upvote_button, downvote_button].forEach(b => b.addEventListener("click", async ev => {
+					const filemeta = await idbkv.get(entry.name, filemeta_ikvs);
 					const curr_vote = filemeta.vote;
 					const new_vote = ev.currentTarget == upvote_button ? +1 : -1;
 					if (curr_vote == new_vote) {
