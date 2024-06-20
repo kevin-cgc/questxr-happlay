@@ -33,19 +33,34 @@ if (USE_API_PROMPT_UI) {
 		cont_div.style.minHeight = "100%";
 
 		try {
-			const submit_button = /** @type {HTMLButtonElement} */ (notnull(document.querySelector("gradio-app ##component-6")));
-			submit_button.addEventListener("click", async () => {
-				console.log("clicked submit");
-				const prompt = notnull(document.querySelector("gradio-app #component-3 textarea")).value;
+			// search under gradio_app for button that contains text "submit"
+			const submit_button = /** @type {HTMLButtonElement} */ (notnull([...gradio_app.querySelectorAll("button")].find(b => b.textContent?.toLowerCase().includes("submit"))));
+			const textarea = /** @type {HTMLTextAreaElement} */ (notnull(gradio_app.querySelector("textarea")));
+			const on_submit_fn = async () => {
+				console.log("submit on gradio app");
+				const prompt = textarea.value;
 				const model = "audiogen"; //unknown, not in the UI
-				const og_signal_url = document.querySelector("gradio-app #component-8 a")?.href;
+				const result_container = /** @type {HTMLDivElement} */ (notnull([...gradio_app.querySelectorAll("label")].find(s => s.textContent?.toLowerCase().includes("result"))?.closest("div")));
 
-				while (document.querySelector("gradio-app #component-8 a")?.href === og_signal_url) {
+				const og_signal_url = result_container.querySelector("a")?.href;
+
+				let start_time = performance.now();
+				while (result_container.querySelector("a")?.href === og_signal_url) {
+					if (performance.now() - start_time > 60000) {
+						console.error("Timeout waiting for signal URL");
+						return;
+					}
 					await new Promise(resolve => setTimeout(resolve, 100));
 				}
-				const signal_url = document.querySelector("gradio-app #component-8 a")?.href;
+				const signal_url = notnull(result_container.querySelector("a")).href;
 
 				await save_gradio_signal_to_file({signal_url, prompt, model});
+			};
+			submit_button.addEventListener("click", on_submit_fn);
+			textarea.addEventListener("keydown", ev => {
+				if (ev.key === "Enter" && !ev.shiftKey) {
+					on_submit_fn();
+				}
 			});
 		} catch (e) {
 			console.error("Error setting up submit button", e);

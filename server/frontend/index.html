@@ -4,7 +4,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>MQTP Haptic Playback Controller</title>
-	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" media="none" onload="this.media='all'"> <!-- load async -->
 	<link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -54,9 +54,10 @@
 		</div>
 		<div class="genmodelpromptcont">
 
-			<script type="module" src="https://gradio.s3-us-west-2.amazonaws.com/4.26.0/gradio.js"></script>
+			<script async type="module" src="https://gradio.s3-us-west-2.amazonaws.com/4.26.0/gradio.js"></script>
 			<!-- <gradio-app style="display: none;" src="https://s672-genhaptic-workshop.hf.space"></gradio-app> -->
-			<gradio-app style="display: none;" src="https://s672-hapticaudiogen.hf.space"></gradio-app>
+			<!-- <gradio-app style="display: none;" src="https://s672-hapticaudiogen.hf.space"></gradio-app> -->
+			<gradio-app style="display: none;" src="https://s672-workshop.hf.space"></gradio-app>
 
 			<div class="apiprompt">
 				<h2>Generate Haptic Signal</h2>
