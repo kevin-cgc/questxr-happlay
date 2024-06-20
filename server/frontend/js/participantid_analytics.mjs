@@ -87,7 +87,7 @@ class ParticipantID {
 		});
 
 
-		this.#set(last_participant_id_info).catch(console.error);
+		this.#set(last_participant_id_info).catch(e => console.error(e));
 	}
 
 	get_filemeta_store() {

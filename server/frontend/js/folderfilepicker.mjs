@@ -230,13 +230,24 @@ for (const button of [openfolder_button, changefolder_button]) {
 	});
 }
 
-{ // load last used directory
+async function load_last_used_directory() { // load last used directory
 	const last_used_dir_handle = /** @type {FileSystemDirectoryHandle | null} **/ (await idbkv.get("last_used_dir_handle"));
 	if (last_used_dir_handle) {
 		console.log("Opening last used directory", last_used_dir_handle);
-		await open_directory(last_used_dir_handle);
+		try {
+			if (await last_used_dir_handle.queryPermission() == "prompt") {
+				await last_used_dir_handle.requestPermission({ mode: "readwrite" });
+			}
+			await open_directory(last_used_dir_handle);
+		} catch(e) {
+			console.error(e);
+			console.error("Unable to open last_used_dir_handle");
+			alert(`Unable to open last used directory '${last_used_dir_handle.name}'. Please reselect the directory.`)
+		}
 	}
 }
+load_last_used_directory().catch(e => console.error("Error loading last used directory", e)); //no top level await for this
+
 { // rescan last used directory when tab is focused
 	document.addEventListener("visibilitychange", async () => {
 		if (!document.hidden || document.visibilityState === "visible") {
@@ -346,6 +357,15 @@ export async function save_signal_blob_to_file(blob, filemeta) {
 		throw new Error("No last used directory");
 	}
 
+	// this is not it
+	// const qs = await last_used_dir_handle.queryPermission();
+	// console.log("queryPermission", qs);
+	// const ps = await last_used_dir_handle.requestPermission({ mode: "readwrite" });
+	// console.log("requestPermission", ps);
+	// if (ps != "granted") {
+	// 	alert("Permission denied to write to directory");
+	// 	throw new Error("Permission denied");
+	// }
 	const fh = await last_used_dir_handle.getFileHandle(filemeta.filename, { create: true });
 	const writable = await fh.createWritable();
 	await writable.write(blob);
