@@ -217,7 +217,7 @@ for (const button of [openfolder_button, changefolder_button]) {
 				alert("Directory picker not supported in this browser");
 				return;
 			}
-			const dir_handle = await window.showDirectoryPicker();
+			const dir_handle = await window.showDirectoryPicker({ mode: "readwrite" });
 			idbkv.set("last_used_dir_handle", dir_handle);
 			await open_directory(dir_handle);
 		} catch (e) {
@@ -357,15 +357,11 @@ export async function save_signal_blob_to_file(blob, filemeta) {
 		throw new Error("No last used directory");
 	}
 
-	// this is not it
-	// const qs = await last_used_dir_handle.queryPermission();
-	// console.log("queryPermission", qs);
-	// const ps = await last_used_dir_handle.requestPermission({ mode: "readwrite" });
-	// console.log("requestPermission", ps);
-	// if (ps != "granted") {
-	// 	alert("Permission denied to write to directory");
-	// 	throw new Error("Permission denied");
-	// }
+	const ps = await last_used_dir_handle.requestPermission({ mode: "readwrite" }); // this does not actually check/ask for readwrite permission for some reason? (if only read is granted)
+	if (ps != "granted") {
+		alert("Permission denied to write file to directory");
+		throw new Error("Permission denied to write file to directory");
+	}
 	const fh = await last_used_dir_handle.getFileHandle(filemeta.filename, { create: true });
 	const writable = await fh.createWritable();
 	await writable.write(blob);

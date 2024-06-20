@@ -39,7 +39,7 @@ if (USE_API_PROMPT_UI) {
 			const on_submit_fn = async () => {
 				console.log("submit on gradio app");
 				const prompt = textarea.value;
-				const model = "audiogen"; //unknown, not in the UI
+				const model = [...gradio_app.querySelectorAll("span")].find(s => s.textContent?.toLowerCase().includes("model"))?.closest("div")?.querySelector("input")?.value ?? "unknown";
 				const result_container = /** @type {HTMLDivElement} */ (notnull([...gradio_app.querySelectorAll("label")].find(s => s.textContent?.toLowerCase().includes("result"))?.closest("div")));
 
 				const og_signal_url = result_container.querySelector("a")?.href;
