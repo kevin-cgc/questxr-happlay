@@ -47,7 +47,14 @@ async function open_directory_internal(dir_handle) {
 	/** @type {{ entry: FileSystemFileHandle, file_div: HTMLDivElement }[]} */
 	const new_files = [];
 
-	for await (const entry of dir_handle.values()) {
+	const entries_iter = dir_handle.values();
+	const entries_sorted = [];
+	for await (const entry of entries_iter) {
+		entries_sorted.push(entry);
+	}
+	entries_sorted.sort((a, b) => a.name.localeCompare(b.name));
+
+	for (const entry of entries_sorted) {
 		if (entry.kind != "file" || !entry.name.endsWith(".wav")) {
 			// console.debug("Skipping non-wav file", entry);
 			continue;
