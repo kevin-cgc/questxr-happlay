@@ -37,6 +37,8 @@ export let last_waveform = null;
 export const draw_waveform = (pcm, filename) => {
 	last_waveform = { pcm, filename };
 
+	// console.log(`max: ${Math.max(...pcm)}, min: ${Math.min(...pcm)}`)
+
 	filename_span.textContent = filename;
 
 	wf_ctx.fillStyle = "black";
@@ -47,9 +49,14 @@ export const draw_waveform = (pcm, filename) => {
 	wf_ctx.strokeStyle = "white";
 	wf_ctx.beginPath();
 	wf_ctx.moveTo(0, height / 2);
-	for (let i = 0; i < width; i++) {
-		const sample = pcm[Math.floor(i * last_step)];
-		wf_ctx.lineTo(i, height / 2 - sample * height / 2);
+	for (let i = 0; i < width - 1; i++) {
+		// const sample = pcm[Math.floor(i * last_step)];
+		// wf_ctx.lineTo(i, height / 2 - sample * height / 2);
+		const samples = pcm.slice(Math.floor(i * last_step), Math.floor((i + 1) * last_step));
+		const max = Math.max(...samples);
+		const min = Math.min(...samples);
+		wf_ctx.lineTo(i, height / 2 - min * height / 2);
+		wf_ctx.lineTo(i, height / 2 - max * height / 2);
 	}
 	wf_ctx.stroke();
 }
