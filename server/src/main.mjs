@@ -300,20 +300,21 @@ const BASE_CONTROLLER_HTTP_PORT = Number.parseInt(process.env["HAPPLAY_CONTROLLE
 const BASE_DEVICE_WS_PORT = Number.parseInt(process.env["HAPPLAY_DEVICE_WS_PORT"] || "8080"); // instancing: 8180, 8280, 8380...
 const HAPPLAY_DATA_DIR = process.env["HAPPLAY_DATA_DIR"] || path.join(import.meta.dirname, "../data");
 const PARTICIPANTS_DIR = path.join(HAPPLAY_DATA_DIR, "participants");
+const BEAM_CLOUD_API_KEY = process.env["BEAM_CLOUD_API_KEY"];
+if (!BEAM_CLOUD_API_KEY) {
+	console.error("BEAM_CLOUD_API_KEY env var is required");
+	process.exit(1);
+}
 
 for (let i=0; i<instance_num; i++) {
 	const controller_http_port = BASE_CONTROLLER_HTTP_PORT + i * 100;
 	const device_ws_port = BASE_DEVICE_WS_PORT + i * 100;
-	const beam_cloud_api_key = process.env["BEAM_CLOUD_API_KEY"];
-	if (!beam_cloud_api_key) {
-		console.error("BEAM_CLOUD_API_KEY env var is required");
-		process.exit(1);
-	}
+
 
 	await main({
 		controller_http_port,
 		device_ws_port,
 		participants_dir: PARTICIPANTS_DIR, // all instances share the same participants dir, since participant ids should be unique across instances
-		beam_cloud_api_key,
+		beam_cloud_api_key: BEAM_CLOUD_API_KEY,
 	});
 }

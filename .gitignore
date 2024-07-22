@@ -90,3 +90,5 @@ lint/tmp/
 
 #compiled spirv files
 *.spv
+
+*.temp
