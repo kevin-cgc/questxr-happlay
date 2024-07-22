@@ -1,28 +1,157 @@
-import { USE_API_PROMPT_UI } from "./appmode.mjs";
+import { USE_GRADIO_PROMPT_UI } from "./appmode.mjs";
 import { save_signal_blob_to_file } from "./folderfilepicker.mjs";
+import { NpWaveFormCanvas } from "./np-waveform-canvas.mjs";
 import { notnull, sanitize_filename } from "./util.mjs";
 
 const genmodelpromptcont_div = /** @type {HTMLDivElement} */ (notnull(document.querySelector(".genmodelpromptcont")));
-const duration_range_input = /** @type {HTMLInputElement} */ (notnull(genmodelpromptcont_div.querySelector("input[type=range]")));
-const duration_number_input = /** @type {HTMLInputElement} */ (notnull(genmodelpromptcont_div.querySelector("input[type=number]")));
 const apiprompt_div = /** @type {HTMLDivElement} */ (notnull(genmodelpromptcont_div.querySelector(".apiprompt")));
-const gradio_app = /** @type {HTMLElement} */ (notnull(document.querySelector("gradio-app")));
+const gradio_app = /** @type {HTMLElement | null} */ (document.querySelector("gradio-app"));
 
-for (const input of [duration_range_input, duration_number_input]) {
-	input.addEventListener("input", () => {
-		const value = parseFloat(input.value);
-		if (isNaN(value)) return;
-		if (input === duration_range_input) duration_number_input.value = value.toString();
-		else duration_range_input.value = value.toString();
-	});
-}
 
-if (USE_API_PROMPT_UI) {
-	console.error("TODO: prompting API not yet implemented");
-	//todo
+if (!USE_GRADIO_PROMPT_UI) {
 	apiprompt_div.style.display = "";
-	gradio_app.style.display = "none";
+	if (gradio_app) gradio_app.style.display = "none";
+	genmodelpromptcont_div.style.display = "grid";
+	genmodelpromptcont_div.style.gridTemplateRows = "100%";
+
+	const API_URL = "/api/generate";
+	const REQ_BODY_BASE = {
+		"prompt": "",
+		"n_at_once": 5,
+		"resp_type": "all"
+	};
+
+	const prompt_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("input.prompt")));
+	const generate_button = /** @type {HTMLButtonElement} */ (notnull(apiprompt_div.querySelector("button.generate")));
+	const resultspane_div = /** @type {HTMLDivElement} */ (notnull(apiprompt_div.querySelector("div.resultspane")));
+	const resultslist_div = /** @type {HTMLDivElement} */ (notnull(resultspane_div.querySelector("div.resultslist")));
+	const selectedresult_div = /** @type {HTMLDivElement} */ (notnull(resultspane_div.querySelector("div.selectedresult")));
+	const selectedwaveform_npwfcanvas = /** @type {NpWaveFormCanvas} */ (notnull(selectedresult_div.querySelector("np-waveform-canvas")));
+	const download_button = /** @type {HTMLButtonElement} */ (notnull(selectedresult_div.querySelector("button.download")));
+
+	const duration_range_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("input[type=range]")));
+	const duration_number_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("input[type=number]")));
+	for (const input of [duration_range_input, duration_number_input]) {
+		input.addEventListener("input", () => {
+			const value = parseFloat(input.value);
+			if (isNaN(value)) return;
+			if (input === duration_range_input) duration_number_input.value = value.toString();
+			else duration_range_input.value = value.toString();
+		});
+	}
+
+	generate_button.addEventListener("click", async () => {
+		const prompt = prompt_input.value;
+
+		try {
+			generate_button.disabled = true;
+			clear_results();
+			const resp = await fetch(API_URL, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({ ...REQ_BODY_BASE, prompt })
+			});
+			const nwavs_b64 = await resp.json();
+			if (typeof nwavs_b64 == "object" && "error" in nwavs_b64) {
+				alert(`Error during generation: ${nwavs_b64.error}`);
+				throw new Error(`Error during generation: ${nwavs_b64.error}`);
+			}
+			if (!Array.isArray(nwavs_b64)) {
+				alert("Invalid response from server");
+				throw new Error(`Invalid response from server: ${JSON.stringify(nwavs_b64)}`);
+			}
+			console.time("decode");
+			const nwavs_audio_buffers = nwavs_b64.map((b64) => {
+				const u8b = Uint8Array.from(atob(b64), c => c.charCodeAt(0)); // pcm_u8 samples
+				const ab = new AudioBuffer({ length: u8b.byteLength, numberOfChannels: 1, sampleRate: 8000 });
+				const channel = ab.getChannelData(0);
+				for (let i = 0; i < channel.length; i++) {
+					channel[i] = (u8b[i] - 128) / 128;
+				}
+				return ab;
+			});
+			console.timeEnd("decode");
+
+			render_results(nwavs_audio_buffers, prompt);
+		} finally {
+			generate_button.disabled = false;
+		}
+	});
+
+	/** @type {{ ab: AudioBuffer, prompt: string } | null} */
+	let last_selected_waveform = null;
+	/**
+	 * @param {AudioBuffer} ab
+	 * @param {string} prompt
+	 */
+	function select_waveform(ab, prompt) {
+		last_selected_waveform = { ab, prompt };
+		selectedwaveform_npwfcanvas.draw_waveform(ab.getChannelData(0));
+		download_button.disabled = false;
+	}
+
+
+	function clear_results() {
+		while (resultslist_div.firstChild) resultslist_div.removeChild(resultslist_div.firstChild);
+		last_selected_waveform = null;
+		download_button.disabled = true;
+		selectedwaveform_npwfcanvas.draw_waveform(null);
+	}
+
+	/**
+	 * @param {AudioBuffer[]} nwavs_audio_buffers
+	 * @param {string} prompt
+	 */
+	function render_results(nwavs_audio_buffers, prompt) {
+		clear_results();
+
+		for (const ab of nwavs_audio_buffers) {
+			const result_div = document.createElement("div");
+			result_div.classList.add("result");
+
+			const waveform_canvas = new NpWaveFormCanvas();
+			result_div.appendChild(waveform_canvas);
+
+			waveform_canvas.draw_waveform(ab.getChannelData(0));
+
+			result_div.addEventListener("click", () => {
+				select_waveform(ab, prompt);
+			});
+
+			resultslist_div.appendChild(result_div);
+		}
+
+		select_waveform(nwavs_audio_buffers[0], prompt);
+	}
+
+	download_button.addEventListener("click", async () => {
+		if (!last_selected_waveform) return;
+		const { ab, prompt } = last_selected_waveform;
+		const signal = convert_audio_buffer_to_wav(ab);
+		const randid = Math.random().toString(36).substring(7);
+		const filename = sanitize_filename(`${prompt.slice(0, 50)}_${randid}.wav`);
+		await save_signal_blob_to_file(signal, {
+			name: filename,
+			filename,
+			prompt: prompt_input.value,
+			model: "unknown",
+			origin: API_URL,
+			sha265: "",
+			starred: false,
+			trash: false,
+			vote: 0,
+			playcount: 0,
+		});
+	});
+
+	clear_results();
 } else {
+	if (!gradio_app) {
+		alert("gradio-app not found");
+		throw new Error("gradio-app not found");
+	}
 	apiprompt_div.style.display = "none";
 	gradio_app.style.display = "";
 	gradio_app.addEventListener("render", () => {

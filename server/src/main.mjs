@@ -19,17 +19,19 @@ import fs from "fs/promises";
  * @param {number} param0.controller_http_port
  * @param {number} param0.device_ws_port
  * @param {string} param0.participants_dir
+ * @param {string} param0.beam_cloud_api_key
  */
 async function main({
 	controller_http_port,
 	device_ws_port,
 	participants_dir,
+	beam_cloud_api_key,
 }) {
 	const app = express();
 	const static_path = path.join(import.meta.dirname, "../frontend");
 	app.use(express.static(static_path));
 
-	await setup_api(app, participants_dir);
+	await setup_api(app, participants_dir, beam_cloud_api_key);
 
 	const server = app.listen(controller_http_port, () => console.log(`Controller started on http://localhost:${controller_http_port}`));
 
@@ -130,8 +132,10 @@ const PID_DIGEST_SALT = "happlay_workshop1"
 /**
  *
  * @param {express.Express} app
+ * @param {string} participants_dir
+ * @param {string} beam_cloud_api_key
  */
-async function setup_api(app, participants_dir) {
+async function setup_api(app, participants_dir, beam_cloud_api_key) {
 	const get_participant_info = req => get_participant_info_for_dir(participants_dir, req);
 	const get_filename_from_params = req => get_filename_from_params_for_pdir(participants_dir, req);
 
@@ -237,6 +241,29 @@ async function setup_api(app, participants_dir) {
 
 	// 	console.log(`Received file ${file.originalname} with size ${file.size} bytes and saved as ${file.filename}`);
 	// });
+
+
+	// forward post requests to /api/generate to "https://app.beam.cloud/endpoint/audiogen-inf-12c-only/v4" with added Authorization header
+	app.post("/api/generate", express.text({ type: "application/json" }), async (req, res) => {
+		// return res.json(JSON.parse(await fs.readFile("beamcloud-output.temp", "utf-8")));
+		const beam_resp = await fetch("https://app.beam.cloud/endpoint/audiogen-inf-12c-only/v4", {
+			method: "POST",
+			keepalive: true,
+			headers: {
+				"Content-Type": "application/json",
+				"Authorization": "Bearer " + beam_cloud_api_key,
+			},
+			body: req.body,
+		});
+		if (!beam_resp.ok) {
+			res.status(beam_resp.status).send(await beam_resp.text());
+			return;
+		}
+		const beam_resp_json = await beam_resp.json();
+		res.json(beam_resp_json);
+	});
+
+
 }
 
 /**
@@ -277,10 +304,16 @@ const PARTICIPANTS_DIR = path.join(HAPPLAY_DATA_DIR, "participants");
 for (let i=0; i<instance_num; i++) {
 	const controller_http_port = BASE_CONTROLLER_HTTP_PORT + i * 100;
 	const device_ws_port = BASE_DEVICE_WS_PORT + i * 100;
+	const beam_cloud_api_key = process.env["BEAM_CLOUD_API_KEY"];
+	if (!beam_cloud_api_key) {
+		console.error("BEAM_CLOUD_API_KEY env var is required");
+		process.exit(1);
+	}
 
 	await main({
 		controller_http_port,
 		device_ws_port,
-		participants_dir: PARTICIPANTS_DIR // all instances share the same participants dir, since participant ids should be unique across instances
+		participants_dir: PARTICIPANTS_DIR, // all instances share the same participants dir, since participant ids should be unique across instances
+		beam_cloud_api_key,
 	});
 }

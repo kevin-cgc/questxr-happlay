@@ -20,13 +20,14 @@ html {
 body {
 	/* background-color: var(--primary-color); */
 	margin: 0;
-	padding: 2em;
+	padding: 1.5em;
 	background: linear-gradient(to bottom right, #2b2d2f, #2b383f);
 	background-repeat: no-repeat;
 	color: var(--text-color);
 	font-family: 'Courier New', Courier, monospace; /* Emphasizing the monospace theme */
 	display: grid;
 	grid-template-rows: auto minmax(0, 1fr);
+	padding-top: 0.33em;
 }
 
 
@@ -76,6 +77,11 @@ button {
 	font-weight: bold;
 	cursor: pointer;
 }
+button:disabled {
+	color: var(--tertiary-color-darker);
+	background-color: var(--tertiary-color-dark);
+	cursor: not-allowed;
+}
 a {
 	color: var(--secondary-color);
 }
@@ -92,6 +98,10 @@ input[type="range"] {
 	border: none;
 	padding: 0.5ex 1ex;
 	font-size: 1em;
+}
+input:disabled {
+	color: var(--tertiary-color-darker);
+	cursor: not-allowed;
 }
 select {
 	background-color: var(--tertiary-color-dark);
@@ -117,6 +127,10 @@ div.header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+
+	h1 {
+		margin: 0.7ex 0;
+	}
 }
 div.participantinfo {
 	display: flex;
@@ -147,8 +161,8 @@ div#root {
 	grid-template:
 		"playbackv playbackv playbackv playbackv" min-content
 		"fileupload filepicker mprompt mprompt" minmax(50ex, 1fr)
-		"serverwslog serverwslog serverwslog connquests" minmax(auto, 30vh) /
-   			minmax(30ex, 0.5fr) minmax(105ex, 1fr) minmax(60ex, 1fr) 0.6fr;
+		"serverwslog serverwslog serverwslog connquests" minmax(auto, 16vh) /
+      minmax(31ex, 0.1fr) minmax(105ex, 1fr) minmax(60ex, 1fr) 0.6fr;
 	gap: 2ex;
 }
 
@@ -160,9 +174,9 @@ div#root {
 .logcontainer {
 	display: grid;
 	background-color: var(--primary-color);
-	padding: 1em;
+	padding: 1.5ex;
 	grid-template-rows: auto 1fr;
-	gap: 2ex;
+	gap: 1.2ex;
 }
 .logcontainer > h2 {
 	margin: 0;
@@ -287,16 +301,22 @@ div#root {
 	display: grid;
 	grid-template:
 		"header" auto
-		"filelist" minmax(0, 1fr) / auto;
+		"filelist" minmax(0, 1fr) / minmax(auto,100%);
 }
 #hapfilepicker > div.openeddirectory > div.dirheader {
 	grid-area: header;
-	display: flex;
+	display: grid;
 	justify-content: space-between;
 	align-items: center;
 	padding: 1ex;
 	padding-right: 0;
 	gap: 4ex;
+	grid-template-columns: minmax(0px, 1fr) auto;
+
+	h2 {
+		word-wrap: break-word;
+		margin: 0;
+	}
 }
 #hapfilepicker > div.openeddirectory div.filelist {
 	grid-area: filelist;
@@ -418,15 +438,59 @@ div.genmodelpromptcont {
 	overflow-y: auto;
 
 	div.apiprompt {
-		display: flex;
-		flex-direction: column;
-		gap: 4.5ex;
+		display: grid;
+		grid-template-rows: auto auto auto minmax(0,1fr);
+		gap: 2ex;
 		padding: 2ex;
 		font-size: 1.2em;
+		padding-top: 2ex;
+
+		button.generate {
+			font-size: 1.5em;
+		}
+
+		div.resultspane {
+			display: grid;
+			grid-template-columns: min-content minmax(0,1fr);
+			grid-template-rows: 100%;
+			gap: 1ex;
+			padding: 1ex;
+			border: 2px solid var(--tertiary-color-light);
+			div.resultslist {
+				display: flex;
+				flex-direction: column;
+				gap: 1.5ex;
+				overflow-y: scroll;
+				width: 36ex;
+
+				div.result {
+					/* background-color: var(--tertiary-color-dark); */
+					cursor: pointer;
+					height: 10ex;
+					/* width: 35ex; */
+				}
+			}
+
+			div.selectedresult {
+				display: grid;
+				grid-template-rows: minmax(0px, 1fr) auto;
+
+				div.waveformcontainer {
+					overflow: hidden;
+				}
+
+				div.controls {
+					display: flex;
+					justify-content: center;
+					align-items: center;
+					gap: 1ex;
+				}
+			}
+		}
 	}
 
 	h2 {
-		margin-bottom: 0;
+		margin: 0;
 	}
 
 	& div.promptcont {

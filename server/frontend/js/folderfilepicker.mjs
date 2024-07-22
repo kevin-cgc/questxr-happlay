@@ -116,7 +116,7 @@ async function open_directory_internal(dir_handle) {
 				file_div.appendChild(bdiv);
 
 				const upload_button = document.createElement("button");
-				upload_button.textContent = "Select For Playback";
+				upload_button.textContent = "Load";
 				bdiv.appendChild(upload_button);
 
 				// const star_button = document.createElement("button");
