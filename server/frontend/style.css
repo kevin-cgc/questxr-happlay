@@ -476,6 +476,10 @@ div.genmodelpromptcont {
 					position: relative;
 				}
 
+				div.result.selected {
+					border-color: var(--secondary-color);
+				}
+
 				div.result::before {
 					position: absolute;
 					top: 0px;

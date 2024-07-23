@@ -120,12 +120,17 @@ if (!USE_GRADIO_PROMPT_UI) {
 			waveform_canvas.draw_waveform(ab.getChannelData(0));
 
 			result_div.addEventListener("click", () => {
+				for (const child of resultslist_div.children) {
+					child.classList.remove("selected");
+				}
+				result_div.classList.add("selected");
 				select_waveform(ab, prompt);
 			});
 
 			resultslist_div.appendChild(result_div);
 		}
 
+		resultslist_div.querySelector(".result")?.classList.add("selected");
 		select_waveform(nwavs_audio_buffers[0], prompt);
 	}
 
