@@ -429,7 +429,14 @@ div#root {
 	}
 
 }
-
+@keyframes generateButtonProgress {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0.75;
+	}
+}
 div.genmodelpromptcont {
 	grid-area: mprompt;
 
@@ -447,7 +454,27 @@ div.genmodelpromptcont {
 
 		button.generate {
 			font-size: 1.5em;
+			position: relative;
 		}
+
+		button.generate::after {
+			content: "";
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 10%;
+			background-color: var(--secondary-color);
+			transform-origin: left;
+			transform: scaleX(0%);
+			opacity: 0;
+		}
+
+		button.generate.generating::after {
+			opacity: 1;
+			animation: generateButtonProgress 1.6s ease-in-out infinite alternate;
+		}
+
 
 		div.resultspane {
 			display: grid;

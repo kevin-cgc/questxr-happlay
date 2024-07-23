@@ -46,6 +46,17 @@ if (!USE_GRADIO_PROMPT_UI) {
 
 		try {
 			generate_button.disabled = true;
+			generate_button.classList.add("generating");
+			generate_button.animate({
+				"transform": ["scaleX(0)", "scaleX(1)"],
+			}, {
+				duration: 13 * 1e3,
+				iterations: 1,
+				fill: "forwards",
+				easing: "linear",
+				pseudoElement: "::after",
+			});
+
 			clear_results();
 			const resp = await fetch(API_URL, {
 				method: "POST",
@@ -78,6 +89,8 @@ if (!USE_GRADIO_PROMPT_UI) {
 			render_results(nwavs_audio_buffers, prompt);
 		} finally {
 			generate_button.disabled = false;
+			generate_button.classList.remove("generating");
+
 		}
 	});
 
