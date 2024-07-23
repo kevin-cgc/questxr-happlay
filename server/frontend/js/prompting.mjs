@@ -108,9 +108,11 @@ if (!USE_GRADIO_PROMPT_UI) {
 	function render_results(nwavs_audio_buffers, prompt) {
 		clear_results();
 
+		let human_index = 1;
 		for (const ab of nwavs_audio_buffers) {
 			const result_div = document.createElement("div");
 			result_div.classList.add("result");
+			result_div.dataset.index = (human_index++).toString();
 
 			const waveform_canvas = new NpWaveFormCanvas();
 			result_div.appendChild(waveform_canvas);

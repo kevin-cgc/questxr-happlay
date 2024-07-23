@@ -460,15 +460,32 @@ div.genmodelpromptcont {
 			div.resultslist {
 				display: flex;
 				flex-direction: column;
-				gap: 1.5ex;
+				gap: 1ex;
 				overflow-y: scroll;
 				width: 36ex;
+				padding: 1ex;
+				background-color: var(--tertiary-color-darker);
 
 				div.result {
 					/* background-color: var(--tertiary-color-dark); */
 					cursor: pointer;
 					height: 10ex;
 					/* width: 35ex; */
+					border: 2px solid var(--tertiary-color-dark);
+
+					position: relative;
+				}
+
+				div.result::before {
+					position: absolute;
+					top: 0px;
+					left: 0px;
+					content: attr(data-index);
+					margin: 0.5ex;
+					color: var(--tertiary-color-light);
+					/* background-color: #00000083; */
+					/* text-shadow: 1px 1px 2px #000; */
+					background: radial-gradient(#000000, #00000000);
 				}
 			}
 
