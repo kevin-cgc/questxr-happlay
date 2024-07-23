@@ -330,10 +330,9 @@ div#root {
 		background-color: var(--primary-color);
 		padding: 1ex;
 		display: grid;
-		grid-template-columns: auto 1fr auto;
-		gap: 0.5ex;
+		grid-template-columns: auto 1fr minmax(0px, 20ex) auto;
+		gap: 1.5ex;
 		/* justify-content: space-between; */
-
 		cursor: pointer;
 
 
@@ -342,7 +341,6 @@ div#root {
 			align-items: center;
 			position: relative;
 		}
-
 		div.syncstatus {
 			&:hover:after {
 				content: "sync is disabled. (set participant id)";
@@ -385,7 +383,12 @@ div#root {
 		span.filename {
 			display: flex;
 			align-items: center;
-			padding: 0.2ex 2ex;
+			padding: 0.2ex 1ex;
+		}
+		div.waveformcontainer {
+			overflow: hidden;
+			height: 0px;
+			min-height: 100%;
 		}
 
 		div.buttons {

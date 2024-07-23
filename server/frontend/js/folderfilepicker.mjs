@@ -1,5 +1,6 @@
 import { idbkv } from "../script.mjs";
-import { load_and_send_pcm } from "./load_send_pcm.mjs";
+import { load_and_send_pcm, load_pcm } from "./load_send_pcm.mjs";
+import { NpWaveFormCanvas } from "./np-waveform-canvas.mjs";
 import { PARTICIPANT_ID_GLO } from "./participantid_analytics.mjs";
 import { notnull } from "./util.mjs";
 
@@ -111,6 +112,20 @@ async function open_directory_internal(dir_handle) {
 				filename_span.textContent = entry.name;
 				file_div.appendChild(filename_span);
 
+
+				const waveformcontainer_div = document.createElement("div");
+				waveformcontainer_div.className = "waveformcontainer";
+				file_div.appendChild(waveformcontainer_div);
+				const waveform_canvas = new NpWaveFormCanvas();
+				// waveform_canvas.width = 50;
+				// waveform_canvas.height = 20;
+				waveformcontainer_div.appendChild(waveform_canvas);
+				entry.getFile().then(async file => {
+					const pcm = await load_pcm(file);
+					waveform_canvas.draw_waveform(pcm);
+				}).catch(e => console.log(e));
+
+
 				const bdiv = document.createElement("div");
 				bdiv.className = "buttons";
 				file_div.appendChild(bdiv);
@@ -158,8 +173,13 @@ async function open_directory_internal(dir_handle) {
 
 				[file_div, filename_span, upload_button].forEach(el => el.addEventListener("click", async ev => {
 					if (ev.target != ev.currentTarget) return;
-					const file = await entry.getFile();
-					load_and_send_pcm(file);
+					try {
+						const file = await entry.getFile();
+						await load_and_send_pcm(file);
+					} catch (e) {
+						console.error(e);
+						alert("Failed to load PCM from file: " + e);
+					}
 				}));
 			}
 			filelist_div.append(file_div);

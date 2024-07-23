@@ -43,8 +43,13 @@ dragndroptacton_form.addEventListener("click", async () => {
 			multiple: false,
 			excludeAcceptAllOption: false,
 		});
-		const file = await file_handle.getFile();
-		load_and_send_pcm(file);
+		try {
+			const file = await file_handle.getFile();
+			await load_and_send_pcm(file);
+		} catch (e) {
+			console.error(e);
+			alert("Failed to load PCM from file: " + e);
+		}
 	} catch (e) {
 		if (e.name == "AbortError") {
 			//do nothing
@@ -53,13 +58,18 @@ dragndroptacton_form.addEventListener("click", async () => {
 		}
 	}
 });
-dragndroptacton_form.addEventListener("drop", event => {
+dragndroptacton_form.addEventListener("drop", async event => {
 	event.preventDefault();
 	dragndroptacton_form.classList.remove("dragover");
 	const files = event.dataTransfer?.files;
 	if (files && files.length > 0) {
 		const file = files[0];
-		load_and_send_pcm(file);
+		try {
+			await load_and_send_pcm(file);
+		} catch (e) {
+			console.error(e);
+			alert("Failed to load PCM from file: " + e);
+		}
 	} else {
 		alert("No files dropped");
 	}
