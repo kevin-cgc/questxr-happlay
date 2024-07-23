@@ -454,8 +454,9 @@ div.genmodelpromptcont {
 			grid-template-columns: min-content minmax(0,1fr);
 			grid-template-rows: 100%;
 			gap: 1ex;
-			padding: 1ex;
-			border: 2px solid var(--tertiary-color-light);
+			/* padding: 1ex; */
+			/* border: 2px solid var(--tertiary-color-light); */
+
 			div.resultslist {
 				display: flex;
 				flex-direction: column;
