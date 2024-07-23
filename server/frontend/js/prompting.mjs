@@ -1,4 +1,5 @@
 import { USE_GRADIO_PROMPT_UI } from "./appmode.mjs";
+import { convert_mono_audio_buffer_to_wav_pcm_u8 } from "./audio-buffer-to-wav.mjs";
 import { save_signal_blob_to_file } from "./folderfilepicker.mjs";
 import { NpWaveFormCanvas } from "./np-waveform-canvas.mjs";
 import { notnull, sanitize_filename } from "./util.mjs";
@@ -129,8 +130,8 @@ if (!USE_GRADIO_PROMPT_UI) {
 	download_button.addEventListener("click", async () => {
 		if (!last_selected_waveform) return;
 		const { ab, prompt } = last_selected_waveform;
-		const signal = convert_audio_buffer_to_wav(ab);
-		const randid = Math.random().toString(36).substring(7);
+		const signal = await convert_audio_buffer_to_wav(ab);
+		const randid = Math.random().toString(36).substring(7).toUpperCase();
 		const filename = sanitize_filename(`${prompt.slice(0, 50)}_${randid}.wav`);
 		await save_signal_blob_to_file(signal, {
 			name: filename,
@@ -205,7 +206,7 @@ async function save_gradio_signal_to_file({ signal_url, prompt, model }) {
 
 	const signal = await fetch(signal_url).then(resp => resp.blob());
 
-	const randid = Math.random().toString(36).substring(7);
+	const randid = Math.random().toString(36).substring(7).toUpperCase();
 
 	const filename = sanitize_filename(`${model}_${prompt.slice(0, 50)}_${randid}.wav`);
 
@@ -222,4 +223,23 @@ async function save_gradio_signal_to_file({ signal_url, prompt, model }) {
 		playcount: 0,
 	});
 
+}
+
+
+/**
+ *
+ * @param {AudioBuffer} ab
+ */
+async function convert_audio_buffer_to_wav(ab) {
+	// const au_ctx = new AudioContext({ sampleRate: ab.sampleRate, latencyHint: "playback" });
+	// const au_media_dest_node = au_ctx.createMediaStreamDestination()
+	// const media_recorder = new MediaRecorder(au_media_dest_node.stream, { mimeType: "audio/wav" });
+
+	// const au_buf_src_node = new AudioBufferSourceNode(au_ctx, { buffer: ab });
+	// au_buf_src_node.connect(au_media_dest_node);
+	// that approach is stuck with realtime playback because OfflineAudioContext doesnt support mediarecording (afaict), so in JS creation of the wav file might be better
+
+	const wav_bytes = convert_mono_audio_buffer_to_wav_pcm_u8(ab);
+	const wav_blob = new Blob([wav_bytes], { type: "audio/wav" });
+	return wav_blob;
 }

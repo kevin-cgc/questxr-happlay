@@ -474,6 +474,7 @@ div.genmodelpromptcont {
 			div.selectedresult {
 				display: grid;
 				grid-template-rows: minmax(0px, 1fr) auto;
+				gap: 1ex;
 
 				div.waveformcontainer {
 					overflow: hidden;
@@ -484,6 +485,14 @@ div.genmodelpromptcont {
 					justify-content: center;
 					align-items: center;
 					gap: 1ex;
+
+					button.download {
+						padding: 1ex 10ex;
+
+						.material-symbols-outlined {
+							font-size: 2em;
+						}
+					}
 				}
 			}
 		}
