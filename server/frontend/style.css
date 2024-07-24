@@ -541,6 +541,8 @@ div.genmodelpromptcont {
 
 					button.download {
 						padding: 1ex 10ex;
+						display: flex;
+						align-items: center;
 
 						.material-symbols-outlined {
 							font-size: 2em;

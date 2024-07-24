@@ -4,23 +4,26 @@ import { save_signal_blob_to_file } from "./folderfilepicker.mjs";
 import { NpWaveFormCanvas } from "./np-waveform-canvas.mjs";
 import { notnull, sanitize_filename } from "./util.mjs";
 
+/** @typedef {{ ab: AudioBuffer, prompt: string, model: string, randid: string, human_index: number }} WaveformInfo */
+
 const genmodelpromptcont_div = /** @type {HTMLDivElement} */ (notnull(document.querySelector(".genmodelpromptcont")));
 const apiprompt_div = /** @type {HTMLDivElement} */ (notnull(genmodelpromptcont_div.querySelector(".apiprompt")));
 const gradio_app = /** @type {HTMLElement | null} */ (document.querySelector("gradio-app"));
 
+const API_URL = "/api/generate";
+const REQ_BODY_BASE = {
+	"prompt": "",
+	"n_at_once": 5,
+	"resp_type": "all"
+};
+
+const DOWNLOAD_ALL = true;
 
 if (!USE_GRADIO_PROMPT_UI) {
 	apiprompt_div.style.display = "";
 	if (gradio_app) gradio_app.style.display = "none";
 	genmodelpromptcont_div.style.display = "grid";
 	genmodelpromptcont_div.style.gridTemplateRows = "100%";
-
-	const API_URL = "/api/generate";
-	const REQ_BODY_BASE = {
-		"prompt": "",
-		"n_at_once": 5,
-		"resp_type": "all"
-	};
 
 	const prompt_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("input.prompt")));
 	const model_select = /** @type {HTMLSelectElement} */ (notnull(apiprompt_div.querySelector("select.model")));
@@ -30,6 +33,10 @@ if (!USE_GRADIO_PROMPT_UI) {
 	const selectedresult_div = /** @type {HTMLDivElement} */ (notnull(resultspane_div.querySelector("div.selectedresult")));
 	const selectedwaveform_npwfcanvas = /** @type {NpWaveFormCanvas} */ (notnull(selectedresult_div.querySelector("np-waveform-canvas")));
 	const download_button = /** @type {HTMLButtonElement} */ (notnull(selectedresult_div.querySelector("button.download")));
+
+	if (DOWNLOAD_ALL) {
+		download_button.append("Download All");
+	}
 
 	const duration_range_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("input[type=range]")));
 	const duration_number_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("input[type=number]")));
@@ -96,16 +103,15 @@ if (!USE_GRADIO_PROMPT_UI) {
 		}
 	});
 
-	/** @type {{ ab: AudioBuffer, prompt: string, model: string } | null} */
+
+	/** @type {WaveformInfo | null} */
 	let last_selected_waveform = null;
 	/**
-	 * @param {AudioBuffer} ab
-	 * @param {string} prompt
-	 * @param {string} model
+	 * @param {WaveformInfo} wfi
 	 */
-	function select_waveform(ab, prompt, model) {
-		last_selected_waveform = { ab, prompt, model };
-		selectedwaveform_npwfcanvas.draw_waveform(ab.getChannelData(0));
+	function select_waveform(wfi) {
+		last_selected_waveform = wfi;
+		selectedwaveform_npwfcanvas.draw_waveform(wfi.ab.getChannelData(0));
 		download_button.disabled = false;
 	}
 
@@ -113,10 +119,13 @@ if (!USE_GRADIO_PROMPT_UI) {
 	function clear_results() {
 		while (resultslist_div.firstChild) resultslist_div.removeChild(resultslist_div.firstChild);
 		last_selected_waveform = null;
+		last_waveforms = null;
 		download_button.disabled = true;
 		selectedwaveform_npwfcanvas.draw_waveform(null);
 	}
 
+	/** @type {{ nwavs_audio_buffers: AudioBuffer[], prompt: string, model: string, randid: string } | null} */
+	let last_waveforms = null;
 	/**
 	 * @param {AudioBuffer[]} nwavs_audio_buffers
 	 * @param {string} prompt
@@ -124,6 +133,8 @@ if (!USE_GRADIO_PROMPT_UI) {
 	 */
 	function render_results(nwavs_audio_buffers, prompt, model) {
 		clear_results();
+		const randid = Math.random().toString(36).substring(7).toUpperCase();
+		last_waveforms = { nwavs_audio_buffers, prompt, model, randid };
 
 		let human_index = 1;
 		for (const ab of nwavs_audio_buffers) {
@@ -141,34 +152,30 @@ if (!USE_GRADIO_PROMPT_UI) {
 					child.classList.remove("selected");
 				}
 				result_div.classList.add("selected");
-				select_waveform(ab, prompt, model);
+				select_waveform({ab, prompt, model, randid, human_index});
 			});
 
 			resultslist_div.appendChild(result_div);
 		}
 
 		resultslist_div.querySelector(".result")?.classList.add("selected");
-		select_waveform(nwavs_audio_buffers[0], prompt, model);
+		select_waveform({ ab: nwavs_audio_buffers[0], prompt, model, randid, human_index: 1 });
 	}
 
 	download_button.addEventListener("click", async () => {
-		if (!last_selected_waveform) return;
-		const { ab, prompt, model } = last_selected_waveform;
-		const signal = await convert_audio_buffer_to_wav(ab);
-		const randid = Math.random().toString(36).substring(7).toUpperCase();
-		const filename = sanitize_filename(`${prompt.slice(0, 50)}_${randid}.wav`);
-		await save_signal_blob_to_file(signal, {
-			name: filename,
-			filename,
-			prompt,
-			model,
-			origin: API_URL,
-			sha265: "",
-			starred: false,
-			trash: false,
-			vote: 0,
-			playcount: 0,
-		});
+		if (DOWNLOAD_ALL) {
+			if (!last_waveforms) return;
+			const { nwavs_audio_buffers, prompt, model, randid } = last_waveforms;
+			for (let i = 0; i < nwavs_audio_buffers.length; i++) {
+				const human_index = i + 1;
+				const ab = nwavs_audio_buffers[i];
+				save_generated_waveform_to_file({ ab, prompt, model, randid, human_index });
+			}
+		} else {
+			if (!last_selected_waveform) return;
+			const { ab, prompt, model, randid, human_index } = last_selected_waveform;
+			save_generated_waveform_to_file({ ab, prompt, model, randid, human_index });
+		}
 	});
 
 	clear_results();
@@ -227,13 +234,9 @@ if (!USE_GRADIO_PROMPT_UI) {
  * @param {{ signal_url: string, prompt: string, model: string }} param1
  */
 async function save_gradio_signal_to_file({ signal_url, prompt, model }) {
-
 	const signal = await fetch(signal_url).then(resp => resp.blob());
-
 	const randid = Math.random().toString(36).substring(7).toUpperCase();
-
 	const filename = sanitize_filename(`${model}_${prompt.slice(0, 50)}_${randid}.wav`);
-
 	await save_signal_blob_to_file(signal, {
 		name: filename,
 		filename,
@@ -246,8 +249,30 @@ async function save_gradio_signal_to_file({ signal_url, prompt, model }) {
 		vote: 0,
 		playcount: 0,
 	});
-
 }
+
+/**
+ *
+ * @param {WaveformInfo} wfi
+ */
+async function save_generated_waveform_to_file(wfi) {
+	const { ab, prompt, model, randid, human_index } = wfi
+    const signal = await convert_audio_buffer_to_wav(ab);
+    const filename = sanitize_filename(`${prompt.slice(0, 50)}_${randid}_${human_index}.wav`);
+    await save_signal_blob_to_file(signal, {
+        name: filename,
+        filename,
+        prompt,
+        model,
+        origin: API_URL,
+        sha265: "",
+        starred: false,
+        trash: false,
+        vote: 0,
+        playcount: 0,
+    });
+}
+
 
 
 /**
