@@ -11,10 +11,12 @@ const apiprompt_div = /** @type {HTMLDivElement} */ (notnull(genmodelpromptcont_
 const gradio_app = /** @type {HTMLElement | null} */ (document.querySelector("gradio-app"));
 
 const API_URL = "/api/generate";
+const N_AT_ONCE = 5;
+const SHOW_TOP_N = 3;
 const REQ_BODY_BASE = {
 	"prompt": "",
-	"n_at_once": 5,
-	"resp_type": "all"
+	"n_at_once": N_AT_ONCE,
+	"resp_type": "sorted"
 };
 
 const DOWNLOAD_ALL = true;
@@ -84,7 +86,8 @@ if (!USE_GRADIO_PROMPT_UI) {
 				throw new Error(`Invalid response from server: ${JSON.stringify(nwavs_b64)}`);
 			}
 			console.time("decode");
-			const nwavs_audio_buffers = nwavs_b64.map((b64) => {
+			const topnwavs_b64 = nwavs_b64.slice(0, SHOW_TOP_N);
+			const nwavs_audio_buffers = topnwavs_b64.map((b64) => {
 				const u8b = Uint8Array.from(atob(b64), c => c.charCodeAt(0)); // pcm_u8 samples
 				const ab = new AudioBuffer({ length: u8b.byteLength, numberOfChannels: 1, sampleRate: 8000 });
 				const channel = ab.getChannelData(0);
