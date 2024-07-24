@@ -314,7 +314,7 @@ div#root {
 	grid-template-columns: minmax(0px, 1fr) auto;
 
 	h2 {
-		word-wrap: break-word;
+		word-break: break-all;
 		margin: 0;
 	}
 }
@@ -330,7 +330,7 @@ div#root {
 		background-color: var(--primary-color);
 		padding: 1ex;
 		display: grid;
-		grid-template-columns: auto 1fr minmax(0px, 20ex) auto;
+		grid-template-columns: auto minmax(0px, 1fr) 20ex auto;
 		gap: 1.5ex;
 		/* justify-content: space-between; */
 		cursor: pointer;
@@ -384,6 +384,7 @@ div#root {
 			display: flex;
 			align-items: center;
 			padding: 0.2ex 1ex;
+			word-break: break-all;
 		}
 		div.waveformcontainer {
 			overflow: hidden;
