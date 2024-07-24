@@ -94,8 +94,6 @@ async function open_directory_internal(dir_handle) {
 
 			const file_div = document.createElement("div");
 
-			new_files.push({ entry, file_div });
-
 			{ // init file_div
 				file_div.className = "file";
 				file_div.classList.toggle("starred", filemeta_initial.starred);
@@ -186,7 +184,11 @@ async function open_directory_internal(dir_handle) {
 					}
 				}));
 			}
+
 			filelist_div.append(file_div);
+			if (new_files.length == 0) file_div.scrollIntoView();
+			new_files.push({ entry, file_div });
+			// filelist_div.prepend(file_div); //need to swap sort, causes thrashing, not really pleasant
 		}
 	}
 

@@ -387,8 +387,9 @@ div#root {
 		}
 		div.waveformcontainer {
 			overflow: hidden;
-			height: 0px;
-			min-height: 100%;
+			/* height: 0px; */
+			/* min-height: 100%; */
+			contain: size layout paint style; /* instead of height: 0; min-height: 100% */
 		}
 
 		div.buttons {
