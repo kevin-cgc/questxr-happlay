@@ -16,7 +16,8 @@ const SHOW_TOP_N = 3;
 const REQ_BODY_BASE = {
 	"prompt": "",
 	"n_at_once": N_AT_ONCE,
-	"resp_type": "sorted"
+	"resp_type": "sorted",
+	"sorted_top_n": SHOW_TOP_N,
 };
 
 const DOWNLOAD_ALL = true;
