@@ -100,6 +100,7 @@ async function open_directory_internal(dir_handle) {
 				file_div.classList.toggle("trashed", filemeta_initial.trash);
 				file_div.classList.toggle("upvoted", filemeta_initial.vote == +1);
 				file_div.classList.toggle("downvoted", filemeta_initial.vote == -1);
+				file_div.title = `'${filemeta_initial.prompt}' from model '${filemeta_initial.model}'`;
 
 				file_div[SYMBOL_FILE_HANDLE] = entry;
 				file_div[SYMBOL_FILE_NAME] = entry.name;
