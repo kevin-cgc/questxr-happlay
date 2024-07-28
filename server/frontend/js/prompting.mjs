@@ -53,6 +53,8 @@ if (!USE_GRADIO_PROMPT_UI) {
 	}
 
 	generate_button.addEventListener("click", async () => {
+		prompt_input.value = prompt_input.value.trim();
+
 		const prompt = prompt_input.value;
 		const model = model_select.value;
 
