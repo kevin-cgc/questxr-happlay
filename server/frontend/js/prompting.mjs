@@ -11,8 +11,8 @@ const apiprompt_div = /** @type {HTMLDivElement} */ (notnull(genmodelpromptcont_
 const gradio_app = /** @type {HTMLElement | null} */ (document.querySelector("gradio-app"));
 
 const API_URL = "/api/generate";
-const N_AT_ONCE = 5;
-const SHOW_TOP_N = 3;
+const N_AT_ONCE = 7;
+const SHOW_TOP_N = 5;
 const REQ_BODY_BASE = {
 	"prompt": "",
 	"n_at_once": N_AT_ONCE,
