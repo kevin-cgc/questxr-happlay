@@ -175,12 +175,12 @@ if (!USE_GRADIO_PROMPT_UI) {
 			for (let i = 0; i < nwavs_audio_buffers.length; i++) {
 				const human_index = i + 1;
 				const ab = nwavs_audio_buffers[i];
-				save_generated_waveform_to_file({ ab, prompt, model, randid, human_index });
+				await save_generated_waveform_to_file({ ab, prompt, model, randid, human_index });
 			}
 		} else {
 			if (!last_selected_waveform) return;
 			const { ab, prompt, model, randid, human_index } = last_selected_waveform;
-			save_generated_waveform_to_file({ ab, prompt, model, randid, human_index });
+			await save_generated_waveform_to_file({ ab, prompt, model, randid, human_index });
 		}
 	});
 

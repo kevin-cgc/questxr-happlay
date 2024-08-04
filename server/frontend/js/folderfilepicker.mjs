@@ -406,4 +406,6 @@ export async function save_signal_blob_to_file(blob, filemeta) {
 	await idbkv.set(filemeta.filename, filemeta, filemeta_ikvs);
 
 	await open_directory(last_used_dir_handle); //will also sync the file
+
+	// await idbkv.set(filemeta.filename, filemeta, PARTICIPANT_ID_GLO.get_filemeta_store()); //double write cause there might be race with multiple file saves or smth
 }
