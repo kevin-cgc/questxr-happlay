@@ -77,7 +77,7 @@ if (!USE_GRADIO_PROMPT_UI) {
 				headers: {
 					"Content-Type": "application/json"
 				},
-				body: JSON.stringify({ ...REQ_BODY_BASE, prompt })
+				body: JSON.stringify({ ...REQ_BODY_BASE, prompt, model_name: model })
 			});
 			const nwavs_b64 = await resp.json();
 			if (typeof nwavs_b64 == "object" && "error" in nwavs_b64) {
