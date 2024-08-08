@@ -53,7 +53,9 @@ if (!USE_GRADIO_PROMPT_UI) {
 	}
 
 	const topk_number_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("#genmodeltopk")));
+	const topp_number_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("#genmodeltopp")));
 	const temperature_number_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("#genmodeltemperature")));
+	const use_sampling_checkbox = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("#genmodelusesampling")));
 
 
 	generate_button.addEventListener("click", async () => {
@@ -62,7 +64,9 @@ if (!USE_GRADIO_PROMPT_UI) {
 		const prompt = prompt_input.value;
 		const model = model_select.value;
 		const duration = parseFloat(duration_number_input.value);
+		const use_sampling = use_sampling_checkbox.checked;
 		const topk = parseInt(topk_number_input.value);
+		const topp = parseFloat(topp_number_input.value);
 		const temperature = parseFloat(temperature_number_input.value);
 		if (!Number.isFinite(duration) || !Number.isFinite(topk) || !Number.isFinite(temperature)) {
 			alert("Invalid number input for generation parameters");
@@ -92,7 +96,9 @@ if (!USE_GRADIO_PROMPT_UI) {
 					...REQ_BODY_BASE,
 					prompt,
 					model_name: model,
+					use_sampling: use_sampling,
 					top_k: topk,
+					top_p: topp,
 					temperature: temperature,
 				})
 			});
