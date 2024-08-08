@@ -56,6 +56,7 @@ if (!USE_GRADIO_PROMPT_UI) {
 	const topp_number_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("#genmodeltopp")));
 	const temperature_number_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("#genmodeltemperature")));
 	const use_sampling_checkbox = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("#genmodelusesampling")));
+	const cfgcoef_number_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("#genmodelcfgcoef")));
 
 
 	generate_button.addEventListener("click", async () => {
@@ -67,6 +68,7 @@ if (!USE_GRADIO_PROMPT_UI) {
 		const use_sampling = use_sampling_checkbox.checked;
 		const topk = parseInt(topk_number_input.value);
 		const topp = parseFloat(topp_number_input.value);
+		const cfg_coef = parseFloat(cfgcoef_number_input.value);
 		const temperature = parseFloat(temperature_number_input.value);
 		if (!Number.isFinite(duration) || !Number.isFinite(topk) || !Number.isFinite(temperature)) {
 			alert("Invalid number input for generation parameters");
@@ -100,6 +102,7 @@ if (!USE_GRADIO_PROMPT_UI) {
 					top_k: topk,
 					top_p: topp,
 					temperature: temperature,
+					cfg_coef: cfg_coef,
 				})
 			});
 			const nwavs_b64 = await resp.json();
