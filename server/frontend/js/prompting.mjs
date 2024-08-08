@@ -41,8 +41,8 @@ if (!USE_GRADIO_PROMPT_UI) {
 		download_button.append("Download All");
 	}
 
-	const duration_range_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("input[type=range]")));
-	const duration_number_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("input[type=number]")));
+	const duration_range_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("#genmodelduration_range")));
+	const duration_number_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("#genmodelduration")));
 	for (const input of [duration_range_input, duration_number_input]) {
 		input.addEventListener("input", () => {
 			const value = parseFloat(input.value);
@@ -52,11 +52,22 @@ if (!USE_GRADIO_PROMPT_UI) {
 		});
 	}
 
+	const topk_number_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("#genmodeltopk")));
+	const temperature_number_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("#genmodeltemperature")));
+
+
 	generate_button.addEventListener("click", async () => {
 		prompt_input.value = prompt_input.value.trim();
 
 		const prompt = prompt_input.value;
 		const model = model_select.value;
+		const duration = parseFloat(duration_number_input.value);
+		const topk = parseInt(topk_number_input.value);
+		const temperature = parseFloat(temperature_number_input.value);
+		if (!Number.isFinite(duration) || !Number.isFinite(topk) || !Number.isFinite(temperature)) {
+			alert("Invalid number input for generation parameters");
+			throw new Error("Invalid number input for generation parameters");
+		}
 
 		try {
 			generate_button.disabled = true;
@@ -77,7 +88,13 @@ if (!USE_GRADIO_PROMPT_UI) {
 				headers: {
 					"Content-Type": "application/json"
 				},
-				body: JSON.stringify({ ...REQ_BODY_BASE, prompt, model_name: model })
+				body: JSON.stringify({
+					...REQ_BODY_BASE,
+					prompt,
+					model_name: model,
+					top_k: topk,
+					temperature: temperature,
+				})
 			});
 			const nwavs_b64 = await resp.json();
 			if (typeof nwavs_b64 == "object" && "error" in nwavs_b64) {
