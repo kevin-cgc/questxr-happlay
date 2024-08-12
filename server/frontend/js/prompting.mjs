@@ -19,6 +19,7 @@ const REQ_BODY_BASE = {
 	"resp_type": "sorted",
 	"sorted_top_n": SHOW_TOP_N,
 	"create_variants": true,
+	"normalize_output": true,
 };
 
 const DOWNLOAD_ALL = true;

@@ -250,7 +250,7 @@ async function setup_api(app, participants_dir, beam_cloud_api_key) {
 	// forward post requests to /api/generate to beam cloud
 	app.post("/api/generate", express.text({ type: "application/json" }), async (req, res) => {
 		// return res.json(JSON.parse(await fs.readFile("beamcloud-output.temp", "utf-8")));
-		const beam_resp = await fetch("https://app.beam.cloud/endpoint/audiogen-inf-ms/v14", {
+		const beam_resp = await fetch("https://app.beam.cloud/endpoint/audiogen-inf-ms/v15", {
 			method: "POST",
 			keepalive: true,
 			headers: {
