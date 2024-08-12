@@ -12,7 +12,7 @@ const changefolder_button = /** @type {HTMLButtonElement} **/ (openeddirectory_d
 const opendirname_h2 = /** @type {HTMLHeadingElement} **/ (openeddirectory_div.querySelector("h2"));
 const filelist_div = /** @type {HTMLDivElement} **/ (openeddirectory_div.querySelector(".filelist"));
 
-/** @typedef {{ name: string, filename: string, sha265: string, origin: string, model: string, prompt: string, starred: boolean, trash: boolean, vote: number, playcount: number }} FileEntryMeta */
+/** @typedef {{ name: string, filename: string, sha265: string, origin: string, model: string, vprompt: string, prompt: string, starred: boolean, trash: boolean, vote: number, playcount: number }} FileEntryMeta */
 
 const SYMBOL_FILE_HANDLE = Symbol("file_handle");
 const SYMBOL_FILE_NAME = Symbol("file_name");
@@ -80,6 +80,7 @@ async function open_directory_internal(dir_handle) {
 				sha265: "",
 				origin: dir_handle.name,
 				model: "",
+				vprompt: "",
 				prompt: "",
 				starred: false,
 				trash: false,

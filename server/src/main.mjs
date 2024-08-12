@@ -199,6 +199,9 @@ async function setup_api(app, participants_dir, beam_cloud_api_key) {
 		if (typeof req.query.vote == "string") meta.vote = parseFloat(req.query.vote);
 		if (typeof req.query.playcount == "string") meta.playcount = parseInt(req.query.playcount);
 
+		if (typeof req.query.vprompt == "string" && !meta.vprompt) meta.vprompt = req.query.vprompt; // only set if empty
+		if (typeof req.query.prompt == "string" && !meta.prompt) meta.prompt = req.query.prompt; // only set if empty
+
 		await fs.writeFile(file_meta_path, JSON.stringify(meta, null, 2));
 		res.json(meta);
 	});
@@ -217,6 +220,7 @@ async function setup_api(app, participants_dir, beam_cloud_api_key) {
 			sha256: req.query.sha256,
 			origin: req.query.origin,
 			model: req.query.model,
+			vprompt: req.query.vprompt,
 			prompt: req.query.prompt,
 			starred: req.query.starred === "true",
 			trash: req.query.trash === "true",
@@ -246,7 +250,7 @@ async function setup_api(app, participants_dir, beam_cloud_api_key) {
 	// forward post requests to /api/generate to beam cloud
 	app.post("/api/generate", express.text({ type: "application/json" }), async (req, res) => {
 		// return res.json(JSON.parse(await fs.readFile("beamcloud-output.temp", "utf-8")));
-		const beam_resp = await fetch("https://app.beam.cloud/endpoint/audiogen-inf-ms/v13", {
+		const beam_resp = await fetch("https://app.beam.cloud/endpoint/audiogen-inf-ms/v14", {
 			method: "POST",
 			keepalive: true,
 			headers: {
