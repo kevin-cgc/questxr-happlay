@@ -16,13 +16,26 @@ const SHOW_TOP_N = 5;
 const REQ_BODY_BASE = {
 	"prompt": "",
 	"n_at_once": N_AT_ONCE,
-	"resp_type": "sorted",
+	"resp_type": "shuffled",
 	"sorted_top_n": SHOW_TOP_N,
 	"create_variants": true,
 	"normalize_output": true,
 };
 
 const DOWNLOAD_ALL = true;
+
+/**
+ *
+ * @param {string} model
+ * @returns {string}
+ */
+function model_to_user_study_model_name(model) {
+	switch (model) {
+		case "51eabea7_1f457268": return "modelA";
+		case "HFaudiogen-medium_db34c85a": return "modelB";
+		default: throw new Error(`Unknown model: ${model}`);
+	}
+}
 
 if (!USE_GRADIO_PROMPT_UI) {
 	apiprompt_div.style.display = "";
@@ -208,12 +221,14 @@ if (!USE_GRADIO_PROMPT_UI) {
 				const human_index = i + 1;
 				const ab = nwavs_audio_buffers[i];
 				const vprompt = vprompt_list[i];
-				await save_generated_waveform_to_file({ ab, prompt, vprompt, model, randid, human_index });
+				const user_study_model_name = model_to_user_study_model_name(model);
+				await save_generated_waveform_to_file({ ab, prompt, vprompt, model, randid, human_index }, user_study_model_name);
 			}
 		} else {
 			if (!last_selected_waveform) return;
 			const { ab, vprompt, prompt, model, randid, human_index } = last_selected_waveform;
-			await save_generated_waveform_to_file({ ab, vprompt, prompt, model, randid, human_index });
+			const user_study_model_name = model_to_user_study_model_name(model);
+			await save_generated_waveform_to_file({ ab, vprompt, prompt, model, randid, human_index }, user_study_model_name);
 		}
 	});
 
@@ -294,11 +309,13 @@ async function save_gradio_signal_to_file({ signal_url, prompt, model }) {
 /**
  *
  * @param {WaveformInfo} wfi
+ * @param {string=} userstudy_model_name
  */
-async function save_generated_waveform_to_file(wfi) {
+async function save_generated_waveform_to_file(wfi, userstudy_model_name) {
 	const { ab, vprompt, prompt, model, randid, human_index } = wfi
     const signal = await convert_audio_buffer_to_wav(ab);
-    const filename = sanitize_filename(`${prompt.slice(0, 50)}_${randid}_${human_index}.wav`);
+	const raw_fn = userstudy_model_name ? `${prompt.slice(0, 50)}_${userstudy_model_name}_${randid}_${human_index}.wav` : `${prompt.slice(0, 50)}_${randid}_${human_index}.wav`;
+    const filename = sanitize_filename(raw_fn);
     await save_signal_blob_to_file(signal, {
         name: filename,
         filename,
