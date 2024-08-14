@@ -48,6 +48,7 @@ if (!USE_GRADIO_PROMPT_UI) {
 		"modelA": "51eabea7_1f457268",
 		"modelB": "HFaudiogen-medium_db34c85a",
 	};
+	/** @type {Record<string, number>} */
 	const EXPECTED_DURATION_FOR_MODEL = {
 		"51eabea7_1f457268": 15 * 1e3, // 15s
 		"HFaudiogen-medium_db34c85a": 32 * 1e3, // 32s
@@ -117,6 +118,7 @@ if (!USE_GRADIO_PROMPT_UI) {
 			throw new Error("Invalid number input for generation parameters");
 		}
 
+		/** @type {{ el: HTMLElement, dur: number }[]} */
 		const animate_generating_els = [
 			{ el: generate_button, dur: 15 * 1e3 },
 			{ el: modela_h3, dur: EXPECTED_DURATION_FOR_MODEL[AB_MODELS["modelA"]] },
@@ -163,7 +165,7 @@ if (!USE_GRADIO_PROMPT_UI) {
 			download_button.disabled = false;
 		} finally {
 			generate_button.disabled = false;
-			for (const el of animate_generating_els) el.classList.remove("generating");
+			for (const { el } of animate_generating_els) el.classList.remove("generating");
 		}
 	});
 
