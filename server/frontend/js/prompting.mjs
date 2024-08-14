@@ -47,16 +47,16 @@ if (!USE_GRADIO_PROMPT_UI) {
 	const AB_MODELS = FLIP_AB_MODELS ?
 		{ // flipped
 			"modelA": "HFaudiogen-medium_db34c85a",
-			"modelB": "51eabea7_1f457268",
+			"modelB": "51eabea7_d684b3a7",
 		} :
 		{ // default
-			"modelA": "51eabea7_1f457268",
+			"modelA": "51eabea7_d684b3a7",
 			"modelB": "HFaudiogen-medium_db34c85a",
 		};
 	console.log("FLIP_AB_MODELS: ", FLIP_AB_MODELS, "AB_MODELS: ", AB_MODELS);
 	/** @type {Record<string, number>} */
 	const EXPECTED_DURATION_FOR_MODEL = {
-		"51eabea7_1f457268": 15 * 1e3, // 15s
+		"51eabea7_d684b3a7": 15 * 1e3, // 15s
 		"HFaudiogen-medium_db34c85a": 32 * 1e3, // 32s
 	};
 	const MODEL_TO_AB_MAP = new Map(Object.entries(AB_MODELS).map(([k, v]) => [v, k]));
