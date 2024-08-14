@@ -1,4 +1,4 @@
-import { USE_GRADIO_PROMPT_UI } from "./appmode.mjs";
+import { FLIP_AB_MODELS, USE_GRADIO_PROMPT_UI } from "./appmode.mjs";
 import { convert_mono_audio_buffer_to_wav_pcm_u8 } from "./audio-buffer-to-wav.mjs";
 import { save_signal_blob_to_file } from "./folderfilepicker.mjs";
 import { NpWaveFormCanvas } from "./np-waveform-canvas.mjs";
@@ -44,10 +44,16 @@ if (!USE_GRADIO_PROMPT_UI) {
 	const selectedwaveform_npwfcanvas = /** @type {NpWaveFormCanvas} */ (notnull(selectedresult_div.querySelector("np-waveform-canvas")));
 	const download_button = /** @type {HTMLButtonElement} */ (notnull(selectedresult_div.querySelector("button.download")));
 
-	const AB_MODELS = {
-		"modelA": "51eabea7_1f457268",
-		"modelB": "HFaudiogen-medium_db34c85a",
-	};
+	const AB_MODELS = FLIP_AB_MODELS ?
+		{ // flipped
+			"modelA": "HFaudiogen-medium_db34c85a",
+			"modelB": "51eabea7_1f457268",
+		} :
+		{ // default
+			"modelA": "51eabea7_1f457268",
+			"modelB": "HFaudiogen-medium_db34c85a",
+		};
+	console.log("FLIP_AB_MODELS: ", FLIP_AB_MODELS, "AB_MODELS: ", AB_MODELS);
 	/** @type {Record<string, number>} */
 	const EXPECTED_DURATION_FOR_MODEL = {
 		"51eabea7_1f457268": 15 * 1e3, // 15s
@@ -399,7 +405,7 @@ async function make_request({ prompt, model, use_sampling, topk, topp, temperatu
 		alert("Invalid response from server");
 		throw new Error(`Invalid response from server: ${JSON.stringify({nwavs_b64, vprompt_list})}`);
 	}
-	console.time("decode");
+	// console.time("decode");
 	// const topnwavs_b64 = nwavs_b64.slice(0, SHOW_TOP_N); # should be done server side
 	const nwavs_audio_buffers = nwavs_b64.map((b64) => {
 		const u8b = Uint8Array.from(atob(b64), c => c.charCodeAt(0)); // pcm_u8 samples
@@ -410,7 +416,7 @@ async function make_request({ prompt, model, use_sampling, topk, topp, temperatu
 		}
 		return ab;
 	});
-	console.timeEnd("decode");
+	// console.timeEnd("decode");
 
 	return { nwavs_audio_buffers, vprompt_list };
 }

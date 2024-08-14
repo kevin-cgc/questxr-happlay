@@ -12,6 +12,8 @@ const search_params = new URLSearchParams(location.search);
 // 	location.hash = "workshop";
 // 	location.reload();
 // }
-if (search_params.size > 0) {
-	console.warn("Ignoring search params (please use hash params e.g., `#workshop=true`)");
-}
+// if (search_params.size > 0) {
+// 	console.warn("Ignoring search params (please use hash params e.g., `#workshop=true`)");
+// }
+
+export const FLIP_AB_MODELS = search_params.has("FLIP");
