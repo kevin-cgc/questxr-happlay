@@ -29,7 +29,7 @@
 				<span class="filename"></span>
 			</div>
 		</div>
-		<form id="dragndroptacton">
+		<form id="dragndroptacton" style="display: none;">
 			<span>Drag and drop a .wav file here to upload to all connected Quests.</span>
 			<strong>Or click to upload <span class="material-symbols-outlined">publish</span></strong>
 			<small>NOTE: all audio files will automatically be resampled to 8000Hz by the browser <small>prlly with windowed-sinc</small></small>
@@ -66,12 +66,11 @@
 					<input type="text" class="prompt" name="prompt" id="genmodelprompt" placeholder="Enter prompt here. Longer prompts typically result in higher quality signals">
 				</div>
 				<div class="btmrow">
-					<div>
+					<div class="genmodelinputcontainer">
 						<label for="genmodelmodel">Model:</label>
 						<select class="model" name="model" id="genmodelmodel">
-							<!-- <option value="51eabea7_12c0dcd3">51eabea7_12c0dcd3</option> -->
-							<option value="51eabea7_1f457268">Model A</option>
-							<option value="HFaudiogen-medium_db34c85a">Model B</option>
+							<option value="51eabea7_1f457268">51eabea7_1f457268</option>
+							<option value="HFaudiogen-medium_db34c85a">HFaudiogen-medium_db34c85a</option>
 						</select>
 					</div>
 					<div>
@@ -101,7 +100,10 @@
 					</span>
 				</div>
 				<div class="resultspane">
-					<div class="resultslist"></div>
+					<div class="reslistcontainer">
+						<h3>Model A</h3>
+						<div class="resultslist modela"></div>
+					</div>
 					<div class="selectedresult">
 						<div class="waveformcontainer">
 							<np-waveform-canvas></np-waveform-canvas>
@@ -112,7 +114,10 @@
 							</button>
 						</div>
 					</div>
-
+					<div class="reslistcontainer">
+						<h3>Model B</h3>
+						<div class="resultslist modelb"></div>
+					</div>
 				</div>
 			</div>
 		</div>

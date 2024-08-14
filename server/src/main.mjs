@@ -248,9 +248,12 @@ async function setup_api(app, participants_dir, beam_cloud_api_key) {
 
 
 	// forward post requests to /api/generate to beam cloud
+	let beam_flipflop = false;
 	app.post("/api/generate", express.text({ type: "application/json" }), async (req, res) => {
 		// return res.json(JSON.parse(await fs.readFile("beamcloud-output.temp", "utf-8")));
-		const beam_resp = await fetch("https://app.beam.cloud/endpoint/audiogen-inf-ms/v16", {
+		const BEAM_API_URL = beam_flipflop ? "https://app.beam.cloud/endpoint/audiogen-inf-ms/v18" : "https://app.beam.cloud/endpoint/audiogen-inf-ms/v19";
+		beam_flipflop = !beam_flipflop;
+		const beam_resp = await fetch(BEAM_API_URL, {
 			method: "POST",
 			keepalive: true,
 			headers: {

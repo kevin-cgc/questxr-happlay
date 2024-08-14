@@ -28,6 +28,7 @@ body {
 	display: grid;
 	grid-template-rows: auto minmax(0, 1fr);
 	padding-top: 0.33em;
+	padding-bottom: 1em;
 }
 
 
@@ -158,11 +159,16 @@ div#root {
 	display: grid;
 	/* grid-template-columns: auto 1fr auto;
 	grid-template-rows: minmax(auto, 30vh) minmax(auto, 30vh) auto auto; */
-	grid-template:
+	/* grid-template:
 		"playbackv playbackv playbackv playbackv" min-content
 		"fileupload filepicker mprompt mprompt" minmax(50ex, 1fr)
 		"serverwslog serverwslog serverwslog connquests" minmax(auto, 16vh) /
-      minmax(31ex, 0.1fr) minmax(105ex, 1fr) minmax(60ex, 1fr) 0.6fr;
+      minmax(31ex, 0.1fr) minmax(105ex, 1fr) minmax(60ex, 1fr) 0.6fr; */
+	grid-template:
+		"playbackv playbackv playbackv" min-content
+		"filepicker mprompt mprompt" minmax(50ex, 1fr)
+		"serverwslog serverwslog connquests" minmax(auto, 14vh) /
+      minmax(105ex, 1fr) minmax(60ex, 1fr) 0.6fr;
 	gap: 2ex;
 }
 
@@ -456,12 +462,10 @@ div.genmodelpromptcont {
 		padding: 2ex;
 		font-size: 1.2em;
 		padding-top: 2ex;
-
 		button.generate {
 			font-size: 1.5em;
 			position: relative;
 		}
-
 		button.generate::after {
 			content: "";
 			position: absolute;
@@ -474,20 +478,44 @@ div.genmodelpromptcont {
 			transform: scaleX(0%);
 			opacity: 0;
 		}
-
 		button.generate.generating::after {
 			opacity: 1;
 			animation: generateButtonProgress 1.6s ease-in-out infinite alternate;
 		}
-
-
 		div.resultspane {
 			display: grid;
-			grid-template-columns: min-content minmax(0,1fr);
+			grid-template-columns: min-content minmax(0,1fr) min-content;
 			grid-template-rows: 100%;
 			gap: 1ex;
 			/* padding: 1ex; */
 			/* border: 2px solid var(--tertiary-color-light); */
+
+			div.reslistcontainer {
+				display: grid;
+				grid-template-rows: auto 1fr;
+
+				h3 {
+					margin: 0;
+					text-align: center;
+					position: relative;
+				}
+				h3::after {
+					content: "";
+					position: absolute;
+					bottom: 0;
+					left: 0;
+					width: 100%;
+					height: 10%;
+					background-color: var(--secondary-color);
+					transform-origin: left;
+					transform: scaleX(0%);
+					opacity: 0;
+				}
+				h3.generating::after {
+					opacity: 1;
+					animation: generateButtonProgress 1.6s ease-in-out infinite alternate;
+				}
+			}
 
 			div.resultslist {
 				display: flex;
@@ -524,7 +552,6 @@ div.genmodelpromptcont {
 					background: radial-gradient(#000000, #00000000);
 				}
 			}
-
 			div.selectedresult {
 				display: grid;
 				grid-template-rows: minmax(0px, 1fr) auto;
@@ -556,6 +583,8 @@ div.genmodelpromptcont {
 
 	h2 {
 		margin: 0;
+		text-align: center;
+		margin-bottom: -2ex;
 	}
 
 	& div.promptcont {
@@ -577,7 +606,7 @@ div.genmodelpromptcont div.btmrow {
 	&> div {
 		display: grid;
 		grid-template-rows: auto 1fr;
-		gap: 1ex
+		gap: 1ex;
 	}
 
 	& div.durationrow {

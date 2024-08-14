@@ -11,7 +11,7 @@ const apiprompt_div = /** @type {HTMLDivElement} */ (notnull(genmodelpromptcont_
 const gradio_app = /** @type {HTMLElement | null} */ (document.querySelector("gradio-app"));
 
 const API_URL = "/api/generate";
-const N_AT_ONCE = 7;
+const N_AT_ONCE = 5;
 const SHOW_TOP_N = 5;
 const REQ_BODY_BASE = {
 	"prompt": "",
@@ -23,19 +23,7 @@ const REQ_BODY_BASE = {
 };
 
 const DOWNLOAD_ALL = true;
-
-/**
- *
- * @param {string} model
- * @returns {string}
- */
-function model_to_user_study_model_name(model) {
-	switch (model) {
-		case "51eabea7_1f457268": return "modelA";
-		case "HFaudiogen-medium_db34c85a": return "modelB";
-		default: throw new Error(`Unknown model: ${model}`);
-	}
-}
+const AB_PROMPTING = true;
 
 if (!USE_GRADIO_PROMPT_UI) {
 	apiprompt_div.style.display = "";
@@ -44,16 +32,55 @@ if (!USE_GRADIO_PROMPT_UI) {
 	genmodelpromptcont_div.style.gridTemplateRows = "100%";
 
 	const prompt_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("input.prompt")));
+	const genmodelinputcontainer_div = /** @type {HTMLDivElement} */ (notnull(apiprompt_div.querySelector(".genmodelinputcontainer")));
 	const model_select = /** @type {HTMLSelectElement} */ (notnull(apiprompt_div.querySelector("select.model")));
 	const generate_button = /** @type {HTMLButtonElement} */ (notnull(apiprompt_div.querySelector("button.generate")));
 	const resultspane_div = /** @type {HTMLDivElement} */ (notnull(apiprompt_div.querySelector("div.resultspane")));
-	const resultslist_div = /** @type {HTMLDivElement} */ (notnull(resultspane_div.querySelector("div.resultslist")));
+	const resultslist_modelA_div = /** @type {HTMLDivElement} */ (notnull(resultspane_div.querySelector("div.resultslist.modela")));
+	const modela_h3 = /** @type {HTMLHeadingElement} */ (notnull(resultslist_modelA_div.parentElement?.querySelector("h3")));
+	const resultslist_modelB_div = /** @type {HTMLDivElement} */ (notnull(resultspane_div.querySelector("div.resultslist.modelb")));
+	const modelb_h3 = /** @type {HTMLHeadingElement} */ (notnull(resultslist_modelB_div.parentElement?.querySelector("h3")));
 	const selectedresult_div = /** @type {HTMLDivElement} */ (notnull(resultspane_div.querySelector("div.selectedresult")));
 	const selectedwaveform_npwfcanvas = /** @type {NpWaveFormCanvas} */ (notnull(selectedresult_div.querySelector("np-waveform-canvas")));
 	const download_button = /** @type {HTMLButtonElement} */ (notnull(selectedresult_div.querySelector("button.download")));
 
+	const AB_MODELS = {
+		"modelA": "51eabea7_1f457268",
+		"modelB": "HFaudiogen-medium_db34c85a",
+	};
+	const EXPECTED_DURATION_FOR_MODEL = {
+		"51eabea7_1f457268": 15 * 1e3, // 15s
+		"HFaudiogen-medium_db34c85a": 32 * 1e3, // 32s
+	};
+	const MODEL_TO_AB_MAP = new Map(Object.entries(AB_MODELS).map(([k, v]) => [v, k]));
+	/**
+	 * @param {string} user_study_model_name
+	 * @returns {HTMLDivElement}
+	 */
+	function get_resultslist_div(user_study_model_name) {
+		if (user_study_model_name === "modelA") return resultslist_modelA_div;
+		if (user_study_model_name === "modelB") return resultslist_modelB_div;
+		throw new Error(`Unknown user_study_model_name: ${user_study_model_name}`);
+	}
+	/**
+	 *
+	 * @param {string} model
+	 * @returns {string}
+	 */
+	function model_to_user_study_model_name(model) {
+		const user_study_model_name = MODEL_TO_AB_MAP.get(model);
+		if (!user_study_model_name) throw new Error(`Unknown model: ${model}`);
+		return user_study_model_name;
+	}
+
 	if (DOWNLOAD_ALL) {
 		download_button.append("Download All");
+	}
+	if (AB_PROMPTING) {
+		genmodelinputcontainer_div.style.display = "none";
+	} else {
+		// modela_h3.style.visibility = "hidden";
+		notnull(resultslist_modelB_div.parentElement).style.display = "none";
 	}
 
 	const duration_range_input = /** @type {HTMLInputElement} */ (notnull(apiprompt_div.querySelector("#genmodelduration_range")));
@@ -90,65 +117,53 @@ if (!USE_GRADIO_PROMPT_UI) {
 			throw new Error("Invalid number input for generation parameters");
 		}
 
+		const animate_generating_els = [
+			{ el: generate_button, dur: 15 * 1e3 },
+			{ el: modela_h3, dur: EXPECTED_DURATION_FOR_MODEL[AB_MODELS["modelA"]] },
+			{ el: modelb_h3, dur: EXPECTED_DURATION_FOR_MODEL[AB_MODELS["modelB"]] }
+		];
 		try {
 			generate_button.disabled = true;
-			generate_button.classList.add("generating");
-			generate_button.animate({
-				"transform": ["scaleX(0)", "scaleX(1)"],
-			}, {
-				duration: 15 * 1e3,
-				iterations: 1,
-				fill: "forwards",
-				easing: "linear",
-				pseudoElement: "::after",
-			});
+			for (const { el, dur } of animate_generating_els) {
+				el.classList.add("generating");
+				el.animate({ "transform": ["scaleX(0)", "scaleX(1)"] }, {
+					duration: dur,
+					iterations: 1,
+					fill: "forwards",
+					easing: "linear",
+					pseudoElement: "::after",
+				});
+			}
+
 
 			clear_results();
-			const resp = await fetch(API_URL, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json"
-				},
-				body: JSON.stringify({
-					...REQ_BODY_BASE,
-					prompt,
-					model_name: model,
-					use_sampling: use_sampling,
-					top_k: topk,
-					top_p: topp,
-					temperature: temperature,
-					cfg_coef: cfg_coef,
-				})
-			});
-			const result = await resp.json();
-			const nwavs_b64 = result["wavs"];
-			const vprompt_list = result["prompts"];
-			if (typeof nwavs_b64 == "object" && "error" in nwavs_b64) {
-				alert(`Error during generation: ${nwavs_b64.error}`);
-				throw new Error(`Error during generation: ${nwavs_b64.error}`);
-			}
-			if (!Array.isArray(nwavs_b64) || !Array.isArray(vprompt_list) || nwavs_b64.length !== vprompt_list.length) {
-				alert("Invalid response from server");
-				throw new Error(`Invalid response from server: ${JSON.stringify({nwavs_b64, vprompt_list})}`);
-			}
-			console.time("decode");
-			const topnwavs_b64 = nwavs_b64.slice(0, SHOW_TOP_N);
-			const nwavs_audio_buffers = topnwavs_b64.map((b64) => {
-				const u8b = Uint8Array.from(atob(b64), c => c.charCodeAt(0)); // pcm_u8 samples
-				const ab = new AudioBuffer({ length: u8b.byteLength, numberOfChannels: 1, sampleRate: 8000 });
-				const channel = ab.getChannelData(0);
-				for (let i = 0; i < channel.length; i++) {
-					channel[i] = (u8b[i] - 128) / 128;
-				}
-				return ab;
-			});
-			console.timeEnd("decode");
+			const randid = Math.random().toString(36).substring(7).toUpperCase();
 
-			render_results(nwavs_audio_buffers, vprompt_list, prompt, model);
+			if (AB_PROMPTING) {
+				last_waveforms = [];
+				const settled = await Promise.allSettled(Object.entries(AB_MODELS).map(async ([user_study_model_name, model]) => {
+					const { nwavs_audio_buffers, vprompt_list } = await make_request({ prompt, model, use_sampling, topk, topp, temperature, cfg_coef, });
+					const resultslist_div = get_resultslist_div(user_study_model_name);
+					if (!Array.isArray(last_waveforms)) throw new Error("last_waveforms not array");
+					last_waveforms.push({ nwavs_audio_buffers, vprompt_list, prompt, model, randid });
+					render_list_results(nwavs_audio_buffers, vprompt_list, prompt, model, resultslist_div, randid);
+				}));
+				for (const s of settled) {
+					if (s.status === "rejected") {
+						console.error("Error during generation", s.reason);
+						throw s.reason;
+					}
+				}
+			} else {
+				const { nwavs_audio_buffers, vprompt_list } = await make_request({ prompt, model, use_sampling, topk, topp, temperature, cfg_coef, });
+				last_waveforms = { nwavs_audio_buffers, vprompt_list, prompt, model, randid };
+				render_list_results(nwavs_audio_buffers, vprompt_list, prompt, model, resultslist_modelA_div, randid);
+			}
+
+			download_button.disabled = false;
 		} finally {
 			generate_button.disabled = false;
-			generate_button.classList.remove("generating");
-
+			for (const el of animate_generating_els) el.classList.remove("generating");
 		}
 	});
 
@@ -161,29 +176,29 @@ if (!USE_GRADIO_PROMPT_UI) {
 	function select_waveform(wfi) {
 		last_selected_waveform = wfi;
 		selectedwaveform_npwfcanvas.draw_waveform(wfi.ab.getChannelData(0));
-		download_button.disabled = false;
 	}
 
 
 	function clear_results() {
-		while (resultslist_div.firstChild) resultslist_div.removeChild(resultslist_div.firstChild);
+		while (resultslist_modelA_div.firstChild) resultslist_modelA_div.removeChild(resultslist_modelA_div.firstChild);
+		while (resultslist_modelB_div.firstChild) resultslist_modelB_div.removeChild(resultslist_modelB_div.firstChild);
 		last_selected_waveform = null;
 		last_waveforms = null;
 		download_button.disabled = true;
 		selectedwaveform_npwfcanvas.draw_waveform(null);
 	}
 
-	/** @type {{ nwavs_audio_buffers: AudioBuffer[], vprompt_list: string[], prompt: string, model: string, randid: string } | null} */
+	/** @typedef {{ nwavs_audio_buffers: AudioBuffer[], vprompt_list: string[], prompt: string, model: string, randid: string }} LastWaveforms */
+	/** @type {LastWaveforms | LastWaveforms[] | null} */
 	let last_waveforms = null;
 	/**
 	 * @param {AudioBuffer[]} nwavs_audio_buffers
 	 * @param {string} prompt
 	 * @param {string} model
 	 */
-	function render_results(nwavs_audio_buffers, vprompt_list, prompt, model) {
-		clear_results();
-		const randid = Math.random().toString(36).substring(7).toUpperCase();
-		last_waveforms = { nwavs_audio_buffers, vprompt_list, prompt, model, randid };
+	function render_list_results(nwavs_audio_buffers, vprompt_list, prompt, model, resultslist_div, randid) {
+		// clear_results(); # allow filling both resultslist_divs
+		// last_waveforms = { nwavs_audio_buffers, vprompt_list, prompt, model, randid };
 
 		let i = 0;
 		let human_index = 1;
@@ -199,7 +214,7 @@ if (!USE_GRADIO_PROMPT_UI) {
 			waveform_canvas.draw_waveform(ab.getChannelData(0));
 
 			result_div.addEventListener("click", () => {
-				for (const child of resultslist_div.children) {
+				for (const child of [...resultslist_modelA_div.children, ...resultslist_modelB_div.children]) {
 					child.classList.remove("selected");
 				}
 				result_div.classList.add("selected");
@@ -209,20 +224,25 @@ if (!USE_GRADIO_PROMPT_UI) {
 			resultslist_div.appendChild(result_div);
 		}
 
-		resultslist_div.querySelector(".result")?.classList.add("selected");
-		select_waveform({ ab: nwavs_audio_buffers[0], vprompt: vprompt_list[0], prompt, model, randid, human_index: 1 });
+		const either_list_has_selected_result = [...resultslist_modelA_div.children, ...resultslist_modelB_div.children].some(div => div.classList.contains("selected"));
+		if (!either_list_has_selected_result) { // if nothing selected already, select first result
+			resultslist_div.querySelector(".result")?.classList.add("selected");
+			select_waveform({ ab: nwavs_audio_buffers[0], vprompt: vprompt_list[0], prompt, model, randid, human_index: 1 });
+		}
 	}
 
 	download_button.addEventListener("click", async () => {
 		if (DOWNLOAD_ALL) {
 			if (!last_waveforms) return;
-			const { nwavs_audio_buffers, vprompt_list, prompt, model, randid } = last_waveforms;
-			for (let i = 0; i < nwavs_audio_buffers.length; i++) {
-				const human_index = i + 1;
-				const ab = nwavs_audio_buffers[i];
-				const vprompt = vprompt_list[i];
-				const user_study_model_name = model_to_user_study_model_name(model);
-				await save_generated_waveform_to_file({ ab, prompt, vprompt, model, randid, human_index }, user_study_model_name);
+			for (const lwfs of (Array.isArray(last_waveforms) ? last_waveforms : [last_waveforms])) {
+				const { nwavs_audio_buffers, vprompt_list, prompt, model, randid } = lwfs;
+				for (let i = 0; i < nwavs_audio_buffers.length; i++) {
+					const human_index = i + 1;
+					const ab = nwavs_audio_buffers[i];
+					const vprompt = vprompt_list[i];
+					const user_study_model_name = model_to_user_study_model_name(model);
+					await save_generated_waveform_to_file({ ab, prompt, vprompt, model, randid, human_index }, user_study_model_name);
+				}
 			}
 		} else {
 			if (!last_selected_waveform) return;
@@ -314,7 +334,7 @@ async function save_gradio_signal_to_file({ signal_url, prompt, model }) {
 async function save_generated_waveform_to_file(wfi, userstudy_model_name) {
 	const { ab, vprompt, prompt, model, randid, human_index } = wfi
     const signal = await convert_audio_buffer_to_wav(ab);
-	const raw_fn = userstudy_model_name ? `${prompt.slice(0, 50)}_${userstudy_model_name}_${randid}_${human_index}.wav` : `${prompt.slice(0, 50)}_${randid}_${human_index}.wav`;
+	const raw_fn = userstudy_model_name ? `${prompt.slice(0, 50)}_${randid}_${userstudy_model_name}_${human_index}.wav` : `${prompt.slice(0, 50)}_${randid}_${human_index}.wav`;
     const filename = sanitize_filename(raw_fn);
     await save_signal_blob_to_file(signal, {
         name: filename,
@@ -349,4 +369,46 @@ async function convert_audio_buffer_to_wav(ab) {
 	const wav_bytes = convert_mono_audio_buffer_to_wav_pcm_u8(ab);
 	const wav_blob = new Blob([wav_bytes], { type: "audio/wav" });
 	return wav_blob;
+}
+
+async function make_request({ prompt, model, use_sampling, topk, topp, temperature, cfg_coef,}) {
+	const resp = await fetch(API_URL, {
+		method: "POST", headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			...REQ_BODY_BASE,
+			prompt,
+			model_name: model,
+			use_sampling: use_sampling,
+			top_k: topk,
+			top_p: topp,
+			temperature: temperature,
+			cfg_coef: cfg_coef,
+		})
+	});
+	const result = await resp.json();
+	const nwavs_b64 = result["wavs"];
+	/** @type {string[]} */
+	const vprompt_list = result["prompts"];
+	if (typeof nwavs_b64 == "object" && "error" in nwavs_b64) {
+		alert(`Error during generation: ${nwavs_b64.error}`);
+		throw new Error(`Error during generation: ${nwavs_b64.error}`);
+	}
+	if (!Array.isArray(nwavs_b64) || !Array.isArray(vprompt_list) || nwavs_b64.length !== vprompt_list.length) {
+		alert("Invalid response from server");
+		throw new Error(`Invalid response from server: ${JSON.stringify({nwavs_b64, vprompt_list})}`);
+	}
+	console.time("decode");
+	// const topnwavs_b64 = nwavs_b64.slice(0, SHOW_TOP_N); # should be done server side
+	const nwavs_audio_buffers = nwavs_b64.map((b64) => {
+		const u8b = Uint8Array.from(atob(b64), c => c.charCodeAt(0)); // pcm_u8 samples
+		const ab = new AudioBuffer({ length: u8b.byteLength, numberOfChannels: 1, sampleRate: 8000 });
+		const channel = ab.getChannelData(0);
+		for (let i = 0; i < channel.length; i++) {
+			channel[i] = (u8b[i] - 128) / 128;
+		}
+		return ab;
+	});
+	console.timeEnd("decode");
+
+	return { nwavs_audio_buffers, vprompt_list };
 }
