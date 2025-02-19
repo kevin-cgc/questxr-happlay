@@ -23,7 +23,7 @@ const REQ_BODY_BASE = {
 };
 
 const DOWNLOAD_ALL = true;
-const AB_PROMPTING = true;
+const AB_PROMPTING = false;
 
 if (!USE_GRADIO_PROMPT_UI) {
 	apiprompt_div.style.display = "";
