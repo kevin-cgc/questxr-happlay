@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -e
 
 basedomain="$1"
@@ -6,7 +8,9 @@ if [ -z "$basedomain" ]; then
 	exit 1
 fi
 
-mv local.properties local.properties.orig
+cp local.properties local.properties.orig
+
+./gradlew --no-daemon clean
 
 for NUM in 0 1 2 3 4 5 6 7 8 9
 do
@@ -20,8 +24,9 @@ do
 		continue
 	fi
 
-	rg -v "^WS_SERVER_DOMAIN" local.properties.orig > local.properties
-	echo "WS_SERVER_DOMAIN=qxrhp${NUM}.${basedomain}" >> local.properties
+	grep -v "^WS_SERVER_DOMAIN" local.properties > local.properties.temp
+	echo "WS_SERVER_DOMAIN=qxrhp${NUM}.${basedomain}" >> local.properties.temp
+	mv local.properties.temp local.properties
 	cat local.properties | grep qxrhp
 
 	./gradlew --no-daemon assembleRelease;

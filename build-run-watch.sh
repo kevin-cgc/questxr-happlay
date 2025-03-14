@@ -2,8 +2,14 @@
 
 set -ex
 
-# ./gradlew assembleDebug
-./gradlew assembleRelease
+if [ "$1" == "clean" ]; then
+  ./gradlew clean
+fi
+if [ "$1" != "skipbuild" ]; then
+  # ./gradlew assembleDebug
+  ./gradlew assembleRelease
+fi
+
 # adb install -r ./app/build/outputs/apk/debug/app-debug.apk
 adb install -r ./app/build/outputs/apk/release/app-release.apk
 adb logcat -c

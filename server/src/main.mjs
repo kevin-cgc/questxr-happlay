@@ -311,6 +311,8 @@ const BEAM_CLOUD_API_KEY = process.env["BEAM_CLOUD_API_KEY"];
 if (!BEAM_CLOUD_API_KEY) {
 	console.error("BEAM_CLOUD_API_KEY env var is required");
 	process.exit(1);
+} else {
+	console.log("BEAM_CLOUD_API_KEY:", BEAM_CLOUD_API_KEY.slice(0, 5) + "...");
 }
 
 for (let i=0; i<instance_num; i++) {
