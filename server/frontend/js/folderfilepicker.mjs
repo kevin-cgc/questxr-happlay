@@ -3,6 +3,7 @@ import { load_and_send_pcm, load_pcm } from "./load_send_pcm.mjs";
 import { NpWaveFormCanvas } from "./np-waveform-canvas.mjs";
 import { PARTICIPANT_ID_GLO } from "./participantid_analytics.mjs";
 import { notnull } from "./util.mjs";
+import { update_video } from "./video-playback.mjs";
 
 const hapfilepicker_div = /** @type {HTMLDivElement} **/ (document.getElementById("hapfilepicker"));
 const folderselect_div = /** @type {HTMLDivElement} **/ (hapfilepicker_div.querySelector("div .folderselect"));
@@ -60,6 +61,12 @@ async function open_directory_internal(dir_handle) {
 			// console.debug("Skipping non-wav file", entry);
 			continue;
 		}
+
+		const is_pbm = entry.name.endsWith("-pbm.wav");
+		const video_basename = entry.name.replace(/-\d*_\d*-pbm\.[^.]{1,3}$/, "");
+		const video_filename_webm = video_basename + ".webm";
+		const video_filename_mp4 = video_basename + ".mp4";
+		const video_entry = entries_sorted.find(e => e.name == video_filename_webm || e.name == video_filename_mp4);
 
 		const fdiv = await (async () => {
 			for (const fdiv of filelist_files) {
@@ -180,6 +187,12 @@ async function open_directory_internal(dir_handle) {
 					try {
 						const file = await entry.getFile();
 						await load_and_send_pcm(file);
+						if (is_pbm) {
+							if (!video_entry) throw new Error("Video file not found for PBM wav");
+							if (video_entry.kind != "file") throw new Error("Video entry is not a file");
+							const vfile = await video_entry.getFile();
+							update_video(vfile);
+						}
 					} catch (e) {
 						console.error(e);
 						alert("Failed to load PCM from file: " + e);

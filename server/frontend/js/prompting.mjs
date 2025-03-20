@@ -1,4 +1,4 @@
-import { FLIP_AB_MODELS, USE_GRADIO_PROMPT_UI } from "./appmode.mjs";
+import { FLIP_AB_MODELS, USE_GRADIO_PROMPT_UI, VIDEO_PLAYBACK } from "./appmode.mjs";
 import { convert_mono_audio_buffer_to_wav_pcm_u8 } from "./audio-buffer-to-wav.mjs";
 import { save_signal_blob_to_file } from "./folderfilepicker.mjs";
 import { NpWaveFormCanvas } from "./np-waveform-canvas.mjs";
@@ -9,6 +9,7 @@ import { notnull, sanitize_filename } from "./util.mjs";
 const genmodelpromptcont_div = /** @type {HTMLDivElement} */ (notnull(document.querySelector(".genmodelpromptcont")));
 const apiprompt_div = /** @type {HTMLDivElement} */ (notnull(genmodelpromptcont_div.querySelector(".apiprompt")));
 const gradio_app = /** @type {HTMLElement | null} */ (document.querySelector("gradio-app"));
+const pbmvideopane_div = /** @type {HTMLDivElement} */ (notnull(document.querySelector(".pbmvideopane")));
 
 const API_URL = "/api/generate";
 const N_AT_ONCE = 5;
@@ -25,7 +26,11 @@ const REQ_BODY_BASE = {
 const DOWNLOAD_ALL = true;
 const AB_PROMPTING = false;
 
-if (!USE_GRADIO_PROMPT_UI) {
+if (VIDEO_PLAYBACK) {
+	genmodelpromptcont_div.style.display = "none";
+	pbmvideopane_div.style.display = "";	
+
+} else if (!USE_GRADIO_PROMPT_UI) {
 	apiprompt_div.style.display = "";
 	if (gradio_app) gradio_app.style.display = "none";
 	genmodelpromptcont_div.style.display = "grid";

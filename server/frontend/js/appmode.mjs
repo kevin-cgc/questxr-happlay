@@ -5,7 +5,7 @@ export const WORKSHOP_MODE = hash_params.has("workshop");
 // export const USE_API_PROMPT_UI = hash_params.has("apipromptui");
 export const USE_GRADIO_PROMPT_UI = hash_params.has("gradiopromptui");
 
-
+export const VIDEO_PLAYBACK = hash_params.has("video");
 
 const search_params = new URLSearchParams(location.search);
 // if (search_params.has("workshop")) {
