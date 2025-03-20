@@ -1,4 +1,4 @@
-import { SAMPLE_RATE } from "./appmode.mjs";
+import { ALT_WSS_HOST, SAMPLE_RATE } from "./appmode.mjs";
 
 const serverwslog = document.getElementById("serverwslog");
 function log_to_logcontainer(message, logcontainer) {
@@ -13,6 +13,9 @@ export const swslog = msg => log_to_logcontainer(msg, serverwslog);
 
 const url = new URL(location.href);
 const create_websocket = () => {
+	if (ALT_WSS_HOST) {
+		return new WebSocket(`wss://${ALT_WSS_HOST}/ws`);
+	}
 	const ws = new WebSocket(`${url.protocol == "https:" ? "wss" : "ws" }://${url.host}/ws`);
 	// ws.binaryType = "arraybuffer";
 	return ws;

@@ -17,3 +17,4 @@ const search_params = new URLSearchParams(location.search);
 // }
 
 export const FLIP_AB_MODELS = search_params.has("FLIP");
+export const ALT_WSS_HOST = search_params.get("wsshost") ?? null;
