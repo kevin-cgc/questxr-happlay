@@ -8,16 +8,21 @@ const captionlist_div = /** @type {HTMLDivElement} */ (notnull(captionrating_div
 const submit_button = /** @type {HTMLButtonElement} */ (notnull(captionrating_div.querySelector("button.submit")));
 
 /**
- * @param {string[]} captions_for_signal - Array of captions for the signal.
+ * @param {{ [x: string]: string[] }} captions_for_signal - Array of captions for the signal.
  * @returns {CaptionRatingElement[]} - Array of CaptionRatingElement instances.
  */
-function render_captions(captions_for_signal) {
+function render_captions(captions_for_signal, random_order=true) {
     while (captionlist_div.lastChild) captionlist_div.removeChild(captionlist_div.lastChild);
     const res = [];
-    for (const caption of captions_for_signal) {
-        const captionrating = CaptionRatingElement.createWithCaption(caption);
-        captionlist_div.appendChild(captionrating);
-        res.push(captionrating);
+    for (const [category, captions] of random_order ? get_random_order(Object.entries(captions_for_signal)) : Object.entries(captions_for_signal)) {
+        const h4 = document.createElement("h3");
+        h4.textContent = category;
+        captionlist_div.appendChild(h4);
+        for (const caption of random_order ? get_random_order(captions) : captions) {
+            const captionrating = CaptionRatingElement.createWithCaption(caption);
+            captionlist_div.appendChild(captionrating);
+            res.push(captionrating);
+        }
     }
     // submit_button.disabled = true;
     submit_button.disabled = false;
@@ -147,15 +152,15 @@ function parse_caption_file(text) {
 
 /**
  * @param {ParsedCaption[]} parsed - Array of parsed caption objects.
- * @returns {Map<string, string[]>} - A map where the key is the signal ID and the value is an array of captions.
+ * @returns {Map<string, { [x: string]: string[]}>} - A map where the key is the signal ID and the value is an array of captions.
  */
 function get_all_captions_by_signal_id(parsed) {
     const captions_by_signal_id = new Map();
-    for (const { signal_id, captions } of parsed) {
+    for (const { signal_id, captions, category } of parsed) {
         if (!captions_by_signal_id.has(signal_id)) {
-            captions_by_signal_id.set(signal_id, []);
+            captions_by_signal_id.set(signal_id, {});
         }
-        captions_by_signal_id.get(signal_id).push(...captions);
+        captions_by_signal_id.get(signal_id)[category] = captions;
     }
     return captions_by_signal_id;
 }
@@ -212,7 +217,7 @@ async function caption_rating_main() {
     const captions_by_signal_id = get_all_captions_by_signal_id(parsed);
     for (const [signal_id, captions] of get_random_order(captions_by_signal_id)) {
         // try to load the file signal_id.wav from the directory
-        const captionrating_els = render_captions(get_random_order(captions));
+        const captionrating_els = render_captions(captions);
         while (true) {
             try {
                 const file_handle = await dir_handle.getFileHandle(`${signal_id}`);

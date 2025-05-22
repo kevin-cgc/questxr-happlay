@@ -35,6 +35,12 @@ div.captionrating div.captionlist {
     padding: 2ex;
 }
 
+div.captionrating div.captionlist h3 {
+    text-align: center;
+    text-transform: capitalize;
+    margin-bottom: 0;
+}
+
 div.captionrating div.captionlist div.caption {
     display: grid;
     grid-template-columns: 1fr 50ex;
@@ -59,7 +65,7 @@ div.captionrating div.captionlist div.caption .captiontext {
 }
 div.captionrating div.captionlist div.caption div.ratingslider {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr 4.5ex;
     gap: 1ex;
     align-items: center;
     /* width: 50%; */
