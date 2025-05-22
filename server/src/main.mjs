@@ -307,10 +307,9 @@ const BASE_CONTROLLER_HTTP_PORT = Number.parseInt(process.env["HAPPLAY_CONTROLLE
 const BASE_DEVICE_WS_PORT = Number.parseInt(process.env["HAPPLAY_DEVICE_WS_PORT"] || "8080"); // instancing: 8180, 8280, 8380...
 const HAPPLAY_DATA_DIR = process.env["HAPPLAY_DATA_DIR"] || path.join(import.meta.dirname, "../data");
 const PARTICIPANTS_DIR = path.join(HAPPLAY_DATA_DIR, "participants");
-const BEAM_CLOUD_API_KEY = process.env["BEAM_CLOUD_API_KEY"];
+const BEAM_CLOUD_API_KEY = process.env["BEAM_CLOUD_API_KEY"] ?? "";
 if (!BEAM_CLOUD_API_KEY) {
-	console.error("BEAM_CLOUD_API_KEY env var is required");
-	process.exit(1);
+	console.warn("WARN: BEAM_CLOUD_API_KEY env var is empty");
 } else {
 	console.log("BEAM_CLOUD_API_KEY:", BEAM_CLOUD_API_KEY.slice(0, 5) + "...");
 }
