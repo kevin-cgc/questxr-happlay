@@ -1,6 +1,7 @@
 import { notnull } from "./util.mjs";
 import { idbkv } from "../script.mjs";
 import { clean_open_and_sync_library, close_opened_directory } from "./folderfilepicker.mjs";
+import { CAPTION_RATING_MODE } from "./appmode.mjs";
 
 const participantinfo_div = /** @type {HTMLDivElement} */ (notnull(document.querySelector(".participantinfo")));
 const participantid_input = /** @type {HTMLInputElement} */ (notnull(participantinfo_div.querySelector("input[type=text]")));
@@ -23,6 +24,9 @@ class ParticipantID {
 	 * @type {{ participant_id: string, participant_id_digest: string } | null}
 	 */
 	#participant_id_info = null;
+	is_participant_id_set() {
+		return this.#participant_id_info != null;
+	}
 
 	#filemeta_idbkv;
 
@@ -45,50 +49,71 @@ class ParticipantID {
 		});
 
 		participantid_input.addEventListener("change", async ev => {
-			const participant_id = participantid_input.value;
-			if (participant_id.length === 0) {
-				await this.#set(null);
-				return;
-			}
-
-			const u = new URL("/api/participant", location.origin);
-			u.searchParams.set("participant_id", participant_id);
-			const resp = await fetch(u);
-
-			let data;
-			if (resp.status === 404) {
-				const res = await APC.confirm(`Confirm: Create new participant '${participant_id}'?`);
-				if (!res) {
-					this.#set(null);
-					return;
-				}
-
-				const resp = await fetch(u, { method: "POST" });
-				if (!resp.ok) {
-					APC.alert(`Failed to create participant '${participant_id}'`);
-					this.#set(null);
-					return;
-				}
-				data = await resp.json();
-			} else {
-				data = await resp.json();
-				if (!data.participant_id_digest) {
-					APC.alert("Invalid response from server");
-					this.#set(null);
-					return;
-				}
-				let res = await APC.confirm(`Confirm: Overwrite/append to existing server side save data for participant '${data.participant_id}' (created at ${new Date(data.created_at).toLocaleString()})?`);
-				if (!res) {
-					this.#set(null);
-					return;
-				}
-			}
-			await this.#set({ participant_id, participant_id_digest: data.participant_id_digest });
+			await this.#_update_participant_id();
 		});
 
 
 		this.#set(last_participant_id_info).catch(e => console.error(e));
 	}
+
+	async force_prompt_participant_id() {
+		while (true) {
+			const participant_id = await APC.prompt("Enter participant ID");
+			if (participant_id != null) {
+				participantid_input.value = participant_id;
+				await this.#_update_participant_id();
+				if (this.is_participant_id_set()) break;
+			}
+			APC.alert("Failed to set participant ID. A participant ID is required, please try again.");
+		}
+	}
+
+	lock_participant_id(unlock = false) {
+		participantid_input.disabled = !unlock;
+	}
+
+	async #_update_participant_id() {
+		const participant_id = participantid_input.value;
+		if (participant_id.length === 0) {
+			await this.#set(null);
+			return;
+		}
+
+		const u = new URL("/api/participant", location.origin);
+		u.searchParams.set("participant_id", participant_id);
+		const resp = await fetch(u);
+
+		let data;
+		if (resp.status === 404) {
+			const res = await APC.confirm(`Confirm: Create new participant '${participant_id}'?`);
+			if (!res) {
+				this.#set(null);
+				return;
+			}
+
+			const resp = await fetch(u, { method: "POST" });
+			if (!resp.ok) {
+				APC.alert(`Failed to create participant '${participant_id}'`);
+				this.#set(null);
+				return;
+			}
+			data = await resp.json();
+		} else {
+			data = await resp.json();
+			if (!data.participant_id_digest) {
+				APC.alert("Invalid response from server");
+				this.#set(null);
+				return;
+			}
+			let res = await APC.confirm(`Confirm: Overwrite/append to existing server side save data for participant '${data.participant_id}' (created at ${new Date(data.created_at).toLocaleString()})?`);
+			if (!res) {
+				this.#set(null);
+				return;
+			}
+		}
+		await this.#set({ participant_id, participant_id_digest: data.participant_id_digest });
+	}
+
 
 	get_filemeta_store() {
 		return this.#filemeta_idbkv;
@@ -195,8 +220,34 @@ class ParticipantID {
 		return await f.json();
 	}
 
+
+	/**
+	 * @param {string} haptic_signal_name
+	 * @param {string} caption_str
+	 * @param {number} rating
+	 * @returns {Promise<boolean>} false if set failed
+	 */
+	async set_caption_rating(haptic_signal_name, caption_str, rating) {
+		if (!this.#participant_id_info) return false;
+
+		const u = new URL("/api/participant/captionrating", location.origin);
+		u.searchParams.set("participant_id_digest", this.#participant_id_info.participant_id_digest);
+		u.searchParams.set("haptic_signal_name", haptic_signal_name);
+		u.searchParams.set("caption_str", caption_str);
+		u.searchParams.set("rating", rating.toString());
+
+		const f = await fetch(u, { method: "POST" });
+
+		if (f.ok) {
+			return true;
+		} else {
+			console.error("Failed to set caption rating", f);
+			throw new Error("Failed to set caption rating");
+		}
+	}
 }
-const last_participant_id_info = await idbkv.get("last_participant_id_info");
+
+const last_participant_id_info = CAPTION_RATING_MODE ? null : await idbkv.get("last_participant_id_info");
 const DEFAULT_FILE_META_STORE = await idbkv.createStore("file_metadata_default", "keyval");
 export const PARTICIPANT_ID_GLO = new ParticipantID(DEFAULT_FILE_META_STORE, last_participant_id_info);
 

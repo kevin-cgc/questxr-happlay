@@ -1,4 +1,4 @@
-import { SAMPLE_RATE, WORKSHOP_MODE } from "./appmode.mjs";
+import { CAPTION_RATING_MODE, SAMPLE_RATE, WORKSHOP_MODE } from "./appmode.mjs";
 import { bump_playcount_on_filemeta } from "./folderfilepicker.mjs";
 import { notnull } from "./util.mjs";
 
@@ -106,6 +106,6 @@ export function mark_playback_loaded() {
 	playback_progress.value = 0;
 }
 
-if (WORKSHOP_MODE) {
+if (WORKSHOP_MODE || CAPTION_RATING_MODE) {
 	playbackv_div.classList.add("workshopmode")
 }
