@@ -7,6 +7,7 @@ import { last_waveform, mark_playback_loaded, start_playback, stop_playback } fr
 import { } from "./js/dragndrop.mjs";
 import { } from "./js/folderfilepicker.mjs";
 import { } from "./js/prompting.mjs";
+import { } from "./js/captionrating.mjs";
 
 
 register_ws_onmessage(msg => {
