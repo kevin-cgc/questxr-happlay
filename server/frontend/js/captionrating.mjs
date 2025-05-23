@@ -14,7 +14,7 @@ const submit_button = /** @type {HTMLButtonElement} */ (notnull(captionrating_di
 function render_captions(captions_for_signal, random_order=true) {
     while (captionlist_div.lastChild) captionlist_div.removeChild(captionlist_div.lastChild);
     const res = [];
-    for (const [category, captions] of random_order ? get_random_order(Object.entries(captions_for_signal)) : Object.entries(captions_for_signal)) {
+    for (const [category, captions] of Object.entries(captions_for_signal)) {
         const h4 = document.createElement("h3");
         h4.textContent = category;
         captionlist_div.appendChild(h4);
