@@ -13,6 +13,8 @@ const search_params = new URLSearchParams(location.search);
 // 	console.warn("Ignoring search params (please use hash params e.g., `#workshop=true`)");
 // }
 
+export const VIDEO_PLAYBACK = search_params.has("video");
+
 export const FLIP_AB_MODELS = search_params.has("FLIP");
 export const ALT_WSS_HOST = search_params.get("wsshost") ?? null;
 

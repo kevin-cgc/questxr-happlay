@@ -440,6 +440,11 @@ div#root {
 	}
 
 }
+div.pbmvideopane {
+	z-index: 99;
+	grid-area: mprompt;
+	background-color: var(--primary-color);
+}
 @keyframes generateButtonProgress {
 	from {
 		opacity: 1;

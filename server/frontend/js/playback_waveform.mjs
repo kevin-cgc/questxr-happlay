@@ -1,6 +1,7 @@
 import { CAPTION_RATING_MODE, SAMPLE_RATE, WORKSHOP_MODE } from "./appmode.mjs";
 import { bump_playcount_on_filemeta } from "./folderfilepicker.mjs";
 import { notnull } from "./util.mjs";
+import { start_video_playback, stop_video_playback } from "./video-playback.mjs";
 
 const playbackv_div = /** @type {HTMLDivElement} **/ (document.getElementById("playbackv"));
 const waveformcontainer_div = /** @type {HTMLDivElement} **/ (document.getElementById("waveformcontainer"));
@@ -65,6 +66,7 @@ export const draw_waveform = (pcm, filename) => {
 let playback_started_at = null;
 export function start_playback() {
 	playback_started_at = performance.now();
+	start_video_playback();
 
 	if (last_waveform) bump_playcount_on_filemeta(last_waveform.filename);
 
@@ -83,6 +85,7 @@ export function start_playback() {
 }
 export function stop_playback() {
 	playback_started_at = null;
+	stop_video_playback();
 }
 
 const pbh_ctx = notnull(playbackheadcanvas.getContext("2d"));

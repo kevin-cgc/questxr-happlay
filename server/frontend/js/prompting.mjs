@@ -1,4 +1,4 @@
-import { CAPTION_RATING_MODE, FLIP_AB_MODELS, USE_GRADIO_PROMPT_UI } from "./appmode.mjs";
+import { CAPTION_RATING_MODE, FLIP_AB_MODELS, USE_GRADIO_PROMPT_UI, VIDEO_PLAYBACK } from "./appmode.mjs";
 import { convert_mono_audio_buffer_to_wav_pcm_u8 } from "./audio-buffer-to-wav.mjs";
 import { save_signal_blob_to_file } from "./folderfilepicker.mjs";
 import { NpWaveFormCanvas } from "./np-waveform-canvas.mjs";
@@ -10,6 +10,7 @@ const genmodelpromptcont_div = /** @type {HTMLDivElement} */ (notnull(document.q
 const apiprompt_div = /** @type {HTMLDivElement} */ (notnull(genmodelpromptcont_div.querySelector(".apiprompt")));
 const captionrating_div = /** @type {HTMLDivElement} */ (notnull(genmodelpromptcont_div.querySelector(".captionrating")));
 const gradio_app = /** @type {HTMLElement | null} */ (document.querySelector("gradio-app"));
+const pbmvideopane_div = /** @type {HTMLDivElement} */ (notnull(document.querySelector(".pbmvideopane")));
 
 const API_URL = "/api/generate";
 const N_AT_ONCE = 5;
@@ -26,7 +27,11 @@ const REQ_BODY_BASE = {
 const DOWNLOAD_ALL = true;
 const AB_PROMPTING = false;
 
-if (CAPTION_RATING_MODE) {
+if (VIDEO_PLAYBACK) {
+	genmodelpromptcont_div.style.display = "none";
+	pbmvideopane_div.style.display = "";
+
+} else if (CAPTION_RATING_MODE) {
 	captionrating_div.style.display = "";
 	apiprompt_div.style.display = "none";
 
