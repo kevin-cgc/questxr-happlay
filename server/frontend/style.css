@@ -1,4 +1,6 @@
 :root {
+	--background-color: #2b383f;
+	--background-color-2: #2b2d2f;
 	--primary-color: #0d1011; /* Dark slate gray for base elements */
 	/* --primary-color-alt: #0d1011; */
 	--secondary-color: #4A9C8E; /* Teal for accent elements, vibrant yet industrial */
@@ -10,7 +12,7 @@
 }
 
 html {
-	background: #2b383f;
+	background: var(--background-color);
 	height: 100%;
 	width: 100%;
 	display: grid;
@@ -21,7 +23,7 @@ body {
 	/* background-color: var(--primary-color); */
 	margin: 0;
 	padding: 1.5em;
-	background: linear-gradient(to bottom right, #2b2d2f, #2b383f);
+	background: linear-gradient(to bottom right, var(--background-color-2), var(--background-color));
 	background-repeat: no-repeat;
 	color: var(--text-color);
 	font-family: 'Courier New', Courier, monospace; /* Emphasizing the monospace theme */
@@ -291,7 +293,7 @@ div#root {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	background: linear-gradient(to bottom right, #2b383f, #2b2d2f);
+	background: linear-gradient(to bottom right, var(--background-color), var(--background-color-2));
 	/* background-color: var(--tertiary-color-darker); */
 	/* border: 2px solid var(--tertiary-color-light); */
 	/* background: repeating-linear-gradient(
@@ -304,7 +306,7 @@ div#root {
 }
 #hapfilepicker > div.openeddirectory {
 	grid-area: single;
-	background: linear-gradient(to bottom right, #2b383f, #2b2d2f);
+	background: linear-gradient(to bottom right, var(--background-color), var(--background-color-2));
 	display: grid;
 	grid-template:
 		"header" auto

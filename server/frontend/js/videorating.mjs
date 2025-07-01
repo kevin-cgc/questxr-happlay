@@ -5,7 +5,7 @@ import { get_random_order, notnull } from "./util.mjs";
 import { idbkv } from "../script.mjs";
 import { USER_STUDY_SIGNAL_ORDER } from "./signalorder.mjs";
 
-export const USE_FACTORS = true;
+export const USE_FACTORS = false;
 
 /** @type {{ video: string, algo: number }[]} */
 export const SIGNAL_ORDER = USER_STUDY_SIGNAL_ORDER;
@@ -71,6 +71,7 @@ function render_statements(statements, randomize = true, opts) {
         res.push(el);
     }
     submit_button.disabled = false;
+    submit_button.style.display = "";
     return res;
 }
 
@@ -316,6 +317,10 @@ async function video_rating_main() {
 
         document.querySelector("div.videorating div.videocontainer")?.scrollIntoView();
     }
+
+
+    submit_button.disabled = true;
+    while (true) alert("All ratings completed successfully.");
 }
 
 if (VIDEO_RATING_MODE) {
