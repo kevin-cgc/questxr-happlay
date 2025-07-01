@@ -3,12 +3,12 @@ import { load_and_send_pcm } from "./load_send_pcm.mjs";
 import { draw_box, update_video } from "./video-playback.mjs";
 import { get_random_order, notnull } from "./util.mjs";
 import { idbkv } from "../script.mjs";
+import { USER_STUDY_SIGNAL_ORDER } from "./signalorder.mjs";
 
-export const USE_FACTORS = false;
+export const USE_FACTORS = true;
 
 /** @type {{ video: string, algo: number }[]} */
-export const SIGNAL_ORDER = [
-];
+export const SIGNAL_ORDER = USER_STUDY_SIGNAL_ORDER;
 const HXI_FACTORS = {
     "Autotelics": [
         "Regardless of function, I found the haptic sensations pleasant.",
@@ -227,7 +227,7 @@ async function video_rating_main() {
             for await (const entry of participant_dir.entries()) participant_files.push(entry);
             participant_files.sort(([an, ah], [bn, bh]) => an.localeCompare(bn));
 
-            const matches = participant_files.filter(([name, handle]) => name.startsWith(signal_file_prefix));
+            const matches = participant_files.filter(([name, handle]) => name.startsWith(signal_file_prefix) && name.endsWith('.wav'));
             if (matches.length === 0) {
                 alert(`No files found for signal '${signal_file_prefix}'. Please ensure the participant folder contains a signal file '${signal_file_prefix}*.wav`);
                 continue retryload;
@@ -266,7 +266,7 @@ async function video_rating_main() {
 
                 const video_handle = await video_dir.getFileHandle(video);
                 const video_file = await video_handle.getFile();
-        await update_video(video_file);
+                await update_video(video_file);
                 await draw_box(extract_point_x, extract_point_y, extract_radius);
             } catch (e) {
                 console.error(e);
@@ -279,18 +279,18 @@ async function video_rating_main() {
 
         // Collect ratings with retry on incomplete
         const ratings = {};
-        retry: while (true) {
+        retrysubmit: while (true) {
             await new Promise(resolve => submit_button.addEventListener('click', resolve, { once: true }));
             for (const el of ratingEls) {
                 const val = el.get_rating();
                 if (val == null) {
                     alert('Please rate all statements');
-                    continue retry;
+                    continue retrysubmit;
                 }
                 ratings[el.get_statement()] = val;
             }
 
-            break retry;
+            break retrysubmit;
         }
 
         retrysave: while (true) {
@@ -302,9 +302,9 @@ async function video_rating_main() {
             }
             try {
                 const fh = await participant_dir.getFileHandle(json_filename, { create: true });
-            const w = await fh.createWritable();
-            await w.write(JSON.stringify(ratings, null, 2));
-            await w.close();
+                const w = await fh.createWritable();
+                await w.write(JSON.stringify(ratings, null, 2));
+                await w.close();
             } catch (e) {
                 console.error(e);
                 alert(`Error saving ratings for '${signal_file_prefix}': ${e.message}`);
@@ -313,6 +313,8 @@ async function video_rating_main() {
 
             break retrysave;
         }
+
+        document.querySelector("div.videorating div.videocontainer")?.scrollIntoView();
     }
 }
 
