@@ -1,4 +1,4 @@
-import { CAPTION_RATING_MODE, FLIP_AB_MODELS, USE_GRADIO_PROMPT_UI, VIDEO_PLAYBACK } from "./appmode.mjs";
+import { VIDEO_RATING_MODE, CAPTION_RATING_MODE, FLIP_AB_MODELS, USE_GRADIO_PROMPT_UI, VIDEO_PLAYBACK } from "./appmode.mjs";
 import { convert_mono_audio_buffer_to_wav_pcm_u8 } from "./audio-buffer-to-wav.mjs";
 import { save_signal_blob_to_file } from "./folderfilepicker.mjs";
 import { NpWaveFormCanvas } from "./np-waveform-canvas.mjs";
@@ -9,6 +9,7 @@ import { notnull, sanitize_filename } from "./util.mjs";
 const genmodelpromptcont_div = /** @type {HTMLDivElement} */ (notnull(document.querySelector(".genmodelpromptcont")));
 const apiprompt_div = /** @type {HTMLDivElement} */ (notnull(genmodelpromptcont_div.querySelector(".apiprompt")));
 const captionrating_div = /** @type {HTMLDivElement} */ (notnull(genmodelpromptcont_div.querySelector(".captionrating")));
+const videorating_div = /** @type {HTMLDivElement} */ (notnull(genmodelpromptcont_div.querySelector(".videorating")));
 const gradio_app = /** @type {HTMLElement | null} */ (document.querySelector("gradio-app"));
 const pbmvideopane_div = /** @type {HTMLDivElement} */ (notnull(document.querySelector(".pbmvideopane")));
 
@@ -30,6 +31,20 @@ const AB_PROMPTING = false;
 if (VIDEO_PLAYBACK) {
 	genmodelpromptcont_div.style.display = "none";
 	pbmvideopane_div.style.display = "";
+} else if (VIDEO_RATING_MODE) {
+    videorating_div.style.display = "";
+    apiprompt_div.style.display = "none";
+	// move video to videorating_div
+	/** @type {HTMLDivElement} */
+	const video_wrapper = notnull(document.querySelector(".video-wrapper"));
+	notnull(videorating_div.querySelector(".videocontainer")).appendChild(video_wrapper);
+	/** @type {HTMLVideoElement} */
+	const video = notnull(video_wrapper.querySelector("video#pbmvideo"));
+	video.controls = false;
+	/** @type {HTMLDivElement} */
+	const header = notnull(document.querySelector("div.header"));
+	header.style.visibility = "hidden";
+	header.style.height = "0px";
 
 } else if (CAPTION_RATING_MODE) {
 	captionrating_div.style.display = "";

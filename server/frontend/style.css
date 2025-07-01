@@ -629,7 +629,7 @@ div#playbackv {
 		"playbackstatus" auto / 100%;
 	gap: 0ex;
 }
-div#playbackv.workshopmode {
+div#playbackv.nowaveform {
 	div#waveformcontainer {
 		display: none;
 	}

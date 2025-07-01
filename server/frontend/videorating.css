@@ -1,0 +1,98 @@
+body.videoratingmode {
+
+    div#hapfilepicker {
+        display: none;
+    }
+
+    div#root {
+        grid-template:
+            "playbackv playbackv playbackv" min-content
+            "mprompt mprompt mprompt" minmax(50ex, 1fr)
+            "serverwslog serverwslog connquests" minmax(auto, 8vh) /
+        minmax(105ex, 1fr) minmax(60ex, 1fr) 0.6fr;
+    }
+}
+
+div.videorating {
+    font-family: Arial, Helvetica, sans-serif;
+
+    display: flex;
+    flex-direction: column;
+    gap: 2ex;
+    padding: 2ex;
+    font-size: 1.2em;
+    padding-top: 2ex;
+
+    h2 {
+        margin-bottom: 0;
+    }
+
+    h3 {
+        text-align: center;
+    }
+}
+
+div.videorating div.ratinglist {
+    display: grid;
+    grid-auto-flow: row;
+    gap: 2ex;
+    padding: 2ex;
+}
+
+div.videorating div.ratinglist h3 {
+    text-align: center;
+    text-transform: capitalize;
+    margin-bottom: 0;
+}
+
+div.videorating div.ratinglist div.statement {
+    display: grid;
+    grid-template-columns: 1fr 50ex;
+    grid-template-rows: auto;
+    align-items: center;
+    gap: 1ex;
+    padding: 1ex;
+    border-radius: 0.5ex;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+div.videorating datalist {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0.7em;
+}
+
+div.videorating div.ratinglist div.statement .statementtext {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1.4em;
+    text-align: center;
+}
+div.videorating div.ratinglist div.statement div.ratingslider {
+    display: grid;
+    grid-template-columns: 1fr 4.5ex;
+    gap: 1ex;
+    align-items: center;
+    /* width: 50%; */
+}
+div.videorating div.ratinglist div.statement div.ratingslider .rating {
+
+}
+
+div.videorating div.ratinglist div.statement div.ratingslider .ratingvalue {
+    font-weight: bold;
+    font-size: 1.5em;
+    min-width: 2ex;
+    text-align: center;
+}
+
+.video-wrapper {
+    position: relative;
+    display: inline-block;
+
+    .video-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: none; /* so clicks go “through” to the video */
+    }
+}

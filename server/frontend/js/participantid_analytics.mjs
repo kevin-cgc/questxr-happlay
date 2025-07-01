@@ -1,7 +1,7 @@
 import { notnull } from "./util.mjs";
 import { idbkv } from "../script.mjs";
 import { clean_open_and_sync_library, close_opened_directory } from "./folderfilepicker.mjs";
-import { CAPTION_RATING_MODE } from "./appmode.mjs";
+import { CAPTION_RATING_MODE, VIDEO_RATING_MODE } from "./appmode.mjs";
 
 const participantinfo_div = /** @type {HTMLDivElement} */ (notnull(document.querySelector(".participantinfo")));
 const participantid_input = /** @type {HTMLInputElement} */ (notnull(participantinfo_div.querySelector("input[type=text]")));
@@ -247,7 +247,7 @@ class ParticipantID {
 	}
 }
 
-const last_participant_id_info = CAPTION_RATING_MODE ? null : await idbkv.get("last_participant_id_info");
+const last_participant_id_info = (CAPTION_RATING_MODE || VIDEO_RATING_MODE) ? null : await idbkv.get("last_participant_id_info");
 const DEFAULT_FILE_META_STORE = await idbkv.createStore("file_metadata_default", "keyval");
 export const PARTICIPANT_ID_GLO = new ParticipantID(DEFAULT_FILE_META_STORE, last_participant_id_info);
 

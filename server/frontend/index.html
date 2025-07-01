@@ -7,6 +7,7 @@
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" media="none" onload="this.media='all'"> <!-- load async -->
 	<link rel="stylesheet" href="style.css">
 	<link rel="stylesheet" href="caption.css">
+	<link rel="stylesheet" href="videorating.css">
 </head>
 <body>
 	<div class="header">
@@ -54,7 +55,10 @@
 			</div>
 		</div>
 		<div class="pbmvideopane" style="display: none;">
-			<video style="max-height: 100%; max-width: 100%;" id="pbmvideo" controls></video>
+			<div class="video-wrapper">
+				<video style="max-height: 100%; max-width: 100%;" id="pbmvideo" controls></video>
+  				<canvas class="video-overlay"></canvas>
+			</div>
 		</div>
 		<div class="genmodelpromptcont">
 			<div class="apiprompt">
@@ -126,6 +130,11 @@
 
 				</div>
 				<button class="submit" disabled>SUBMIT</button>
+			</div>
+			<div class="videorating" style="display: none;">
+				<div class="videocontainer" style="display: flex; justify-content: center; align-items: center;"></div>
+				<div class="ratinglist"></div>
+				<button class="submit" disabled>SUBMIT RATINGS</button>
 			</div>
 		</div>
 		<div id="serverwslog" class="logcontainer">
