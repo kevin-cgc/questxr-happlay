@@ -55,12 +55,18 @@ const videorating_div = /** @type {HTMLDivElement} */ (notnull(document.querySel
 const ratinglist_div = /** @type {HTMLDivElement} */ (notnull(videorating_div.querySelector('.ratinglist')));
 const submit_button = /** @type {HTMLButtonElement} */ (notnull(videorating_div.querySelector('button.submit')));
 
-function render_statements(statements, randomize = true) {
+/**
+ * Renders a list of statement rating elements.
+ * @param {string[]} statements
+ * @param {boolean} randomize
+ * @returns {StatementRatingElement[]}
+ */
+function render_statements(statements, randomize = true, opts) {
     while (ratinglist_div.lastChild) ratinglist_div.removeChild(ratinglist_div.lastChild);
     const res = [];
     if (randomize) statements = get_random_order(statements);
     for (const stmt of statements) {
-        const el = StatementRatingElement.createWithStatement(stmt);
+        const el = StatementRatingElement.createWithStatement(stmt, opts);
         ratinglist_div.appendChild(el);
         res.push(el);
     }
@@ -93,6 +99,7 @@ class StatementRatingElement extends HTMLDivElement {
         this.statementtext_div = /** @type {HTMLDivElement} */ (this.querySelector('.statementtext'));
         this.rating_input = /** @type {HTMLInputElement} */ (this.querySelector('.rating'));
         this.ratingvalue_span = /** @type {HTMLSpanElement} */ (this.querySelector('.ratingvalue'));
+        this.datalist_el = /** @type {HTMLDataListElement} */ (this.querySelector('datalist'));
         this.rating_input.addEventListener('input', this.#on_input);
         this.rating_input.addEventListener('change', this.#on_input);
         this.rating_input.addEventListener('click', this.#on_input);
@@ -100,6 +107,7 @@ class StatementRatingElement extends HTMLDivElement {
     #on_input = () => {
         this.#rating_value = parseInt(this.rating_input.value);
         this.ratingvalue_span.textContent = this.rating_input.value;
+        this.rating_input.classList.add('filled');
     };
     set_statement(stmt) {
         this.#statement = stmt;
@@ -107,9 +115,44 @@ class StatementRatingElement extends HTMLDivElement {
     }
     get_rating() { return this.#rating_value; }
     get_statement() { return this.#statement; }
-    static createWithStatement(stmt) {
+    /**
+     * Factory method.
+     * @param {string} stmt the statement text
+     * @param {object} [opts]
+     * @param {number} [opts.min=1]
+     * @param {number} [opts.max=7]
+     * @param {number} [opts.step=1]
+     * @param {string[] | null} [opts.marks] labels for each tick
+     */
+    static createWithStatement(stmt, { min = 1, max = 7, step = 1, marks = null } = {}) {
         const el = new StatementRatingElement();
         el.set_statement(stmt);
+        el.rating_input.min  = min.toString();
+        el.rating_input.max  = max.toString();
+        el.rating_input.step = step.toString();
+        el.rating_input.value = Math.round((min + max) / 2).toString(); // default to middle value
+
+        const listId = `likertmarks-${Date.now()}-${Math.floor(Math.random()*1000)}`;
+        el.datalist_el.id = listId;
+        el.rating_input.setAttribute('list', listId);
+        el.datalist_el.innerHTML = '';
+        if (Array.isArray(marks) && marks.length > 0) {
+            const count = marks.length;
+            for (let i = 0; i < count; i++) {
+                const opt = document.createElement('option');
+                const val = min + i * ((max - min) / (count - 1));
+                opt.value = val.toString();
+                opt.label = marks[i];
+                el.datalist_el.appendChild(opt);
+            }
+        } else {
+            for (let v = min; v <= max; v += step) {
+                const opt = document.createElement('option');
+                opt.value = v.toString();
+                opt.label = String(v);
+                el.datalist_el.appendChild(opt);
+            }
+        }
         return el;
     }
 }
@@ -176,7 +219,7 @@ async function video_rating_main() {
 
     for (const { video, algo } of SIGNAL_ORDER) {
         const statements = USE_FACTORS ? FACTOR_STATEMENTS : RATING_STATEMENTS;
-        const ratingEls = render_statements(statements, USE_FACTORS);
+        const ratingEls = render_statements(statements, USE_FACTORS, USE_FACTORS ? {} : { min: 0, max: 100, step: 1, marks: ['0', '25', '50', '75', '100'] });
         const signal_file_prefix = `${video.split(".")[0]}__${algo}`;
 
         retryload: while (true) {

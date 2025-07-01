@@ -57,9 +57,12 @@ div.videorating div.ratinglist div.statement {
 }
 
 div.videorating datalist {
-  display: flex;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 3ex;
   justify-content: space-between;
-  padding: 0 0.7em;
+  padding-left: 1ex;
+  /* padding-right: 0.5ex; */
 }
 
 div.videorating div.ratinglist div.statement .statementtext {
@@ -70,13 +73,84 @@ div.videorating div.ratinglist div.statement .statementtext {
 div.videorating div.ratinglist div.statement div.ratingslider {
     display: grid;
     grid-template-columns: 1fr 4.5ex;
-    gap: 1ex;
+    gap: 1ex 2.5ex;
     align-items: center;
     /* width: 50%; */
 }
-div.videorating div.ratinglist div.statement div.ratingslider .rating {
 
+
+.ratingslider input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    width: 100%;
+    padding: 0px;
 }
+.ratingslider input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 1ex;
+    cursor: pointer;
+    background: var(--text-color);
+    border-radius: 0.5ex;
+}
+.ratingslider input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    margin-top: -1.16ex;
+    height: 3ex;
+    width: 3ex;
+    border-radius: 50%;
+    background: var(--secondary-color);
+    cursor: pointer;
+}
+.ratingslider input[type=range]::-webkit-slider-thumb {
+    opacity: 0.51;
+}
+.ratingslider input[type=range].filled::-webkit-slider-thumb {
+    opacity: 1;
+}
+.ratingslider input[type=range]::-moz-range-track {
+    width: 100%;
+    height: 1ex;
+    cursor: pointer;
+    background: var(--text-color);
+    border-radius: 0.5ex;
+}
+.ratingslider input[type=range]::-moz-range-thumb {
+    height: 3ex;
+    width: 3ex;
+    border-radius: 50%;
+    background: var(--secondary-color);
+    border: none;
+    cursor: pointer;
+    opacity: 0.51;
+}
+.ratingslider input[type=range].filled::-moz-range-thumb {
+    opacity: 1;
+}
+.ratingslider input[type=range]::-ms-track {
+    width: 100%;
+    height: 1ex;
+    background: transparent;
+    border-color: transparent;
+    color: transparent;
+}
+.ratingslider input[type=range]::-ms-fill-lower,
+.ratingslider input[type=range]::-ms-fill-upper {
+    background: var(--text-color);
+    border-radius: 0.5ex;
+}
+.ratingslider input[type=range]::-ms-thumb {
+    height: 3ex;
+    width: 3ex;
+    border-radius: 50%;
+    background: var(--secondary-color);
+    cursor: pointer;
+    opacity: 0.51;
+}
+.ratingslider input[type=range].filled::-ms-thumb {
+    opacity: 1;
+}
+
 
 div.videorating div.ratinglist div.statement div.ratingslider .ratingvalue {
     font-weight: bold;
