@@ -204,7 +204,11 @@ async function video_rating_main() {
     if (prev_used_video_dir) {
         const perm_state = await prev_used_video_dir.queryPermission();
         if (perm_state == "prompt") {
-            await prev_used_video_dir.requestPermission({ mode: "readwrite" })
+            try {
+                await new Promise(resolve => videodir_button.addEventListener('click', resolve, { once: true }));
+                await prev_used_video_dir.requestPermission({ mode: "readwrite" })
+                video_dir = prev_used_video_dir;
+            } catch (e) { console.error(e); }
         } else if (perm_state != "granted") {
             alert(`Previous video directory (${prev_used_video_dir.name}) permission state is '${perm_state}'. Please select a new directory.`);
         } else {
