@@ -28,7 +28,7 @@ const SYMBOL_FILE_META_KEY = Symbol("file_meta_key");
 async function* iterate_wav_entries(dir_handle, parent_rel_path = "") {
 	const entries = [];
 	for await (const entry of dir_handle.values()) entries.push(entry);
-	entries.sort((a, b) => a.name.localeCompare(b.name));
+	entries.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 
 	for (const entry of entries) {
 		const relative_path = parent_rel_path ? `${parent_rel_path}/${entry.name}` : entry.name;
