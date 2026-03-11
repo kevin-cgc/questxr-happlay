@@ -1,5 +1,6 @@
 import { idbkv } from "../script.mjs";
-import { load_and_send_pcm, load_pcm } from "./load_send_pcm.mjs";
+import { load_pcm, send_pcm } from "./load_send_pcm.mjs";
+import { ENABLE_NESTED_DIRECTORY_SCAN } from "./appmode.mjs";
 import { NpWaveFormCanvas } from "./np-waveform-canvas.mjs";
 import { PARTICIPANT_ID_GLO } from "./participantid_analytics.mjs";
 import { notnull } from "./util.mjs";
@@ -16,7 +17,34 @@ const filelist_div = /** @type {HTMLDivElement} **/ (openeddirectory_div.querySe
 
 const SYMBOL_FILE_HANDLE = Symbol("file_handle");
 const SYMBOL_FILE_NAME = Symbol("file_name");
+const SYMBOL_FILE_META_KEY = Symbol("file_meta_key");
 
+/**
+ * @param {FileSystemDirectoryHandle} dir_handle
+ * @param {string} parent_rel_path
+ * @returns {AsyncGenerator<{ entry: FileSystemFileHandle, relative_path: string }, void, void>}
+ */
+async function* iterate_wav_entries(dir_handle, parent_rel_path = "") {
+	const entries = [];
+	for await (const entry of dir_handle.values()) entries.push(entry);
+	entries.sort((a, b) => a.name.localeCompare(b.name));
+
+	for (const entry of entries) {
+		const relative_path = parent_rel_path ? `${parent_rel_path}/${entry.name}` : entry.name;
+		if (entry.kind === "file") {
+			if (entry.name.endsWith(".wav")) yield { entry, relative_path };
+			continue;
+		}
+		if (ENABLE_NESTED_DIRECTORY_SCAN && entry.kind === "directory") {
+			yield* iterate_wav_entries(entry, relative_path);
+		}
+	}
+}
+
+if (ENABLE_NESTED_DIRECTORY_SCAN) {
+	openfolder_button.title = "Nested folder scan enabled via ?nestedfolders flag";
+	changefolder_button.title = "Nested folder scan enabled via ?nestedfolders flag";
+}
 
 let open_directory_promise_queue = Promise.resolve(); // multiple concurrent open_directory calls result in duplicate dom elements
 
@@ -41,25 +69,16 @@ async function open_directory_internal(dir_handle) {
 	// console.debug("open_directory_internal");
 	openeddirectory_div.style.display = "";
 	folderselect_div.style.display = "none";
-	opendirname_h2.textContent = dir_handle.name;
+	opendirname_h2.textContent = dir_handle.name + (ENABLE_NESTED_DIRECTORY_SCAN ? " (recursive)" : "");
 
 	const filelist_files = new Set([...filelist_div.querySelectorAll("div.file")]);
 
-	/** @type {{ entry: FileSystemFileHandle, file_div: HTMLDivElement }[]} */
+	/** @type {{ entry: FileSystemFileHandle, file_div: HTMLDivElement, metadata_key: string }[]} */
 	const new_files = [];
+	const filemeta_ikvs = PARTICIPANT_ID_GLO.get_filemeta_store();
 
-	const entries_iter = dir_handle.values();
-	const entries_sorted = [];
-	for await (const entry of entries_iter) {
-		entries_sorted.push(entry);
-	}
-	entries_sorted.sort((a, b) => a.name.localeCompare(b.name));
-
-	for (const entry of entries_sorted) {
-		if (entry.kind != "file" || !entry.name.endsWith(".wav")) {
-			// console.debug("Skipping non-wav file", entry);
-			continue;
-		}
+	for await (const { entry, relative_path } of iterate_wav_entries(dir_handle)) {
+		const metadata_key = ENABLE_NESTED_DIRECTORY_SCAN ? relative_path : entry.name;
 
 		const fdiv = await (async () => {
 			for (const fdiv of filelist_files) {
@@ -70,128 +89,112 @@ async function open_directory_internal(dir_handle) {
 
 		if (fdiv) {
 			filelist_files.delete(fdiv);
-			notnull(fdiv.querySelector("span.filename")).textContent = entry.name;
+			notnull(fdiv.querySelector("span.filename")).textContent = relative_path;
+			fdiv[SYMBOL_FILE_NAME] = relative_path;
+			fdiv[SYMBOL_FILE_META_KEY] = metadata_key;
 			continue;
-		} else {
-			/** @type {FileEntryMeta} */
-			const fallback_file_entry = {
-				name: entry.name,
-				filename: entry.name,
-				sha265: "",
-				origin: dir_handle.name,
-				model: "",
-				vprompt: "",
-				prompt: "",
-				starred: false,
-				trash: false,
-				vote: 0,
-				playcount: 0,
-			};
-
-			const filemeta_ikvs = PARTICIPANT_ID_GLO.get_filemeta_store();
-			/** @type {FileEntryMeta} */
-			const filemeta_initial = await idbkv.get(entry.name, filemeta_ikvs) ?? (await idbkv.set(entry.name, fallback_file_entry, filemeta_ikvs), fallback_file_entry);
-
-
-			const file_div = document.createElement("div");
-
-			{ // init file_div
-				file_div.className = "file";
-				file_div.classList.toggle("starred", filemeta_initial.starred);
-				file_div.classList.toggle("trashed", filemeta_initial.trash);
-				file_div.classList.toggle("upvoted", filemeta_initial.vote == +1);
-				file_div.classList.toggle("downvoted", filemeta_initial.vote == -1);
-				file_div.title = `'${filemeta_initial.prompt}' from model '${filemeta_initial.model}'`;
-
-				file_div[SYMBOL_FILE_HANDLE] = entry;
-				file_div[SYMBOL_FILE_NAME] = entry.name;
-
-				const syncstatus_div = document.createElement("div");
-				syncstatus_div.className = "syncstatus";
-				file_div.appendChild(syncstatus_div);
-				syncstatus_div.innerHTML = `<span class="material-symbols-outlined"></span>`
-
-				const filename_span = document.createElement("span");
-				filename_span.className = "filename";
-				filename_span.textContent = entry.name;
-				file_div.appendChild(filename_span);
-
-
-				const waveformcontainer_div = document.createElement("div");
-				waveformcontainer_div.className = "waveformcontainer";
-				file_div.appendChild(waveformcontainer_div);
-				const waveform_canvas = new NpWaveFormCanvas();
-				// waveform_canvas.width = 50;
-				// waveform_canvas.height = 20;
-				waveformcontainer_div.appendChild(waveform_canvas);
-				entry.getFile().then(async file => {
-					const pcm = await load_pcm(file);
-					waveform_canvas.draw_waveform(pcm);
-				}).catch(e => console.log(e));
-
-
-				const bdiv = document.createElement("div");
-				bdiv.className = "buttons";
-				file_div.appendChild(bdiv);
-
-				const upload_button = document.createElement("button");
-				upload_button.textContent = "Load";
-				bdiv.appendChild(upload_button);
-
-				// const star_button = document.createElement("button");
-				// star_button.className = "star";
-				// star_button.innerHTML = `<span class="material-symbols-outlined">star</span>`;
-				// bdiv.appendChild(star_button);
-
-				// star_button.addEventListener("click", async ev => {
-				// 	filemeta.starred = !filemeta.starred;
-				// 	file_div.classList.toggle("starred", filemeta.starred);
-				// 	await sync_file_meta(file_div, filemeta);
-				// });
-
-				const upvote_button = document.createElement("button");
-				upvote_button.className = "upvote";
-				upvote_button.innerHTML = `<span class="material-symbols-outlined">thumb_up</span>`;
-				bdiv.appendChild(upvote_button);
-				const downvote_button = document.createElement("button");
-				downvote_button.className = "downvote";
-				downvote_button.innerHTML = `<span class="material-symbols-outlined">thumb_down</span>`;
-				bdiv.appendChild(downvote_button);
-				[upvote_button, downvote_button].forEach(b => b.addEventListener("click", async ev => {
-					const new_vote = ev.currentTarget == upvote_button ? +1 : -1;
-					const filemeta = await idbkv.get(entry.name, filemeta_ikvs);
-					const old_vote = filemeta.vote;
-					if (old_vote == new_vote) {
-						filemeta.vote = 0;
-						file_div.classList.remove("upvoted", "downvoted");
-					} else {
-						filemeta.vote = new_vote;
-						file_div.classList.toggle("upvoted", new_vote == +1);
-						file_div.classList.toggle("downvoted", new_vote == -1);
-					}
-
-					await sync_file_meta(entry.name, file_div, filemeta, filemeta_ikvs);
-				}));
-
-
-
-				[file_div, filename_span, upload_button].forEach(el => el.addEventListener("click", async ev => {
-					if (ev.target != ev.currentTarget) return;
-					try {
-						const file = await entry.getFile();
-						await load_and_send_pcm(file);
-					} catch (e) {
-						console.error(e);
-						alert("Failed to load PCM from file: " + e);
-					}
-				}));
-			}
-
-			filelist_div.append(file_div);
-			if (new_files.length == 0) file_div.scrollIntoView();
-			new_files.push({ entry, file_div });
-			// filelist_div.prepend(file_div); //need to swap sort, causes thrashing, not really pleasant
 		}
+
+		/** @type {FileEntryMeta} */
+		const fallback_file_entry = {
+			name: relative_path,
+			filename: relative_path,
+			sha265: "",
+			origin: dir_handle.name,
+			model: "",
+			vprompt: "",
+			prompt: "",
+			starred: false,
+			trash: false,
+			vote: 0,
+			playcount: 0,
+		};
+
+		/** @type {FileEntryMeta} */
+		const filemeta_initial = await idbkv.get(metadata_key, filemeta_ikvs) ?? (await idbkv.set(metadata_key, fallback_file_entry, filemeta_ikvs), fallback_file_entry);
+
+		const file_div = document.createElement("div");
+
+		{ // init file_div
+			file_div.className = "file";
+			file_div.classList.toggle("starred", filemeta_initial.starred);
+			file_div.classList.toggle("trashed", filemeta_initial.trash);
+			file_div.classList.toggle("upvoted", filemeta_initial.vote == +1);
+			file_div.classList.toggle("downvoted", filemeta_initial.vote == -1);
+			file_div.title = `'${filemeta_initial.prompt}' from model '${filemeta_initial.model}'`;
+
+			file_div[SYMBOL_FILE_HANDLE] = entry;
+			file_div[SYMBOL_FILE_NAME] = relative_path;
+			file_div[SYMBOL_FILE_META_KEY] = metadata_key;
+
+			const syncstatus_div = document.createElement("div");
+			syncstatus_div.className = "syncstatus";
+			file_div.appendChild(syncstatus_div);
+			syncstatus_div.innerHTML = `<span class="material-symbols-outlined"></span>`
+
+			const filename_span = document.createElement("span");
+			filename_span.className = "filename";
+			filename_span.textContent = relative_path;
+			file_div.appendChild(filename_span);
+
+			const waveformcontainer_div = document.createElement("div");
+			waveformcontainer_div.className = "waveformcontainer";
+			file_div.appendChild(waveformcontainer_div);
+			const waveform_canvas = new NpWaveFormCanvas();
+			waveformcontainer_div.appendChild(waveform_canvas);
+			entry.getFile().then(async file => {
+				const pcm = await load_pcm(file);
+				waveform_canvas.draw_waveform(pcm);
+			}).catch(e => console.log(e));
+
+			const bdiv = document.createElement("div");
+			bdiv.className = "buttons";
+			file_div.appendChild(bdiv);
+
+			const upload_button = document.createElement("button");
+			upload_button.textContent = "Load";
+			bdiv.appendChild(upload_button);
+
+			const upvote_button = document.createElement("button");
+			upvote_button.className = "upvote";
+			upvote_button.innerHTML = `<span class="material-symbols-outlined">thumb_up</span>`;
+			bdiv.appendChild(upvote_button);
+			const downvote_button = document.createElement("button");
+			downvote_button.className = "downvote";
+			downvote_button.innerHTML = `<span class="material-symbols-outlined">thumb_down</span>`;
+			bdiv.appendChild(downvote_button);
+			[upvote_button, downvote_button].forEach(b => b.addEventListener("click", async ev => {
+				const new_vote = ev.currentTarget == upvote_button ? +1 : -1;
+				const filemeta = await idbkv.get(metadata_key, filemeta_ikvs);
+				const old_vote = filemeta.vote;
+				if (old_vote == new_vote) {
+					filemeta.vote = 0;
+					file_div.classList.remove("upvoted", "downvoted");
+				} else {
+					filemeta.vote = new_vote;
+					file_div.classList.toggle("upvoted", new_vote == +1);
+					file_div.classList.toggle("downvoted", new_vote == -1);
+				}
+
+				await sync_file_meta(metadata_key, file_div, filemeta, filemeta_ikvs);
+			}));
+
+			[file_div, filename_span, upload_button].forEach(el => el.addEventListener("click", async ev => {
+				if (ev.target != ev.currentTarget) return;
+				try {
+					const file = await entry.getFile();
+					const pcm = await load_pcm(file);
+					send_pcm(pcm, relative_path);
+				} catch (e) {
+					console.error(e);
+					alert("Failed to load PCM from file: " + e);
+				}
+			}));
+		}
+
+		filelist_div.append(file_div);
+		if (new_files.length == 0) file_div.scrollIntoView();
+		new_files.push({ entry, file_div, metadata_key });
 	}
 
 	for (const file_div of filelist_files) {
@@ -346,15 +349,15 @@ async function sync_by_sha265(new_files) {
 
 /**
  *
- * @param {{ entry: FileSystemFileHandle, file_div: HTMLDivElement }[]} new_files
+ * @param {{ entry: FileSystemFileHandle, file_div: HTMLDivElement, metadata_key: string }[]} new_files
  */
 async function sync_by_filename(new_files) {
 	const already_synced = await PARTICIPANT_ID_GLO.get_synced_files();
 	if (already_synced === false) return;
 
 	// set file_div.classlist.add("synced") for already_synced files
-	const new_files_to_sync = new_files.filter(({ entry, file_div }) => {
-		const synced = already_synced.includes(entry.name);
+	const new_files_to_sync = new_files.filter(({ entry, file_div, metadata_key }) => {
+		const synced = already_synced.includes(metadata_key);
 		file_div.classList.remove("sync-failed");
 		file_div.classList.toggle("synced", synced);
 		return !synced;
@@ -362,11 +365,11 @@ async function sync_by_filename(new_files) {
 
 	const filemeta_ikvs = PARTICIPANT_ID_GLO.get_filemeta_store();
 
-	for (const {entry, file_div} of new_files_to_sync) {
+	for (const { entry, file_div, metadata_key } of new_files_to_sync) {
 		try {
 			file_div.classList.remove("sync-failed");
 			file_div.classList.add("syncing");
-			const filemeta = await idbkv.get(entry.name, filemeta_ikvs);
+			const filemeta = await idbkv.get(metadata_key, filemeta_ikvs);
 			if (!filemeta) throw new Error("Filemeta not found");
 			const sync_enabled = await PARTICIPANT_ID_GLO.sync_file(entry, filemeta);
 			if (sync_enabled) file_div.classList.add("synced");

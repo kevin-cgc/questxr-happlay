@@ -18,3 +18,4 @@ const search_params = new URLSearchParams(location.search);
 
 export const FLIP_AB_MODELS = search_params.has("FLIP");
 export const ALT_WSS_HOST = search_params.get("wsshost") ?? null;
+export const ENABLE_NESTED_DIRECTORY_SCAN = search_params.has("nestedfolders");

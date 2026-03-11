@@ -45,4 +45,8 @@ ngrok http --domain=example-example-example.ngrok-free.app --scheme http 8080
 
 And open the controller locally in a browser at `http://localhost:8081`.
 
+
+### features
+- To enable recursive loading of `.wav` files from nested folders in the web UI, append `?nestedfolders` to the controller URL (for example: `http://localhost:8081/?nestedfolders`).
+
 See [system-architecture.svg](docs/system-architecture.svg) for a basic overview of the setup.
