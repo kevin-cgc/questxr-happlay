@@ -17,3 +17,17 @@ export function notnull(v) {
 export function sanitize_filename(filename) {
 	return filename.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
+
+/**
+ * @template T
+ * @param {Iterable<T>} iter
+ * @returns {T[]} shuffled array
+ */
+export function get_random_order(iter) {
+	const arr_copy = [...iter];
+	for (let i = arr_copy.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[arr_copy[i], arr_copy[j]] = [arr_copy[j], arr_copy[i]];
+	}
+	return arr_copy;
+}

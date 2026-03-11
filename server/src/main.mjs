@@ -120,11 +120,13 @@ function get_participant_info_for_dir(participants_dir, req_or_pid) {
 	const participant_dir = path.join(participants_dir, participant_id_digest);
 	const participant_uploads_dir = path.join(participant_dir, "uploads");
 	const participant_meta_file = path.join(participant_dir, "meta.json");
+	const participant_captionrating_file = path.join(participant_dir, "captionrating.json");
 	return {
 		participant_id_digest,
 		participant_dir,
 		participant_meta_file,
 		participant_uploads_dir,
+		participant_captionrating_file
 	};
 }
 
@@ -231,6 +233,40 @@ async function setup_api(app, participants_dir, beam_cloud_api_key) {
 
 		await fs.writeFile(file_meta_path, JSON.stringify(meta, null, 2));
 		await fs.writeFile(file_path, req.body);
+		res.send("OK");
+	});
+
+
+	app.post("/api/participant/captionrating", async (req, res) => {
+		const { participant_id_digest, participant_captionrating_file } = get_participant_info(req);
+
+		let captionrating = {
+			created_at: Date.now(),
+			participant_id_digest: participant_id_digest,
+			haptic_signal: {
+				// haptic_signal_name: { caption_str: rating }
+			}
+		};
+		if (await fs.access(participant_captionrating_file).then(() => true, () => false)) {
+			captionrating = JSON.parse(await fs.readFile(participant_captionrating_file, "utf-8"));
+		}
+
+
+		if (typeof req.query.haptic_signal_name !== "string") {
+			throw new ExpressAppError(400, "haptic_signal_name is required");
+		}
+		if (typeof req.query.caption_str !== "string") {
+			throw new ExpressAppError(400, "caption_str is required");
+		}
+		if (typeof req.query.rating !== "string") {
+			throw new ExpressAppError(400, "rating is required");
+		}
+		if (captionrating.haptic_signal[req.query.haptic_signal_name] == null) {
+			captionrating.haptic_signal[req.query.haptic_signal_name] = {};
+		}
+		captionrating.haptic_signal[req.query.haptic_signal_name][req.query.caption_str] = parseFloat(req.query.rating);
+
+		await fs.writeFile(participant_captionrating_file, JSON.stringify(captionrating, null, 2));
 		res.send("OK");
 	});
 

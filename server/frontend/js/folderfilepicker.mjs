@@ -4,6 +4,7 @@ import { ENABLE_NESTED_DIRECTORY_SCAN } from "./appmode.mjs";
 import { NpWaveFormCanvas } from "./np-waveform-canvas.mjs";
 import { PARTICIPANT_ID_GLO } from "./participantid_analytics.mjs";
 import { notnull } from "./util.mjs";
+import { update_video } from "./video-playback.mjs";
 
 const hapfilepicker_div = /** @type {HTMLDivElement} **/ (document.getElementById("hapfilepicker"));
 const folderselect_div = /** @type {HTMLDivElement} **/ (hapfilepicker_div.querySelector("div .folderselect"));
@@ -22,7 +23,7 @@ const SYMBOL_FILE_META_KEY = Symbol("file_meta_key");
 /**
  * @param {FileSystemDirectoryHandle} dir_handle
  * @param {string} parent_rel_path
- * @returns {AsyncGenerator<{ entry: FileSystemFileHandle, relative_path: string }, void, void>}
+ * @returns {AsyncGenerator<{ entry: FileSystemFileHandle, relative_path: string, siblings: (FileSystemDirectoryHandle | FileSystemFileHandle)[] }, void, void>}
  */
 async function* iterate_wav_entries(dir_handle, parent_rel_path = "") {
 	const entries = [];
@@ -32,7 +33,7 @@ async function* iterate_wav_entries(dir_handle, parent_rel_path = "") {
 	for (const entry of entries) {
 		const relative_path = parent_rel_path ? `${parent_rel_path}/${entry.name}` : entry.name;
 		if (entry.kind === "file") {
-			if (entry.name.endsWith(".wav")) yield { entry, relative_path };
+			if (entry.name.endsWith(".wav")) yield { entry, relative_path, siblings: entries };
 			continue;
 		}
 		if (ENABLE_NESTED_DIRECTORY_SCAN && entry.kind === "directory") {
@@ -77,8 +78,14 @@ async function open_directory_internal(dir_handle) {
 	const new_files = [];
 	const filemeta_ikvs = PARTICIPANT_ID_GLO.get_filemeta_store();
 
-	for await (const { entry, relative_path } of iterate_wav_entries(dir_handle)) {
+	for await (const { entry, relative_path, siblings } of iterate_wav_entries(dir_handle)) {
 		const metadata_key = ENABLE_NESTED_DIRECTORY_SCAN ? relative_path : entry.name;
+
+		const is_pbm = entry.name.endsWith("-pbm.wav");
+		const video_basename = entry.name.replace(/-\d*_\d*-pbm\.[^.]{1,3}$/, "");
+		const video_filename_webm = video_basename + ".webm";
+		const video_filename_mp4 = video_basename + ".mp4";
+		const video_entry = siblings.find(e => e.name == video_filename_webm || e.name == video_filename_mp4);
 
 		const fdiv = await (async () => {
 			for (const fdiv of filelist_files) {
@@ -185,6 +192,12 @@ async function open_directory_internal(dir_handle) {
 					const file = await entry.getFile();
 					const pcm = await load_pcm(file);
 					send_pcm(pcm, relative_path);
+					if (is_pbm) {
+						if (!video_entry) throw new Error("Video file not found for PBM wav");
+						if (video_entry.kind != "file") throw new Error("Video entry is not a file");
+						const vfile = await video_entry.getFile();
+						update_video(vfile);
+					}
 				} catch (e) {
 					console.error(e);
 					alert("Failed to load PCM from file: " + e);
