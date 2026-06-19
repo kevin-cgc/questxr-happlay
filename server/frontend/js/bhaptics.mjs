@@ -80,7 +80,7 @@ function calculate_amplitudes(pcm) {
 		let sum_of_squares = 0;
 		for (let i = offset; i < end; i++) sum_of_squares += pcm[i] ** 2;
 		const rms = Math.sqrt(sum_of_squares / (end - offset));
-		amplitudes.push(Math.max(10, Math.min(100, Math.trunc(rms * 200))));
+		amplitudes.push(Math.min(100, Math.trunc(rms * 200)));
 	}
 	return amplitudes;
 }
