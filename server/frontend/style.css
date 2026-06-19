@@ -302,6 +302,14 @@ div#root {
 #qdevices > .devicelist > .device > h3 > small {
 	font-size: 0.6em;
 }
+#qdevices label.bhaptics-actuator {
+	display: flex;
+	align-items: center;
+	gap: 1ex;
+}
+#qdevices label.bhaptics-actuator input {
+	width: 5em;
+}
 
 #dragndroptacton {
 	grid-area: fileupload;

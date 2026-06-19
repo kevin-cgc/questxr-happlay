@@ -3,6 +3,7 @@ import { get_num_devices, mark_devices_notacked } from "./devicelist.mjs";
 import { draw_waveform, mark_playback_loading } from "./playback_waveform.mjs";
 import { notnull } from "./util.mjs";
 import { send_ws_pcm_signal } from "./websocket.mjs";
+import { set_bhaptics_pcm } from "./bhaptics.mjs";
 
 const HAPTIC_DECODE_AUDIO_CTX = new AudioContext({ sampleRate: SAMPLE_RATE, latencyHint: "playback" });
 
@@ -59,6 +60,7 @@ export async function load_and_send_pcm(file) {
  */
 export function send_pcm(pcm, filename) {
 	draw_waveform(pcm, filename);
+	set_bhaptics_pcm(pcm);
 
 	send_ws_pcm_signal(pcm);
 

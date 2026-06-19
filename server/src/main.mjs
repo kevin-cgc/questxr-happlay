@@ -20,15 +20,28 @@ import fs from "fs/promises";
  * @param {number} param0.device_ws_port
  * @param {string} param0.participants_dir
  * @param {string} param0.beam_cloud_api_key
+ * @param {string} param0.bhaptics_app_id
+ * @param {string} param0.bhaptics_api_key
  */
 async function main({
 	controller_http_port,
 	device_ws_port,
 	participants_dir,
 	beam_cloud_api_key,
+	bhaptics_app_id,
+	bhaptics_api_key,
 }) {
 	const app = express();
 	const static_path = path.join(import.meta.dirname, "../frontend");
+	const tact_js_path = path.join(import.meta.dirname, "../node_modules/tact-js/dist");
+	app.use("/vendor/tact-js", express.static(tact_js_path));
+	app.get("/api/bhaptics/config", (_req, res) => {
+		res.json({
+			enabled: !!(bhaptics_app_id && bhaptics_api_key),
+			appId: bhaptics_app_id,
+			apiKey: bhaptics_api_key,
+		});
+	});
 	app.use(express.static(static_path));
 
 	await setup_api(app, participants_dir, beam_cloud_api_key);
@@ -344,6 +357,8 @@ const BASE_DEVICE_WS_PORT = Number.parseInt(process.env["HAPPLAY_DEVICE_WS_PORT"
 const HAPPLAY_DATA_DIR = process.env["HAPPLAY_DATA_DIR"] || path.join(import.meta.dirname, "../data");
 const PARTICIPANTS_DIR = path.join(HAPPLAY_DATA_DIR, "participants");
 const BEAM_CLOUD_API_KEY = process.env["BEAM_CLOUD_API_KEY"] ?? "";
+const BHAPTICS_APP_ID = process.env["BHAPTICS_APP_ID"] ?? "";
+const BHAPTICS_API_KEY = process.env["BHAPTICS_API_KEY"] ?? "";
 if (!BEAM_CLOUD_API_KEY) {
 	console.warn("WARN: BEAM_CLOUD_API_KEY env var is empty");
 } else {
@@ -360,5 +375,7 @@ for (let i=0; i<instance_num; i++) {
 		device_ws_port,
 		participants_dir: PARTICIPANTS_DIR, // all instances share the same participants dir, since participant ids should be unique across instances
 		beam_cloud_api_key: BEAM_CLOUD_API_KEY,
+		bhaptics_app_id: BHAPTICS_APP_ID,
+		bhaptics_api_key: BHAPTICS_API_KEY,
 	});
 }

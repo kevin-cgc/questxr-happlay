@@ -11,6 +11,7 @@
   "dependencies": {
     "@ngrok/ngrok": "^1.0.0",
     "express": "^5.2.1",
+    "tact-js": "^2.0.4",
     "ws": "^8.20.1"
   },
   "devDependencies": {

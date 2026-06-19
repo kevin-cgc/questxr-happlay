@@ -2,6 +2,7 @@ import { CAPTION_RATING_MODE, SAMPLE_RATE, VIDEO_RATING_MODE, WORKSHOP_MODE } fr
 import { bump_playcount_on_filemeta } from "./folderfilepicker.mjs";
 import { notnull } from "./util.mjs";
 import { start_video_playback, stop_video_playback } from "./video-playback.mjs";
+import { start_bhaptics_playback, stop_bhaptics_playback } from "./bhaptics.mjs";
 
 const playbackv_div = /** @type {HTMLDivElement} **/ (document.getElementById("playbackv"));
 const waveformcontainer_div = /** @type {HTMLDivElement} **/ (document.getElementById("waveformcontainer"));
@@ -67,6 +68,7 @@ let playback_started_at = null;
 export function start_playback() {
 	playback_started_at = performance.now();
 	start_video_playback();
+	start_bhaptics_playback().catch(error => console.error("bHaptics playback failed", error));
 
 	if (last_waveform) bump_playcount_on_filemeta(last_waveform.filename);
 
@@ -86,6 +88,7 @@ export function start_playback() {
 export function stop_playback() {
 	playback_started_at = null;
 	stop_video_playback();
+	stop_bhaptics_playback().catch(error => console.error("Failed to stop bHaptics playback", error));
 }
 
 const pbh_ctx = notnull(playbackheadcanvas.getContext("2d"));
