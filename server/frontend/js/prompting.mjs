@@ -14,14 +14,14 @@ const gradio_app = /** @type {HTMLElement | null} */ (document.querySelector("gr
 const pbmvideopane_div = /** @type {HTMLDivElement} */ (notnull(document.querySelector(".pbmvideopane")));
 
 const API_URL = "/api/generate";
-const N_AT_ONCE = 5;
-const SHOW_TOP_N = 5;
+const N_AT_ONCE = 3;
+const SHOW_TOP_N = 3;
 const REQ_BODY_BASE = {
 	"prompt": "",
 	"n_at_once": N_AT_ONCE,
 	"resp_type": "shuffled",
 	"sorted_top_n": SHOW_TOP_N,
-	"create_variants": true,
+	"create_variants": false,
 	"normalize_output": true,
 };
 
@@ -427,7 +427,7 @@ async function make_request({ prompt, model, use_sampling, topk, topp, temperatu
 		throw new Error(`Error during generation: ${nwavs_b64.error}`);
 	}
 	if (!Array.isArray(nwavs_b64) || !Array.isArray(vprompt_list) || nwavs_b64.length !== vprompt_list.length) {
-		alert("Invalid response from server");
+		alert(`Invalid response from server:\n${result["error"]}`);
 		throw new Error(`Invalid response from server: ${JSON.stringify({nwavs_b64, vprompt_list})}`);
 	}
 	// console.time("decode");

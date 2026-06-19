@@ -3,12 +3,12 @@ import { load_and_send_pcm } from "./load_send_pcm.mjs";
 import { draw_box, update_video } from "./video-playback.mjs";
 import { get_random_order, notnull } from "./util.mjs";
 import { idbkv } from "../script.mjs";
-import { USER_STUDY_SIGNAL_ORDER } from "./signalorder.mjs";
+const signalOrderModule = await import("./signalorder.mjs").catch(() => null);
 
 export const USE_FACTORS = false;
 
 /** @type {{ video: string, algo: number }[]} */
-export const SIGNAL_ORDER = USER_STUDY_SIGNAL_ORDER;
+export const SIGNAL_ORDER = signalOrderModule?.USER_STUDY_SIGNAL_ORDER ?? [];
 const HXI_FACTORS = {
     "Autotelics": [
         "Regardless of function, I found the haptic sensations pleasant.",
