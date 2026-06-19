@@ -1,6 +1,6 @@
 import { idbkv } from "../script.mjs";
 import { load_pcm, send_pcm } from "./load_send_pcm.mjs";
-import { ENABLE_NESTED_DIRECTORY_SCAN } from "./appmode.mjs";
+import { ENABLE_NESTED_DIRECTORY_SCAN, VIDEO_PLAYBACK } from "./appmode.mjs";
 import { NpWaveFormCanvas } from "./np-waveform-canvas.mjs";
 import { PARTICIPANT_ID_GLO } from "./participantid_analytics.mjs";
 import { notnull } from "./util.mjs";
@@ -13,6 +13,7 @@ const openeddirectory_div = /** @type {HTMLDivElement} **/ (hapfilepicker_div.qu
 const changefolder_button = /** @type {HTMLButtonElement} **/ (openeddirectory_div.querySelector("button.changefolder"));
 const opendirname_h2 = /** @type {HTMLHeadingElement} **/ (openeddirectory_div.querySelector("h2"));
 const filelist_div = /** @type {HTMLDivElement} **/ (openeddirectory_div.querySelector(".filelist"));
+const selectvideo_button = /** @type {HTMLButtonElement} **/ (notnull(document.querySelector("button.selectvideo")));
 
 /** @typedef {{ name: string, filename: string, sha265: string, origin: string, model: string, vprompt: string, prompt: string, starred: boolean, trash: boolean, vote: number, playcount: number }} FileEntryMeta */
 
@@ -192,7 +193,7 @@ async function open_directory_internal(dir_handle) {
 					const file = await entry.getFile();
 					const pcm = await load_pcm(file);
 					send_pcm(pcm, relative_path);
-					if (is_pbm) {
+					if (is_pbm && !VIDEO_PLAYBACK) {
 						if (!video_entry) throw new Error("Video file not found for PBM wav");
 						if (video_entry.kind != "file") throw new Error("Video entry is not a file");
 						const vfile = await video_entry.getFile();
@@ -281,6 +282,27 @@ for (const button of [openfolder_button, changefolder_button]) {
 	});
 }
 
+if (VIDEO_PLAYBACK) {
+	selectvideo_button.addEventListener("click", async () => {
+		try {
+			if (!("showOpenFilePicker" in window)) {
+				alert("File picker not supported in this browser");
+				return;
+			}
+			const [video_handle] = await window.showOpenFilePicker({
+				types: [{
+					description: "Video files",
+					accept: { "video/*": [".mp4", ".webm", ".mov", ".m4v", ".ogv"] },
+				}],
+			});
+			const video_file = await video_handle.getFile();
+			await update_video(video_file);
+			selectvideo_button.title = video_file.name;
+		} catch (e) {
+			if (e.name !== "AbortError") throw e;
+		}
+	});
+}
 async function load_last_used_directory() { // load last used directory
 	const last_used_dir_handle = /** @type {FileSystemDirectoryHandle | null} **/ (await idbkv.get("last_used_dir_handle"));
 	if (last_used_dir_handle) {

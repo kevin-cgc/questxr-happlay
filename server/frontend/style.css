@@ -447,6 +447,14 @@ div.pbmvideopane {
 	z-index: 99;
 	grid-area: mprompt;
 	background-color: var(--primary-color);
+	position: relative;
+
+	button.selectvideo {
+		position: absolute;
+		top: 1em;
+		left: 1em;
+		z-index: 1;
+	}
 }
 @keyframes generateButtonProgress {
 	from {
