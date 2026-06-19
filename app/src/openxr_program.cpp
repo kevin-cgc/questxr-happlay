@@ -444,7 +444,7 @@ void OpenXrProgram::PollEvents() {
 			} break;
 			case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING:
 			default: {
-				spdlog::debug("Ignoring event type {}", event->type);
+				spdlog::debug("Ignoring event type {}", static_cast<int32_t>(event->type));
 				break;
 			}
 		}
@@ -466,6 +466,7 @@ const XrEventDataBaseHeader *OpenXrProgram::TryReadNextEvent() {
 		return nullptr;
 	}
 	spdlog::error("xr pull event unknown result: {}", result);
+	return nullptr;
 }
 
 void OpenXrProgram::HandleSessionStateChangedEvent(const XrEventDataSessionStateChanged &state_changed_event) {
@@ -544,8 +545,19 @@ void OpenXrProgram::handle_ws_message(const std::vector<uint8_t> &message, bool 
 					CHECK_XRCMD(xrGetDeviceSampleRateFB(session_, &haptic_action_info, &sample_rate_info));
 					sys_info["haptic_sample_rate"][hand == side::LEFT ? "left" : "right"] = sample_rate_info.sampleRate;
 				}
+				sys_info["trigger_latched_playback"] = trigger_latched_playback;
 
 				send_ws_message(sys_info.dump());
+			} else if (cmd == "set_trigger_latched_playback") {
+				trigger_latched_playback = j.at("data").at("enabled").get<bool>();
+				json playback_mode_changed = {
+					{"cmd", "trigger_latched_playback_changed"},
+					{"data", {
+						{"enabled", trigger_latched_playback},
+						{"system_id", std::to_string(system_id_)}
+					}}
+				};
+				send_ws_message(playback_mode_changed.dump());
 			} else {
 				spdlog::warn("Unknown command: {}", cmd);
 			}
@@ -599,37 +611,41 @@ void OpenXrProgram::PollActions() {
 			std::optional<uint32_t> &hap_samples_consumed_opt = input_.hap_samples_consumed[hand];
 
 			if ((grab_value.currentState < 0.15f || this->loading_haptic_signal) && input_.grab_was_active[hand]) {
-				CHECK_XRCMD(xrStopHapticFeedback(session_, &haptic_action_info));
+				if (!trigger_latched_playback || this->loading_haptic_signal) {
+					CHECK_XRCMD(xrStopHapticFeedback(session_, &haptic_action_info));
 
-				json early_stop_playback = { {"cmd", "stopping_playback"}, {"data", { {"hand", hand == side::LEFT ? "left" : "right"} }} };
-				this->send_ws_message(early_stop_playback.dump());
+					json early_stop_playback = { {"cmd", "stopping_playback"}, {"data", { {"hand", hand == side::LEFT ? "left" : "right"} }} };
+					this->send_ws_message(early_stop_playback.dump());
 
-				hap_samples_consumed_opt.reset(); // not really necessary?
+					hap_samples_consumed_opt.reset();
+				}
 				input_.grab_was_active[hand] = false;
-			} else if (!this->loading_haptic_signal) {
+			}
+			if (!this->loading_haptic_signal) {
 				if (!input_.grab_was_active[hand] && grab_value.currentState > 0.8f) {
-					XrDevicePcmSampleRateGetInfoFB sample_rate_info{XR_TYPE_DEVICE_PCM_SAMPLE_RATE_GET_INFO_FB};
-					CHECK_XRCMD(xrGetDeviceSampleRateFB(session_, &haptic_action_info, &sample_rate_info));
-					spdlog::info("device sample rate: {}", sample_rate_info.sampleRate);
-
-					spdlog::info("starting tacton playback...");
-
-					hap_samples_consumed_opt = 0;
-
-					json starting_playback = {
-						{"cmd", "starting_playback"},
-						{"data", {
-							{"hand", hand == side::LEFT ? "left" : "right"},
-							{"device_sample_rate", sample_rate_info.sampleRate},
-							{"tacton", {
-								{"sample_rate", sample_rate},
-								{"total_samples", total_samples}
-							}}
-						}}
-					};
-					this->send_ws_message(starting_playback.dump());
-
 					input_.grab_was_active[hand] = true;
+					if (!hap_samples_consumed_opt.has_value()) {
+						XrDevicePcmSampleRateGetInfoFB sample_rate_info{XR_TYPE_DEVICE_PCM_SAMPLE_RATE_GET_INFO_FB};
+						CHECK_XRCMD(xrGetDeviceSampleRateFB(session_, &haptic_action_info, &sample_rate_info));
+						spdlog::info("device sample rate: {}", sample_rate_info.sampleRate);
+
+						spdlog::info("starting tacton playback...");
+
+						hap_samples_consumed_opt = 0;
+
+						json starting_playback = {
+							{"cmd", "starting_playback"},
+							{"data", {
+								{"hand", hand == side::LEFT ? "left" : "right"},
+								{"device_sample_rate", sample_rate_info.sampleRate},
+								{"tacton", {
+									{"sample_rate", sample_rate},
+									{"total_samples", total_samples}
+								}}
+							}}
+						};
+						this->send_ws_message(starting_playback.dump());
+					}
 				}
 				if (hap_samples_consumed_opt.has_value()) { //playback started
 					auto hap_samples_consumed = hap_samples_consumed_opt.value();

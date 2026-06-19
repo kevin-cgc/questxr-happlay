@@ -74,6 +74,7 @@ class OpenXrProgram {
 
    private:
 	bool loading_haptic_signal = false;
+	bool trigger_latched_playback = false;
 	std::vector<float> haptic_pcm_buffer = dog_barking_haptic_pcm_f32le;
 
 	std::shared_ptr<Platform> platform_;

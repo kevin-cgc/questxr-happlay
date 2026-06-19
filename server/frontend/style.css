@@ -209,6 +209,55 @@ div#root {
 	align-items: center;
 	gap: 2ex;
 }
+#qdevices label.playback-mode-toggle {
+	display: flex;
+	align-items: center;
+	gap: 1ex;
+	padding: 0.7ex 1.2ex;
+	color: var(--tertiary-color-light);
+	background-color: var(--primary-color);
+	border-left: 3px solid var(--tertiary-color-dark);
+	cursor: pointer;
+	user-select: none;
+	transition: color 120ms ease, border-color 120ms ease;
+}
+#qdevices label.playback-mode-toggle:hover,
+#qdevices label.playback-mode-toggle:has(input:checked) {
+	color: var(--text-color);
+	border-left-color: var(--secondary-color);
+}
+#qdevices input.trigger-latched-playback {
+	appearance: none;
+	flex: 0 0 auto;
+	width: 3.2em;
+	height: 1.7em;
+	margin: 0;
+	padding: 0.2em;
+	border-radius: 1em;
+	background-color: var(--tertiary-color-dark);
+	cursor: pointer;
+	transition: background-color 120ms ease;
+}
+#qdevices input.trigger-latched-playback::before {
+	content: "";
+	display: block;
+	width: 1.3em;
+	height: 1.3em;
+	border-radius: 50%;
+	background-color: var(--tertiary-color-light);
+	transition: transform 120ms ease, background-color 120ms ease;
+}
+#qdevices input.trigger-latched-playback:checked {
+	background-color: var(--secondary-color);
+}
+#qdevices input.trigger-latched-playback:checked::before {
+	transform: translateX(1.5em);
+	background-color: var(--text-color);
+}
+#qdevices input.trigger-latched-playback:focus-visible {
+	outline: 2px solid var(--secondary-color);
+	outline-offset: 2px;
+}
 #qdevices button.refresh {
 	font-size: 1.5em;
 	padding: 0.5ex 1ex;

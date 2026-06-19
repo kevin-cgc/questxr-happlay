@@ -1,7 +1,7 @@
 export * as idbkv from "./thirdparty/idb-keyval.js";
 
 import { swslog, register_ws_onmessage } from "./js/websocket.mjs";
-import { add_or_update_device, mark_device_acked } from "./js/devicelist.mjs";
+import { add_or_update_device, mark_device_acked, update_trigger_latched_playback } from "./js/devicelist.mjs";
 import { send_pcm } from "./js/load_send_pcm.mjs";
 import { last_waveform, mark_playback_loaded, start_playback, stop_playback } from "./js/playback_waveform.mjs";
 import { } from "./js/dragndrop.mjs";
@@ -19,6 +19,8 @@ register_ws_onmessage(msg => {
 	} else if (msg.cmd == "ack_haptic_signal") {
 		mark_device_acked(msg.data.system_id);
 		mark_playback_loaded();
+	} else if (msg.cmd == "trigger_latched_playback_changed") {
+		update_trigger_latched_playback(msg.data.enabled);
 	} else if ("systemId" in msg) {
 		add_or_update_device(msg);
 

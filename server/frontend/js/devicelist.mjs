@@ -4,10 +4,18 @@ import { send_ws_msg } from "./websocket.mjs";
 const qdevices = notnull(document.getElementById("qdevices"));
 const devicelist = notnull(qdevices.querySelector(".devicelist"));
 const refresh_button = notnull(qdevices.querySelector("button.refresh"));
+const trigger_latched_playback_checkbox = /** @type {HTMLInputElement} */ (notnull(qdevices.querySelector("input.trigger-latched-playback")));
 refresh_button.addEventListener("click", () => {
 	devicelist.innerHTML = "";
 	send_ws_msg({ cmd: "getinfo" })
 });
+trigger_latched_playback_checkbox.addEventListener("change", () => {
+	send_ws_msg({ cmd: "set_trigger_latched_playback", data: { enabled: trigger_latched_playback_checkbox.checked } });
+});
+
+export function update_trigger_latched_playback(enabled) {
+	trigger_latched_playback_checkbox.checked = enabled;
+}
 
 export function mark_devices_notacked() {
 	const device_divs = devicelist.querySelectorAll(".device");
@@ -24,6 +32,7 @@ export function get_num_devices() {
 
 export function add_or_update_device(device_info_msg) {
 	const dim = device_info_msg;
+	update_trigger_latched_playback(dim.trigger_latched_playback ?? false);
 
 	const olddiv = devicelist.querySelector(`[data-system-id="${dim.systemId}"]`);
 	if (olddiv) olddiv.remove();
