@@ -1,7 +1,6 @@
 import { SAMPLE_RATE } from "./appmode.mjs";
-import { update_bhaptics_vest } from "./devicelist.mjs";
 
-const WINDOW_DURATION_MS = 100;
+export const BHAPTICS_BIN_DURATION_MS = 100;
 const USE_PATH = false;
 const PATH_COORDINATES = [[0.2, 0.2], [0.2, 0.2]];
 let single_actuator_num = 5;
@@ -27,7 +26,12 @@ async function initialize_bhaptics() {
 		const response = await fetch("/api/bhaptics/config");
 		if (!response.ok) throw new Error(`Config request failed (${response.status})`);
 		const config = await response.json();
-		if (!config.enabled) return null;
+		if (!config.enabled) {
+			window.dispatchEvent(new CustomEvent("bhaptics-vest-status", {
+				detail: { connected: false, actuator_num: single_actuator_num, configured: false },
+			}));
+			return null;
+		}
 
 		const module_path = "/vendor/tact-js/bundle.js";
 		const { default: Tact, PositionType } = await import(module_path);
@@ -38,13 +42,18 @@ async function initialize_bhaptics() {
 		return sdk;
 	} catch (error) {
 		console.error("Failed to initialize bHaptics SDK", error);
+		window.dispatchEvent(new CustomEvent("bhaptics-vest-status", {
+			detail: { connected: false, actuator_num: single_actuator_num, error },
+		}));
 		return null;
 	}
 }
 
 async function update_bhaptics_devices(sdk) {
 	const vest_connected = await sdk.Tact.isDeviceConnected(sdk.PositionType.Vest);
-	update_bhaptics_vest(vest_connected, single_actuator_num);
+	window.dispatchEvent(new CustomEvent("bhaptics-vest-status", {
+		detail: { connected: vest_connected, actuator_num: single_actuator_num, configured: true },
+	}));
 }
 
 async function refresh_bhaptics_devices() {
@@ -73,7 +82,7 @@ function lerp_path(t) {
 }
 
 function calculate_amplitudes(pcm) {
-	const window_size = Math.max(1, Math.round(SAMPLE_RATE * WINDOW_DURATION_MS / 1000));
+	const window_size = Math.max(1, Math.round(SAMPLE_RATE * BHAPTICS_BIN_DURATION_MS / 1000));
 	const amplitudes = [];
 	for (let offset = 0; offset < pcm.length; offset += window_size) {
 		const end = Math.min(offset + window_size, pcm.length);
@@ -90,41 +99,57 @@ export function set_bhaptics_pcm(pcm) {
 }
 
 export async function start_bhaptics_playback() {
+	if (!current_pcm) return;
+	const amplitudes = calculate_amplitudes(current_pcm);
+	await play_bhaptics_amplitudes(amplitudes);
+}
+
+/**
+ * Plays values that are already aligned to bHaptics' 100 ms amplitude bins.
+ * Each value is clamped to an integer intensity from 0 through 100.
+ *
+ * @param {Iterable<number>} amplitudes
+ * @returns {Promise<boolean>} Whether playback could be started.
+ */
+export async function play_bhaptics_amplitudes(amplitudes) {
+	const values = Array.from(amplitudes, amplitude =>
+		Math.round(Math.min(100, Math.max(0, Number(amplitude) || 0)))
+	);
 	const generation = ++playback_generation;
 	const sdk = await tact_promise;
-	if (!sdk || !current_pcm || generation !== playback_generation) return;
+	if (!sdk || values.length === 0 || generation !== playback_generation) return false;
 
-	const amplitudes = calculate_amplitudes(current_pcm);
 	const started_at = performance.now();
-	for (let i = 0; i < amplitudes.length; i++) {
-		const delay = started_at + i * WINDOW_DURATION_MS - performance.now();
+	for (let i = 0; i < values.length; i++) {
+		const delay = started_at + i * BHAPTICS_BIN_DURATION_MS - performance.now();
 		if (delay > 0) await sleep(delay);
-		if (generation !== playback_generation) return;
+		if (generation !== playback_generation) return true;
 
-		const t = i / Math.max(1, amplitudes.length - 1);
+		const t = i / Math.max(1, values.length - 1);
 		const [x, y] = lerp_path(t);
 		if (USE_PATH) {
 			await sdk.Tact.playPath({
 				position: sdk.PositionType.Vest,
 				x: [x],
 				y: [y],
-				intensity: [amplitudes[i]],
-				duration: WINDOW_DURATION_MS,
+				intensity: [values[i]],
+				duration: BHAPTICS_BIN_DURATION_MS,
 			});
 		} else {
 			const motor_len = 40;
-			const values = new Array(motor_len).fill(0);
-			values[single_actuator_num] = amplitudes[i];
+			const motor_values = new Array(motor_len).fill(0);
+			motor_values[single_actuator_num] = values[i];
 			await sdk.Tact.playDot({
 				position: sdk.PositionType.Vest,
-				duration: WINDOW_DURATION_MS,
-				motorValues: values
+				duration: BHAPTICS_BIN_DURATION_MS,
+				motorValues: motor_values
 			});
 		}
 	}
 
-	await sleep(WINDOW_DURATION_MS);
+	await sleep(BHAPTICS_BIN_DURATION_MS);
 	if (generation === playback_generation) await sdk.Tact.stopAll();
+	return true;
 }
 
 export async function stop_bhaptics_playback() {

@@ -1,0 +1,114 @@
+.bhaptics-test-page {
+	display: block;
+	width: 100%;
+	max-width: 1100px;
+	min-height: 100%;
+	margin: 0 auto;
+	box-sizing: border-box;
+}
+
+.bhaptics-test-page header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 3ex;
+	margin: 2ex 0 4ex;
+}
+
+.bhaptics-test-page h1,
+.bhaptics-test-page h2,
+.bhaptics-test-page p {
+	margin: 0.5ex 0;
+}
+
+.status {
+	flex: 0 0 auto;
+	padding: 1.2ex 1.8ex;
+	background: var(--primary-color);
+	border-left: 4px solid var(--tertiary-color-light);
+}
+
+.status.connected { border-left-color: var(--secondary-color); }
+.status.disconnected { border-left-color: var(--error-color); }
+
+.controls {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+	gap: 2ex;
+	padding: 2ex;
+	background: var(--primary-color);
+}
+
+.controls label {
+	display: flex;
+	flex-direction: column;
+	gap: 0.8ex;
+}
+
+.range-control {
+	display: flex;
+	align-items: center;
+	gap: 1ex;
+}
+
+.range-control input { flex: 1; }
+.range-control output { min-width: 3ch; text-align: right; }
+
+.pattern-panel {
+	margin-top: 2ex;
+	padding: 2ex;
+	background: var(--primary-color);
+}
+
+.pattern-heading {
+	display: flex;
+	justify-content: space-between;
+	align-items: end;
+	gap: 2ex;
+	margin-bottom: 2ex;
+}
+
+.legend {
+	display: flex;
+	align-items: center;
+	gap: 0.7ex;
+	white-space: nowrap;
+}
+
+.legend span {
+	display: inline-block;
+	width: 1.5ex;
+	height: 1.5ex;
+}
+
+.on-swatch, .bin.on { background: var(--secondary-color); }
+.off-swatch, .bin.off { background: var(--tertiary-color-dark); }
+
+.pattern {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(16px, 1fr));
+	gap: 5px;
+}
+
+.bin {
+	display: block;
+	min-width: 16px;
+	height: 64px;
+	border-bottom: 3px solid transparent;
+}
+
+.bin.on { border-bottom-color: var(--text-color); }
+
+.actions {
+	display: flex;
+	gap: 1ex;
+	margin-top: 2ex;
+}
+
+button.secondary { color: var(--tertiary-color-light); }
+.playback-status { min-height: 1.5em; }
+
+@media (max-width: 650px) {
+	.bhaptics-test-page header,
+	.pattern-heading { align-items: flex-start; flex-direction: column; }
+}

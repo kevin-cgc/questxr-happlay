@@ -5,6 +5,10 @@ const qdevices = notnull(document.getElementById("qdevices"));
 const devicelist = notnull(qdevices.querySelector(".devicelist"));
 const refresh_button = notnull(qdevices.querySelector("button.refresh"));
 const trigger_latched_playback_checkbox = /** @type {HTMLInputElement} */ (notnull(qdevices.querySelector("input.trigger-latched-playback")));
+window.addEventListener("bhaptics-vest-status", event => {
+	const { connected, actuator_num } = /** @type {CustomEvent} */ (event).detail;
+	update_bhaptics_vest(connected, actuator_num);
+});
 refresh_button.addEventListener("click", () => {
 	devicelist.innerHTML = "";
 	send_ws_msg({ cmd: "getinfo" });

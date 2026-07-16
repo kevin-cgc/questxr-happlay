@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>bHaptics Bin Pattern Tester</title>
+	<link rel="stylesheet" href="../style.css">
+	<link rel="stylesheet" href="bhaptics-test.css">
+</head>
+<body class="bhaptics-test-page">
+	<header>
+		<div>
+			<a href="/">&larr; Main controller</a>
+			<h1>bHaptics Bin Pattern Tester</h1>
+			<p>Create a repeating ON/OFF pattern directly in the same 100 ms bins used by amplitude playback.</p>
+		</div>
+		<div id="vest-status" class="status waiting">Initializing bHaptics&hellip;</div>
+	</header>
+
+	<main>
+		<section class="controls" aria-label="Pattern controls">
+			<label>ON bins
+				<input id="on-bins" type="number" min="1" max="100" step="1" value="2">
+			</label>
+			<label>OFF bins
+				<input id="off-bins" type="number" min="0" max="100" step="1" value="2">
+			</label>
+			<label>Cycles
+				<input id="cycles" type="number" min="1" max="100" step="1" value="5">
+			</label>
+			<label>ON intensity
+				<div class="range-control">
+					<input id="intensity" type="range" min="1" max="100" step="1" value="100">
+					<output id="intensity-value" for="intensity">100</output>
+				</div>
+			</label>
+			<label>Actuator (0&ndash;39)
+				<input id="actuator" type="number" min="0" max="39" step="1" value="5">
+			</label>
+		</section>
+
+		<section class="pattern-panel" aria-labelledby="pattern-heading">
+			<div class="pattern-heading">
+				<div>
+					<h2 id="pattern-heading">Amplitude bins</h2>
+					<p id="pattern-summary"></p>
+				</div>
+				<div class="legend"><span class="on-swatch"></span> ON <span class="off-swatch"></span> OFF</div>
+			</div>
+			<div id="pattern" class="pattern" aria-label="Generated amplitude pattern"></div>
+		</section>
+
+		<div class="actions">
+			<button id="play" type="button">Play pattern</button>
+			<button id="stop" type="button" class="secondary">Stop</button>
+		</div>
+		<p id="playback-status" class="playback-status" role="status"></p>
+	</main>
+
+	<script type="module" src="bhaptics-test.mjs"></script>
+</body>
+</html>
